@@ -7,18 +7,38 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Node / Frontend
 node_modules
-dist
-dist-ssr
-*.local
+admin-web/node_modules
+admin-web/dist
+admin-web/dist-ssr
+admin-web/.local
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
+# Laravel / Backend
+backend/.env
+backend/.env.backup
+backend/.env.production
+backend/vendor
+backend/public/build
+backend/public/hot
+backend/public/storage
+backend/storage/*.key
+backend/storage/pail
+backend/storage/framework/views/*.php
+backend/storage/logs/*.log
+backend/bootstrap/cache/*
+backend/.phpunit.result.cache
+
+# Editor / System
+.vscode
 .idea
 .DS_Store
+Thumbs.db
 *.suo
-*.ntvs*
-*.njsproj
 *.sln
 *.sw?
+.env
+
+# Project specific
+pdf_output.txt
+read_pdf_ext.py
