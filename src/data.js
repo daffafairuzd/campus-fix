@@ -1,3 +1,7 @@
+// ============================================================
+// MOCK DATA — akan digantikan API calls setelah backend siap
+// ============================================================
+
 export const REPORTS = [
   { 
     id:"RPT-001", title:"AC ruangan 301 mati total", category:"HVAC", location:"Gedung A Lt.3", status:"Dalam Proses", priority:"Kritis", reporter:"Ahmad Fauzi", date:"2026-04-03 08:15:22", technician:"Budi S.", sla:"2026-04-05", rating:null, 
@@ -8,7 +12,7 @@ export const REPORTS = [
     ] 
   },
   { 
-    id:"RPT-002", title:"Lampu koridor B putus 3 titik", category:"Listrik", location:"Gedung B Lt.1", status:"Selesai", priority:"Minor", reporter:"Siti Rahma", date:"2026-04-01 19:40:11", technician:"Eko P.", sla:"2026-04-04", rating:4,
+    id:"RPT-002", title:"Lampu koridor B putus 3 titik", category:"Listrik", location:"Gedung B Lt.1", status:"Selesai", priority:"Rendah", reporter:"Siti Rahma", date:"2026-04-01 19:40:11", technician:"Eko P.", sla:"2026-04-04", rating:4,
     description:"Ada 3 buah lampu mati berurutan di sepanjang koridor, menjadikan area temaram ketika malam hari.",
     history: [
       { title: "Laporan dibuat", date: "2026-04-01 19:40:11", user: "Siti Rahma" },
@@ -32,7 +36,7 @@ export const REPORTS = [
     ] 
   },
   { 
-    id:"RPT-005", title:"WiFi area kantin drop terus", category:"Jaringan", location:"Kantin Pusat", status:"Menunggu", priority:"Minor", reporter:"Fajar W.", date:"2026-04-04 16:20:41", technician:null, sla:"2026-04-07", rating:null,
+    id:"RPT-005", title:"WiFi area kantin drop terus", category:"Jaringan", location:"Kantin Pusat", status:"Menunggu", priority:"Sedang", reporter:"Fajar W.", date:"2026-04-04 16:20:41", technician:null, sla:"2026-04-07", rating:null,
     description:"Sinyal wifi penuh tapi tidak bisa dipakai browsing, kemungkinan router hang.",
     history: [
       { title: "Laporan dibuat", date: "2026-04-04 16:20:41", user: "Fajar W." }
@@ -47,7 +51,7 @@ export const REPORTS = [
     ] 
   },
   { 
-    id:"RPT-007", title:"Papan tulis smartboard rusak", category:"Lab", location:"Ruang 201", status:"Selesai", priority:"Minor", reporter:"Taufik M.", date:"2026-03-30 13:45:22", technician:"Budi S.", sla:"2026-04-02", rating:5,
+    id:"RPT-007", title:"Papan tulis smartboard rusak", category:"Lab", location:"Ruang 201", status:"Selesai", priority:"Sedang", reporter:"Taufik M.", date:"2026-03-30 13:45:22", technician:"Budi S.", sla:"2026-04-02", rating:5,
     description:"Pointer tidak akurat dan perlu dikalibrasi tapi sistemnya dikunci PIN.",
     history: [
       { title: "Laporan dibuat", date: "2026-03-30 13:45:22", user: "Taufik M." },
@@ -65,39 +69,56 @@ export const REPORTS = [
   },
 ];
 
+// Status teknisi: availability_status (manual: 'aktif'|'cuti') 
+// workload_status dihitung dari active vs max_capacity
 export const TECHNICIANS = [
-  { id:"TEC-01", name:"Budi Santoso", specialty:"Listrik & Lab", active:3, completed:24, rating:4.8, status:"Tersedia", avatar:"BS" },
-  { id:"TEC-02", name:"Eko Prasetyo", specialty:"Plumbing & HVAC", active:2, completed:31, rating:4.6, status:"Sibuk", avatar:"EP" },
-  { id:"TEC-03", name:"Hendro Kurniawan", specialty:"Lift & Mekanikal", active:2, completed:19, rating:4.9, status:"Sibuk", avatar:"HK" },
-  { id:"TEC-04", name:"Slamet Riyadi", specialty:"Jaringan & IT", active:0, completed:15, rating:4.5, status:"Tersedia", avatar:"SR" },
-  { id:"TEC-05", name:"Wahyu Pramono", specialty:"Umum", active:1, completed:28, rating:4.7, status:"Cuti", avatar:"WP" },
+  { id:"TEC-01", name:"Budi Santoso",     specialty:"Listrik & Lab",      active:3, max_capacity:5, completed:24, rating:4.8, availability_status:"aktif", avatar:"BS" },
+  { id:"TEC-02", name:"Eko Prasetyo",     specialty:"Plumbing & HVAC",    active:2, max_capacity:3, completed:31, rating:4.6, availability_status:"aktif", avatar:"EP" },
+  { id:"TEC-03", name:"Hendro Kurniawan", specialty:"Lift & Mekanikal",   active:2, max_capacity:3, completed:19, rating:4.9, availability_status:"aktif", avatar:"HK" },
+  { id:"TEC-04", name:"Slamet Riyadi",    specialty:"Jaringan & IT",      active:0, max_capacity:3, completed:15, rating:4.5, availability_status:"aktif", avatar:"SR" },
+  { id:"TEC-05", name:"Wahyu Pramono",    specialty:"Umum",               active:1, max_capacity:3, completed:28, rating:4.7, availability_status:"cuti",  avatar:"WP" },
 ];
 
+// Helper: hitung workload_status dari data teknisi
+export const getWorkloadStatus = (tech) => {
+  if (tech.availability_status === 'cuti') return 'Cuti';
+  if (tech.active >= tech.max_capacity) return 'Sibuk';
+  return 'Tersedia';
+};
+
 export const USERS = [
-  { id:"USR-01", name:"Muhammad Ragil", email:"ragil@telkomuniversity.ac.id", role:"Admin", nim:"103012300015", status:"Aktif" },
-  { id:"USR-02", name:"Daffa Fairuz", email:"daffa@telkomuniversity.ac.id", role:"Admin", nim:"103012300309", status:"Aktif" },
-  { id:"USR-03", name:"Ahmad Fauzi", email:"afauzi@student.telkomuniversity.ac.id", role:"Pelapor", nim:"10301230090", status:"Aktif" },
-  { id:"USR-04", name:"Siti Rahma", email:"srahma@student.telkomuniversity.ac.id", role:"Pelapor", nim:"10301230091", status:"Aktif" },
-  { id:"USR-05", name:"Budi Santoso", email:"bsantoso@telkomuniversity.ac.id", role:"Teknisi", nim:"-", status:"Aktif" },
-  { id:"USR-06", name:"Eko Prasetyo", email:"eprasetyo@telkomuniversity.ac.id", role:"Teknisi", nim:"-", status:"Aktif" },
-  { id:"USR-07", name:"Reza Alif", email:"ralif@student.telkomuniversity.ac.id", role:"Pelapor", nim:"10301230095", status:"Nonaktif" },
+  { id:"USR-01", name:"Muhammad Ragil", email:"ragil@telkomuniversity.ac.id",           role:"Admin",   nim:"103012300015", status:"Aktif" },
+  { id:"USR-02", name:"Daffa Fairuz",   email:"daffa@telkomuniversity.ac.id",           role:"Admin",   nim:"103012300309", status:"Aktif" },
+  { id:"USR-03", name:"Ahmad Fauzi",    email:"afauzi@student.telkomuniversity.ac.id",  role:"Pelapor", nim:"10301230090",  status:"Aktif" },
+  { id:"USR-04", name:"Siti Rahma",     email:"srahma@student.telkomuniversity.ac.id",  role:"Pelapor", nim:"10301230091",  status:"Aktif" },
+  { id:"USR-05", name:"Budi Santoso",   email:"bsantoso@telkomuniversity.ac.id",        role:"Teknisi", nim:"-",            status:"Aktif" },
+  { id:"USR-06", name:"Eko Prasetyo",   email:"eprasetyo@telkomuniversity.ac.id",       role:"Teknisi", nim:"-",            status:"Aktif" },
+  { id:"USR-07", name:"Reza Alif",      email:"ralif@student.telkomuniversity.ac.id",   role:"Pelapor", nim:"10301230095",  status:"Nonaktif" },
 ];
 
 export const WEEKLY = [
-  { day:"Sen", laporan:8, selesai:5 },
-  { day:"Sel", laporan:12, selesai:9 },
-  { day:"Rab", laporan:6, selesai:6 },
+  { day:"Sen", laporan:8,  selesai:5  },
+  { day:"Sel", laporan:12, selesai:9  },
+  { day:"Rab", laporan:6,  selesai:6  },
   { day:"Kam", laporan:15, selesai:10 },
-  { day:"Jum", laporan:9, selesai:7 },
-  { day:"Sab", laporan:4, selesai:4 },
-  { day:"Min", laporan:2, selesai:2 },
+  { day:"Jum", laporan:9,  selesai:7  },
+  { day:"Sab", laporan:4,  selesai:4  },
+  { day:"Min", laporan:2,  selesai:2  },
 ];
 
 export const MONTHLY = [
   { month:"Nov", laporan:42, selesai:38 },
   { month:"Des", laporan:55, selesai:48 },
   { month:"Jan", laporan:61, selesai:54 },
-  { month:"Feb", transform:48, selesai:45 },
+  { month:"Feb", laporan:48, selesai:45 },
   { month:"Mar", laporan:73, selesai:61 },
   { month:"Apr", laporan:29, selesai:20 },
+];
+
+// Konfigurasi SLA per level prioritas (resolusi dalam jam)
+export const SLA_CONFIGS = [
+  { priority:"Kritis", response_hours:4,  resolution_hours:24  },
+  { priority:"Tinggi", response_hours:8,  resolution_hours:48  },
+  { priority:"Sedang", response_hours:24, resolution_hours:72  },
+  { priority:"Rendah", response_hours:48, resolution_hours:168 },
 ];

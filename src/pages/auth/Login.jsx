@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import api from '../../api';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -7,15 +8,34 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const [errMessage, setErrMessage] = useState('');
+
+  const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    // Mock login delay
-    setTimeout(() => {
-      setIsLoading(false);
+    setErrMessage('');
+    try {
+      const response = await api.post('/auth/login', { email, password });
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
       localStorage.setItem('isAuthenticated', 'true');
-      window.location.href = '/'; // force reload to mount authenticated state
-    }, 1000);
+      
+      // If user is not admin or teknisi, we can reject them, but for now we let App handle it.
+      // But typically this dashboard is admin only.
+      if (response.data.user.role === 'pelapor') {
+        setErrMessage('Anda tidak memiliki akses ke panel admin.');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('isAuthenticated');
+        return;
+      }
+      
+      window.location.href = '/'; 
+    } catch (err) {
+      setErrMessage(err.response?.data?.message || err.response?.data?.errors?.email?.[0] || 'Gagal login. Silakan coba lagi.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -43,6 +63,12 @@ export default function Login() {
           <h1 className="text-2xl font-bold text-ui-text mb-1.5">Sign In</h1>
           <p className="text-xs text-ui-muted">Gunakan akun administrator Anda untuk melanjutkan.</p>
         </div>
+
+        {errMessage && (
+          <div className="mb-4 p-3 rounded-lg bg-ui-danger/10 border border-ui-danger/30 text-[12px] text-ui-danger relative z-10">
+            {errMessage}
+          </div>
+        )}
 
         <form onSubmit={handleLogin} className="space-y-4 relative z-10">
           <div>

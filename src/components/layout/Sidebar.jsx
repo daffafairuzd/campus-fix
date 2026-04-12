@@ -14,6 +14,9 @@ const NAV = [
 
 export default function Sidebar() {
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('user') || '{"name":"Admin", "role":"admin"}');
+  const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  
   
   const handleLogout = () => {
     localStorage.removeItem('isAuthenticated');
@@ -62,10 +65,10 @@ export default function Sidebar() {
       {/* User */}
       <div className="px-3 py-3.5 border-t border-dark-border">
         <div className="flex items-center gap-2.5">
-          <Avatar initials="MR" size={34} />
+          <Avatar initials={initials} size={34} />
           <div className="flex-1 min-w-0">
-            <div className="text-xs font-semibold text-ui-text whitespace-nowrap overflow-hidden text-ellipsis">Muhammad Ragil</div>
-            <div className="text-[10px] text-ui-muted">Administrator</div>
+            <div className="text-xs font-semibold text-ui-text whitespace-nowrap overflow-hidden text-ellipsis">{user.name}</div>
+            <div className="text-[10px] text-ui-muted capitalize">{user.role || 'Administrator'}</div>
           </div>
           <button 
             className="p-1.5 text-ui-dim hover:text-brand-primary transition-colors bg-transparent border-none outline-none cursor-pointer" 
