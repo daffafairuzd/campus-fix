@@ -9,7 +9,8 @@ class NotificationController extends Controller
 {
     public function index(Request $request)
     {
-        $notifications = Notification::where('user_id', $request->user()->id)
+        $notifications = Notification::with('report')
+            ->where('user_id', $request->user()->id)
             ->orderByDesc('created_at')
             ->limit(30)
             ->get();
@@ -37,5 +38,21 @@ class NotificationController extends Controller
             ->update(['is_read' => true]);
 
         return response()->json(['message' => 'Semua notifikasi ditandai sudah dibaca.']);
+    }
+
+    public function destroy(Request $request, Notification $notification)
+    {
+        if ($notification->user_id !== $request->user()->id) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $notification->delete();
+        return response()->json(['message' => 'Notifikasi dihapus.']);
+    }
+
+    public function deleteAll(Request $request)
+    {
+        Notification::where('user_id', $request->user()->id)->delete();
+        return response()->json(['message' => 'Semua notifikasi dihapus.']);
     }
 }

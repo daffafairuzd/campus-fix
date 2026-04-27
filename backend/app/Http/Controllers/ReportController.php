@@ -133,7 +133,7 @@ class ReportController extends Controller
         ]);
 
         // Broadcast realtime ke semua admin
-        broadcast(new ReportStatusUpdated($report))->toOthers();
+        broadcast(new ReportStatusUpdated($report));
 
         // Notifikasi ke pelapor
         Notification::create([
