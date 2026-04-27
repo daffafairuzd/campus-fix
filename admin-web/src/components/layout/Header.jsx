@@ -77,12 +77,28 @@ export default function Header() {
          setUnreadCount(prev => prev + 1);
       });
       
+      // Dengarkan event laporan baru
+      channel.listen('.report.created', (e) => {
+         const newNotif = {
+           id: "temp_new_" + Date.now(),
+           title: "Laporan Baru Masuk",
+           report: { report_number: e.report_number },
+           message: `Terdapat laporan baru: ${e.title} dari ${e.reporter_name}`,
+           created_at: new Date().toISOString(),
+           is_read: false
+         };
+         setNotifications(prev => [newNotif, ...prev]);
+         setUnreadCount(prev => prev + 1);
+      });
+      
       // Listen to Private Channel for technician assignments if needed (Opsional)
       // echo.private(`user.${user.id}`).listen('.technician.assigned', (e) => {...})
       
       // Cleanup
       return () => {
          channel.stopListening('.report.status.updated');
+         channel.stopListening('.report.sla.breached');
+         channel.stopListening('.report.created');
       };
     }
   }, []);
@@ -208,7 +224,7 @@ export default function Header() {
                  ))}
                </div>
                <div className="px-4 py-2 border-t border-dark-border bg-dark-bg text-center cursor-pointer" onClick={handleMarkAllRead}>
-                 <span className="text-[11px] text-brand-primary font-medium hover:underline">Lihat Semua</span>
+                 <span className="text-[11px] text-brand-primary font-medium hover:underline">Tandai sudah dibaca</span>
                </div>
             </div>
           )}
