@@ -21,6 +21,7 @@ return [
 
     'allowed_origins' => [
         env('FRONTEND_URL', 'http://localhost:5173'),
+        'http://localhost:5174', // Added to handle Vite auto port increment
         'http://localhost:3000', // Next.js / CRA fallback
     ],
 
