@@ -4,8 +4,14 @@ import Pusher from 'pusher-js';
 window.Pusher = Pusher;
 
 const initEcho = () => {
-    // Only init if we actually have token
+    // Only init if we actually have token and Reverb is explicitly enabled
     const token = localStorage.getItem('token');
+    const isEnabled = import.meta.env.VITE_REVERB_ENABLED === 'true';
+
+    if (!isEnabled) {
+        console.log("Real-time Echo disabled (set VITE_REVERB_ENABLED=true in .env to enable)");
+        return null;
+    }
     
     return new Echo({
         broadcaster: 'reverb',

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, AlertTriangle, Plus, Loader2 } from 'lucide-react';
+import { Search, AlertTriangle, Plus, Loader2, X } from 'lucide-react';
 import { Avatar, Badge } from '../components/ui';
 import api from '../api';
 
@@ -12,6 +12,8 @@ export default function Assign() {
   
   // State untuk force override konfirmasi
   const [overrideConfirm, setOverrideConfirm] = useState(null); // { reportId, tech }
+  const [assignments, setAssignments] = useState([]);
+  const [cancelConfirm, setCancelConfirm] = useState(null); // { assignmentId, techName, reportNumber }
 
   useEffect(() => {
     fetchData();
@@ -20,12 +22,14 @@ export default function Assign() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [resReports, resTechs] = await Promise.all([
+      const [resReports, resTechs, resAssignments] = await Promise.all([
         api.get('/reports?sort_by=created_at&sort_dir=desc'),
-        api.get('/technicians')
+        api.get('/technicians'),
+        api.get('/assignments')
       ]);
       setReportsData(resReports.data.data || []);
       setTechnicians(resTechs.data || []);
+      setAssignments(resAssignments.data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -93,6 +97,16 @@ export default function Assign() {
     }
   };
 
+  const cancelAssignment = async (assignmentId) => {
+    try {
+      await api.delete(`/assignments/${assignmentId}`);
+      setCancelConfirm(null);
+      fetchData();
+    } catch (err) {
+      alert("Gagal membatalkan penugasan: " + (err.response?.data?.message || err.message));
+    }
+  };
+
   return (
     <div className="p-6 md:p-7 flex flex-col gap-6">
       
@@ -127,6 +141,32 @@ export default function Assign() {
                 }}
               >
                 Ya, Override
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Assignment Konfirmasi Dialog */}
+      {cancelConfirm && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-dark-bg/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-dark-card border border-ui-danger/40 rounded-xl w-full max-w-sm shadow-2xl p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-ui-danger/15 flex items-center justify-center border border-ui-danger/30">
+                <X className="w-5 h-5 text-ui-danger" />
+              </div>
+              <div className="font-bold text-ui-text text-[15px]">Batalkan Penugasan</div>
+            </div>
+            <p className="text-[13px] text-ui-dim mb-5 leading-relaxed">
+              Yakin ingin membatalkan penugasan <strong className="text-ui-text">{cancelConfirm.techName}</strong> dari laporan <strong className="text-brand-primary">{cancelConfirm.reportNumber}</strong>?
+            </p>
+            <div className="flex gap-3">
+              <button className="btn btn-ghost flex-1" onClick={() => setCancelConfirm(null)}>Kembali</button>
+              <button
+                className="btn btn-primary flex-1 bg-ui-danger hover:bg-ui-danger/80 border-ui-danger"
+                onClick={() => cancelAssignment(cancelConfirm.assignmentId)}
+              >
+                Ya, Batalkan
               </button>
             </div>
           </div>
@@ -259,14 +299,40 @@ export default function Assign() {
 
           <div className="card p-5">
             <h2 className="text-[14px] font-bold text-ui-text mb-4">Sedang Dikerjakan ({assigned.length})</h2>
-            <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-2">
+            <div className="flex flex-col gap-2 max-h-[400px] overflow-y-auto pr-2">
               {assigned.map(r => (
-                <div key={r.id} className="p-3 bg-dark-bg border border-dark-border rounded-lg flex items-center justify-between">
-                  <div>
-                    <div className="text-[12px] font-semibold text-ui-text truncate w-32 md:w-48">{r.title}</div>
-                    <div className="text-[10px] text-ui-dim mt-0.5">Teknisi: <strong className="text-ui-muted">{r.active_technicians.map(t => t.name.split(' ')[0]).join(', ')}</strong></div>
+                <div key={r.id} className="p-3 bg-dark-bg border border-dark-border rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-[10px] font-mono font-bold text-brand-primary">{r.report_number}</span>
+                        <Badge label={r.priority} priority={r.priority} />
+                      </div>
+                      <div className="text-[12px] font-semibold text-ui-text truncate">{r.title}</div>
+                    </div>
+                    <Badge label={r.status} status={r.status} />
                   </div>
-                  <Badge label={r.status} status={r.status} />
+                  <div className="flex flex-wrap gap-2 pt-2 border-t border-dark-border/50">
+                    {r.active_technicians.map(tech => {
+                      const assignment = assignments.find(a => a.report_id === r.id && a.technician_id === tech.id);
+                      const initials = tech.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                      return (
+                        <div key={tech.id} className="flex items-center gap-1.5 px-2 py-1 bg-dark-hover border border-dark-border rounded-md group hover:border-ui-danger/40 transition-colors">
+                          <Avatar initials={initials} size={16} success />
+                          <span className="text-[10px] text-ui-dim font-semibold">{tech.name.split(' ')[0]}</span>
+                          {assignment && (
+                            <button
+                              onClick={() => setCancelConfirm({ assignmentId: assignment.id, techName: tech.name, reportTitle: r.title, reportNumber: r.report_number })}
+                              className="ml-0.5 w-4 h-4 rounded-full bg-transparent hover:bg-ui-danger/20 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
+                              title="Batalkan penugasan"
+                            >
+                              <X size={10} className="text-ui-danger" />
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               ))}
               {assigned.length === 0 && <div className="text-[12px] text-ui-dim text-center p-4">Tidak ada laporan sedang dikerjakan.</div>}

@@ -31,7 +31,7 @@ class SlaController extends Controller
             if ($percentage > 95) $warningLevel = 'danger';
             if ($slaDeadline && $slaDeadline->isPast()) $warningLevel = 'expired';
 
-            $hoursLeft = $slaDeadline ? $now->diffInHours($slaDeadline, false) : null;
+            $hoursLeft = $slaDeadline ? round($now->diffInHours($slaDeadline, false)) : null;
             $timeText  = $hoursLeft === null
                 ? 'Tidak ada deadline'
                 : ($hoursLeft > 24
