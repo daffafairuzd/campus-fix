@@ -28,10 +28,13 @@ const MiniBarChart = ({ data, dataKey, maxKey, gradientFrom = "from-brand-primar
   if (!max) return <div className="h-20 flex items-center justify-center text-[10px] text-ui-muted">Tidak ada data</div>;
   
   return (
-    <div className="flex items-end gap-1.5 h-20">
+    <div className="flex items-end gap-2 h-32 w-full mt-4">
       {data.map((d, i) => (
-        <div key={i} className="flex-1 flex flex-col items-center gap-1">
-          <div className="w-full flex flex-col gap-0.5 h-[60px] justify-end relative">
+        <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative">
+          <div className="absolute -top-7 bg-dark-bg border border-dark-border text-ui-text font-mono text-[10px] px-1.5 py-0.5 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-20 pointer-events-none whitespace-nowrap">
+            {d[dataKey]}
+          </div>
+          <div className="w-full flex flex-col gap-0.5 h-[100px] justify-end relative cursor-pointer">
             {maxKey && (
               <div 
                 className="w-full bg-ui-muted/20 rounded-t-sm min-h-[2px] absolute bottom-0 left-0" 
@@ -110,31 +113,35 @@ export default function Dashboard() {
       {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Weekly trend - Masuk */}
-        <div className="card p-5">
+        <div className="card p-5 flex flex-col h-full">
           <div className="flex justify-between mb-4 items-start">
             <div>
               <div className="text-[13px] font-semibold text-ui-text">Tren Laporan Masuk</div>
               <div className="text-[11px] text-ui-muted">7 Hari Terakhir</div>
             </div>
           </div>
-          <MiniBarChart data={weekly} dataKey="laporan" />
+          <div className="flex-grow flex flex-col justify-center">
+            <MiniBarChart data={weekly} dataKey="laporan" />
+          </div>
         </div>
 
         {/* Weekly trend - Selesai */}
-        <div className="card p-5">
+        <div className="card p-5 flex flex-col h-full">
           <div className="flex justify-between mb-4 items-start">
             <div>
               <div className="text-[13px] font-semibold text-ui-text">Tren Laporan Selesai</div>
               <div className="text-[11px] text-ui-muted">7 Hari Terakhir</div>
             </div>
           </div>
-          <MiniBarChart 
-            data={weekly} 
-            dataKey="selesai" 
-            gradientFrom="from-emerald-500" 
-            gradientTo="to-emerald-500/50" 
-            shadowColor="rgba(16,185,129,0.4)"
-          />
+          <div className="flex-grow flex flex-col justify-center">
+            <MiniBarChart 
+              data={weekly} 
+              dataKey="selesai" 
+              gradientFrom="from-emerald-500" 
+              gradientTo="to-emerald-500/50" 
+              shadowColor="rgba(16,185,129,0.4)"
+            />
+          </div>
         </div>
 
         {/* Category breakdown */}
