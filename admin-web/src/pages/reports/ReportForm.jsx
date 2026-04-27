@@ -3,6 +3,13 @@ import { ArrowLeft, MapPin, Loader2 } from 'lucide-react';
 import api from '../../api';
 
 const DEFAULT_CENTER = [-6.9718, 107.6301];
+
+// Bounding box Telkom University Bandung (dengan sedikit padding)
+const CAMPUS_BOUNDS = [
+  [-6.9775, 107.6240], // Southwest corner
+  [-6.9655, 107.6365], // Northeast corner
+];
+const CAMPUS_MIN_ZOOM = 15;
 const CATEGORIES = ['Listrik','HVAC','Plumbing','Lab','Jaringan','Lift','Bangunan','Umum'];
 
 const fileToBase64 = (file) => new Promise((resolve, reject) => {
@@ -30,6 +37,16 @@ export default function ReportForm({ mode = 'add', initialData = null, onBack, o
   const mapInstance = useRef(null);
   const markerRef = useRef(null);
 
+  // Toast warning state untuk klik di luar kampus
+  const [outOfBoundsWarning, setOutOfBoundsWarning] = useState(false);
+  const warningTimerRef = useRef(null);
+
+  const showOutOfBoundsWarning = () => {
+    setOutOfBoundsWarning(true);
+    if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
+    warningTimerRef.current = setTimeout(() => setOutOfBoundsWarning(false), 3000);
+  };
+
   // Init map
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -38,20 +55,45 @@ export default function ReportForm({ mode = 'add', initialData = null, onBack, o
       const L = window.L;
       const lat = parseFloat(form.latitude) || DEFAULT_CENTER[0];
       const lng = parseFloat(form.longitude) || DEFAULT_CENTER[1];
-      const map = L.map(mapRef.current).setView([lat, lng], form.latitude ? 17 : 15);
+
+      const bounds = L.latLngBounds(CAMPUS_BOUNDS);
+
+      const map = L.map(mapRef.current, {
+        maxBounds: bounds,
+        maxBoundsViscosity: 1.0, // Tidak bisa keluar sama sekali
+        minZoom: CAMPUS_MIN_ZOOM,
+      }).setView([lat, lng], form.latitude ? 17 : 16);
+
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+
+      // Tambahkan overlay batas kampus (polygon transparan)
+      L.rectangle(bounds, {
+        color: '#dc2626',
+        weight: 2,
+        fillOpacity: 0.04,
+        dashArray: '6,4',
+      }).addTo(map).bindTooltip('Area Kampus Telkom University', { permanent: false, direction: 'top' });
+
       if (form.latitude && form.longitude) {
         markerRef.current = L.marker([parseFloat(form.latitude), parseFloat(form.longitude)]).addTo(map);
       }
+
       map.on('click', (e) => {
+        // Validasi: klik harus di dalam bounding box kampus
+        if (!bounds.contains(e.latlng)) {
+          showOutOfBoundsWarning();
+          return;
+        }
         if (markerRef.current) markerRef.current.remove();
         markerRef.current = L.marker([e.latlng.lat, e.latlng.lng]).addTo(map);
         setForm(p => ({ ...p, latitude: e.latlng.lat.toFixed(7), longitude: e.latlng.lng.toFixed(7) }));
       });
+
       mapInstance.current = map;
     }, 150);
     return () => {
       clearTimeout(timer);
+      if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
       if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; markerRef.current = null; }
     };
   }, []);
@@ -161,13 +203,21 @@ export default function ReportForm({ mode = 'add', initialData = null, onBack, o
         </div>
 
         {/* Right: Map */}
-        <div className="card overflow-hidden flex flex-col min-h-[500px]">
+        <div className="card overflow-hidden flex flex-col min-h-[500px] relative">
           <div className="px-4 pt-3 pb-2 border-b border-dark-border flex items-center gap-2">
             <MapPin className="w-3.5 h-3.5 text-brand-primary" />
             <span className="text-[10px] text-ui-muted font-bold tracking-wider">TITIK LOKASI DI PETA</span>
-            <span className="ml-auto text-[10px] text-ui-dim">(klik pada peta untuk menandai)</span>
+            <span className="ml-auto text-[10px] text-ui-dim">(klik dalam area kampus untuk menandai)</span>
           </div>
           <div ref={mapRef} className="flex-1" />
+
+          {/* Toast: klik di luar kampus */}
+          {outOfBoundsWarning && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[9999] bg-ui-danger/90 text-white text-[12px] font-semibold px-4 py-2 rounded-full shadow-lg flex items-center gap-2 animate-fade-in pointer-events-none">
+              <MapPin className="w-3.5 h-3.5" />
+              Titik di luar area Kampus Telkom University
+            </div>
+          )}
         </div>
       </div>
 
