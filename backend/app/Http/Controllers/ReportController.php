@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Report;
 use App\Models\ReportHistory;
+use App\Models\ReportPhoto;
 use App\Models\SlaConfig;
 use App\Models\Notification;
 use App\Events\ReportStatusUpdated;
@@ -91,11 +92,66 @@ class ReportController extends Controller
             'category'    => 'sometimes|string',
             'location'    => 'sometimes|string',
             'priority'    => 'sometimes|in:kritis,tinggi,sedang,rendah',
+            'latitude'    => 'nullable|numeric',
+            'longitude'   => 'nullable|numeric',
             'photo_urls'  => 'nullable|array',
         ]);
 
         $report->update($validated);
         return response()->json($report->fresh()->load(['reporter', 'activeTechnicians']));
+    }
+
+    // ── Photo endpoints ──────────────────────────────────────────────────────
+
+    /**
+     * List semua foto laporan
+     */
+    public function photos(Report $report)
+    {
+        $photos = $report->photos()
+            ->select('id', 'report_id', 'original_name', 'mime_type', 'type', 'photo_data', 'created_at')
+            ->get();
+        return response()->json($photos);
+    }
+
+    /**
+     * Upload foto (base64 data URI) ke tabel report_photos di PostgreSQL
+     */
+    public function uploadPhoto(Request $request, Report $report)
+    {
+        $request->validate([
+            'photo_data'    => 'required|string',
+            'original_name' => 'nullable|string|max:255',
+            'mime_type'     => 'nullable|string|max:50',
+            'type'          => 'nullable|in:bukti_laporan,bukti_penyelesaian',
+        ]);
+
+        if ($report->photos()->count() >= 5) {
+            return response()->json(['message' => 'Maksimal 5 foto per laporan.'], 422);
+        }
+
+        $photo = $report->photos()->create([
+            'uploader_id'   => $request->user()->id,
+            'photo_data'    => $request->photo_data,
+            'original_name' => $request->original_name,
+            'mime_type'     => $request->mime_type,
+            'type'          => $request->type ?? 'bukti_laporan',
+        ]);
+
+        return response()->json($photo, 201);
+    }
+
+    /**
+     * Hapus foto dari laporan
+     */
+    public function deletePhoto(Request $request, Report $report, ReportPhoto $photo)
+    {
+        if ($photo->report_id !== $report->id) {
+            return response()->json(['message' => 'Foto tidak ditemukan di laporan ini.'], 404);
+        }
+
+        $photo->delete();
+        return response()->json(['message' => 'Foto berhasil dihapus.']);
     }
 
     public function destroy(Report $report)

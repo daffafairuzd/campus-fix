@@ -8,7 +8,7 @@ class Report extends Model
 {
     protected $fillable = [
         'report_number', 'title', 'description', 'category', 'location',
-        'building', 'floor', 'status', 'priority', 'photo_urls', 'proof_photo_urls',
+        'building', 'floor', 'status', 'priority',
         'latitude', 'longitude', 'reporter_id', 'sla_deadline',
         'escalated_at', 'closed_at', 'rating', 'feedback_text',
     ];
@@ -16,11 +16,9 @@ class Report extends Model
     protected function casts(): array
     {
         return [
-            'photo_urls'       => 'array',
-            'proof_photo_urls' => 'array',
-            'sla_deadline'     => 'datetime',
-            'escalated_at'     => 'datetime',
-            'closed_at'        => 'datetime',
+            'sla_deadline'  => 'datetime',
+            'escalated_at'  => 'datetime',
+            'closed_at'     => 'datetime',
         ];
     }
 
@@ -44,6 +42,11 @@ class Report extends Model
     public function histories()
     {
         return $this->hasMany(ReportHistory::class)->orderBy('created_at', 'asc');
+    }
+
+    public function photos()
+    {
+        return $this->hasMany(ReportPhoto::class)->orderBy('created_at', 'asc');
     }
 
     public function slaConfig()

@@ -7,7 +7,7 @@ import Assign from './pages/Assign';
 import Analytics from './pages/Analytics';
 import Users from './pages/Users';
 import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
+import ForgotPassword from './pages/auth/ForgotPassword';
 import SlaTracking from './pages/SlaTracking';
 
 // Protected Route Wrapper
@@ -46,7 +46,7 @@ export default function App() {
       <Routes>
         {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         
         {/* Protected Dashboard Routes */}
         <Route path="/" element={

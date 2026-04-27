@@ -16,11 +16,16 @@ use App\Http\Controllers\NotificationController;
 |--------------------------------------------------------------------------
 */
 
-// ─── Public Routes (tidak perlu auth) ────────────────────────────────────
+// --- Public Routes ---
 Route::post('/auth/login',    [AuthController::class, 'login']);
 Route::post('/auth/register', [AuthController::class, 'register']); // hanya pelapor
 
-// ─── Protected Routes (butuh token Sanctum) ──────────────────────────────
+// Forgot Password (OTP Flow) — public, tidak butuh token
+Route::post('/auth/forgot-password/send-otp',  [AuthController::class, 'sendOtp']);
+Route::post('/auth/forgot-password/verify-otp',[AuthController::class, 'verifyOtp']);
+Route::post('/auth/forgot-password/reset',     [AuthController::class, 'resetPassword']);
+
+// --- Protected Routes ---
 Route::middleware('auth:sanctum')->group(function () {
 
     // Auth
@@ -28,7 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/me',               [AuthController::class, 'me']);
     Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
 
-    // Reports — semua role bisa GET, hanya admin yg bisa DELETE
+    // Reports
     Route::get('/reports',                    [ReportController::class, 'index']);
     Route::post('/reports',                   [ReportController::class, 'store']);
     Route::get('/reports/{report}',           [ReportController::class, 'show']);
@@ -36,6 +41,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/reports/{report}',        [ReportController::class, 'destroy']);
     Route::post('/reports/{report}/status',   [ReportController::class, 'updateStatus']);
     Route::post('/reports/{report}/rate',     [ReportController::class, 'rate']);
+
+    // Report Photos — simpan base64 ke PostgreSQL
+    Route::get('/reports/{report}/photos',                      [ReportController::class, 'photos']);
+    Route::post('/reports/{report}/photos',                     [ReportController::class, 'uploadPhoto']);
+    Route::delete('/reports/{report}/photos/{photo}',           [ReportController::class, 'deletePhoto']);
 
     // Assignments — admin only
     Route::get('/assignments',               [AssignmentController::class, 'index']);
@@ -46,7 +56,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/technicians',               [TechnicianController::class, 'index']);
     Route::put('/technicians/{technician}',  [TechnicianController::class, 'update']);
 
-    // Users — admin only
+    // Users
     Route::get('/users',           [UserController::class, 'index']);
     Route::post('/users',          [UserController::class, 'store']);
     Route::put('/users/{user}',    [UserController::class, 'update']);
@@ -55,18 +65,19 @@ Route::middleware('auth:sanctum')->group(function () {
     // SLA Tracking
     Route::get('/sla', [SlaController::class, 'index']);
 
-    // Analytics / Dashboard
-    Route::prefix('analytics')->group(function () {
-        Route::get('/overview',    [AnalyticsController::class, 'overview']);
-        Route::get('/weekly',      [AnalyticsController::class, 'weekly']);
-        Route::get('/monthly',     [AnalyticsController::class, 'monthly']);
-        Route::get('/categories',  [AnalyticsController::class, 'categories']);
-        Route::get('/technicians', [AnalyticsController::class, 'technicianPerformance']);
-    });
+    // Analytics
+    Route::get('/analytics/overview', 'App\Http\Controllers\AnalyticsController@overview');
+    Route::get('/analytics/weekly', 'App\Http\Controllers\AnalyticsController@weekly');
+    Route::get('/analytics/monthly', 'App\Http\Controllers\AnalyticsController@monthly');
+    Route::get('/analytics/categories', 'App\Http\Controllers\AnalyticsController@categories');
+    Route::get('/analytics/technicians', 'App\Http\Controllers\AnalyticsController@technicianPerformance');
+    Route::get('/analytics/reporters', 'App\Http\Controllers\AnalyticsController@topReporters');
+    Route::get('/analytics/advanced-stats', 'App\Http\Controllers\AnalyticsController@advancedStats');
 
     // Notifications
     Route::get('/notifications',                        [NotificationController::class, 'index']);
     Route::patch('/notifications/{notification}/read',  [NotificationController::class, 'markRead']);
+    // Notification read all
     Route::post('/notifications/read-all',              [NotificationController::class, 'markAllRead']);
     Route::delete('/notifications/delete-all',          [NotificationController::class, 'deleteAll']);
     Route::delete('/notifications/{notification}',      [NotificationController::class, 'destroy']);

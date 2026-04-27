@@ -23,7 +23,7 @@ const StatCard = ({ label, value, sub, icon: IconCard, accentColor, trend, class
   </div>
 );
 
-const MiniBarChart = ({ data, dataKey, maxKey }) => {
+const MiniBarChart = ({ data, dataKey, maxKey, gradientFrom = "from-brand-primary", gradientTo = "to-brand-primary/50", shadowColor = "rgba(220,38,38,0.4)" }) => {
   const max = Math.max(...data.map(d => Math.max(d[dataKey] || 0, d[maxKey] || 0)));
   if (!max) return <div className="h-20 flex items-center justify-center text-[10px] text-ui-muted">Tidak ada data</div>;
   
@@ -39,8 +39,8 @@ const MiniBarChart = ({ data, dataKey, maxKey }) => {
               ></div>
             )}
             <div 
-              className="w-full bg-gradient-to-b from-brand-primary to-brand-primary/50 rounded-t-sm min-h-[3px] shadow-[0_0_8px_rgba(220,38,38,0.4)] absolute bottom-0 left-0 z-10"
-              style={{ height: `${(d[dataKey] / max) * 100}%` }}
+              className={`w-full bg-gradient-to-b ${gradientFrom} ${gradientTo} rounded-t-sm min-h-[3px] absolute bottom-0 left-0 z-10`}
+              style={{ height: `${(d[dataKey] / max) * 100}%`, boxShadow: `0 0 8px ${shadowColor}` }}
             ></div>
           </div>
           <div className="text-[9px] text-ui-muted tracking-widest">{d.day || d.month}</div>
@@ -108,20 +108,33 @@ export default function Dashboard() {
       </div>
 
       {/* Charts row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Weekly trend */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Weekly trend - Masuk */}
         <div className="card p-5">
           <div className="flex justify-between mb-4 items-start">
             <div>
-              <div className="text-[13px] font-semibold text-ui-text">Tren Laporan Mingguan</div>
+              <div className="text-[13px] font-semibold text-ui-text">Tren Laporan Masuk</div>
               <div className="text-[11px] text-ui-muted">7 Hari Terakhir</div>
             </div>
-            <div className="flex gap-3 text-[10px] text-ui-muted items-center">
-              <span className="flex items-center"><span className="dot bg-brand-primary mr-1" />Masuk</span>
-              <span className="flex items-center"><span className="dot bg-ui-muted/50 mr-1" />Selesai</span>
+          </div>
+          <MiniBarChart data={weekly} dataKey="laporan" />
+        </div>
+
+        {/* Weekly trend - Selesai */}
+        <div className="card p-5">
+          <div className="flex justify-between mb-4 items-start">
+            <div>
+              <div className="text-[13px] font-semibold text-ui-text">Tren Laporan Selesai</div>
+              <div className="text-[11px] text-ui-muted">7 Hari Terakhir</div>
             </div>
           </div>
-          <MiniBarChart data={weekly} dataKey="laporan" maxKey="selesai" />
+          <MiniBarChart 
+            data={weekly} 
+            dataKey="selesai" 
+            gradientFrom="from-emerald-500" 
+            gradientTo="to-emerald-500/50" 
+            shadowColor="rgba(16,185,129,0.4)"
+          />
         </div>
 
         {/* Category breakdown */}
