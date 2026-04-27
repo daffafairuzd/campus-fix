@@ -20,6 +20,11 @@ use App\Http\Controllers\NotificationController;
 Route::post('/auth/login',    [AuthController::class, 'login']);
 Route::post('/auth/register', [AuthController::class, 'register']); // hanya pelapor
 
+// Forgot Password (OTP Flow) — public, tidak butuh token
+Route::post('/auth/forgot-password/send-otp',  [AuthController::class, 'sendOtp']);
+Route::post('/auth/forgot-password/verify-otp',[AuthController::class, 'verifyOtp']);
+Route::post('/auth/forgot-password/reset',     [AuthController::class, 'resetPassword']);
+
 // ─── Protected Routes (butuh token Sanctum) ──────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -36,6 +41,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/reports/{report}',        [ReportController::class, 'destroy']);
     Route::post('/reports/{report}/status',   [ReportController::class, 'updateStatus']);
     Route::post('/reports/{report}/rate',     [ReportController::class, 'rate']);
+
+    // Report Photos — simpan base64 ke PostgreSQL
+    Route::get('/reports/{report}/photos',                      [ReportController::class, 'photos']);
+    Route::post('/reports/{report}/photos',                     [ReportController::class, 'uploadPhoto']);
+    Route::delete('/reports/{report}/photos/{photo}',           [ReportController::class, 'deletePhoto']);
 
     // Assignments — admin only
     Route::get('/assignments',               [AssignmentController::class, 'index']);

@@ -3,9 +3,13 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\OtpMail;
+use App\Models\PasswordResetOtp;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -120,6 +124,101 @@ class AuthController extends Controller
         ]);
 
         return response()->json(['message' => 'Password berhasil diubah.']);
+    }
+
+    // ── Forgot Password (OTP Flow) ────────────────────────────────────────────
+
+    /**
+     * Step 1: Kirim OTP ke email
+     */
+    public function sendOtp(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $user = User::where('email', $request->email)->first();
+
+        // Selalu kembalikan sukses agar tidak bocorkan info user mana yang terdaftar
+        if (!$user) {
+            return response()->json(['message' => 'Jika email terdaftar, kode OTP akan dikirim.']);
+        }
+
+        // Invalidate OTP lama
+        PasswordResetOtp::where('email', $request->email)->update(['used' => true]);
+
+        // Buat OTP 6 digit
+        $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        PasswordResetOtp::create([
+            'email'      => $request->email,
+            'otp'        => $otp,
+            'used'       => false,
+            'expires_at' => Carbon::now()->addMinutes(10),
+        ]);
+
+        // Kirim email
+        Mail::to($user->email)->send(new OtpMail($otp, $user->name));
+
+        return response()->json(['message' => 'Kode OTP telah dikirim ke email Anda.']);
+    }
+
+    /**
+     * Step 2: Verifikasi OTP
+     */
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'otp'   => 'required|string|size:6',
+        ]);
+
+        $record = PasswordResetOtp::where('email', $request->email)
+            ->where('otp', $request->otp)
+            ->where('used', false)
+            ->latest()
+            ->first();
+
+        if (!$record || $record->isExpired()) {
+            return response()->json(['message' => 'Kode OTP tidak valid atau sudah kadaluarsa.'], 422);
+        }
+
+        return response()->json(['message' => 'OTP valid.', 'verified' => true]);
+    }
+
+    /**
+     * Step 3: Reset password setelah OTP terverifikasi
+     */
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'email'                 => 'required|email',
+            'otp'                   => 'required|string|size:6',
+            'password'              => 'required|string|min:8|confirmed',
+        ]);
+
+        $record = PasswordResetOtp::where('email', $request->email)
+            ->where('otp', $request->otp)
+            ->where('used', false)
+            ->latest()
+            ->first();
+
+        if (!$record || $record->isExpired()) {
+            return response()->json(['message' => 'Kode OTP tidak valid atau sudah kadaluarsa.'], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+        if (!$user) {
+            return response()->json(['message' => 'User tidak ditemukan.'], 404);
+        }
+
+        $user->update([
+            'password'             => Hash::make($request->password),
+            'must_change_password' => false,
+        ]);
+
+        // Tandai OTP sudah dipakai
+        $record->update(['used' => true]);
+
+        return response()->json(['message' => 'Password berhasil direset. Silakan login dengan password baru.']);
     }
 
     private function formatUser(User $user): array

@@ -85,7 +85,7 @@ export default function Login() {
           <div>
             <div className="flex justify-between items-center mb-1.5">
               <label className="block text-[11px] font-semibold tracking-wider text-ui-muted">PASSWORD</label>
-              <a href="#" className="text-[11px] text-brand-primary hover:text-brand-secondary">Lupa Password?</a>
+              <Link to="/forgot-password" className="text-[11px] text-brand-primary hover:text-brand-secondary">Lupa Password?</Link>
             </div>
             <input 
               type="password" 
@@ -106,9 +106,8 @@ export default function Login() {
           </button>
         </form>
 
-        <div className="mt-6 text-center text-xs text-ui-muted relative z-10">
-          Belum memilik akun? <Link to="/register" className="text-brand-primary hover:text-brand-secondary font-medium">Register Tim Baru</Link>
-        </div>
+
+
       </div>
     </div>
   );
