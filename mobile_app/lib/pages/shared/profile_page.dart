@@ -74,7 +74,7 @@ class _ProfilePageState extends State<ProfilePage> {
             style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w800)),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 160),
         children: [
           // Profile Card
           Container(

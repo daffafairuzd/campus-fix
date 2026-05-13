@@ -11,10 +11,12 @@ import '../models/report_model.dart';
 /// - Android Emulator      → 10.0.2.2:8000
 /// - Device fisik (iOS/Android) → ganti dengan IP lokal PC kamu
 String get _baseUrl {
+  // Alamat IP lokal laptop agar bisa diakses dari HP fisik (satu jaringan Wi-Fi)
+  const String localIp = '192.168.18.15';
+
   if (kIsWeb) return 'http://localhost:8000/api';
-  if (Platform.isAndroid) return 'http://10.0.2.2:8000/api';
-  if (Platform.isIOS) return 'http://localhost:8000/api'; // iOS Simulator
-  return 'http://localhost:8000/api'; // Windows / macOS / Linux desktop
+  if (Platform.isAndroid || Platform.isIOS) return 'http://$localIp:8000/api';
+  return 'http://localhost:8000/api';
 }
 
 class ApiService {
@@ -199,6 +201,17 @@ class ApiService {
     return [];
   }
 
+  /// Ambil detail lengkap satu laporan (termasuk foto & history detail)
+  Future<FacilityReport> getReport(int id) async {
+    final res = await http.get(_uri('/reports/$id'), headers: _headers);
+
+    if (res.statusCode == 200) {
+      return FacilityReport.fromJson(jsonDecode(res.body));
+    }
+    _handleError(res);
+    throw Exception('Gagal memuat detail laporan');
+  }
+
   /// Laporan yang di-assign ke teknisi yang sedang login
   Future<List<FacilityReport>> getTeknisiTasks() async {
     final res = await http.get(
@@ -236,6 +249,8 @@ class ApiService {
     required String category,
     required String location,
     required String description,
+    double? latitude,
+    double? longitude,
   }) async {
     final res = await http.post(
       _uri('/reports'),
@@ -246,13 +261,16 @@ class ApiService {
         'category': category,
         'location': location,
         'priority': 'rendah', // default, admin yang akan mengubah
+        'latitude': latitude,
+        'longitude': longitude,
       }),
     );
 
     if (res.statusCode == 201 || res.statusCode == 200) {
       final body = jsonDecode(res.body) as Map<String, dynamic>;
       // Return report id untuk upload foto
-      return body['id'] as int? ?? body['report']?['id'] as int? ?? 0;
+      final rawId = body['id'] ?? body['report']?['id'];
+      return int.tryParse(rawId?.toString() ?? '0') ?? 0;
     }
     _handleError(res);
     return 0;
@@ -270,8 +288,10 @@ class ApiService {
       _uri('/reports/$reportId/photos'),
       headers: _headers,
       body: jsonEncode({
-        'data': base64Str,
+        'photo_data': base64Str,
         'mime_type': mime,
+        'original_name': imageFile.path.split('/').last,
+        'type': 'bukti_laporan',
       }),
     );
 

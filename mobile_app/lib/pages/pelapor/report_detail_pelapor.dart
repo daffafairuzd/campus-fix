@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -30,6 +32,28 @@ class _ReportDetailPelaporState extends State<ReportDetailPelapor> {
       _rating = _report.rating!;
       _feedbackController.text = _report.feedback ?? '';
       _feedbackSubmitted = true;
+    }
+    
+    // Ambil data terbaru dari API (untuk memuat foto & detail lengkap)
+    _refreshReport();
+  }
+
+  Future<void> _refreshReport() async {
+    try {
+      final freshReport = await api.getReport(_report.id);
+      if (mounted) {
+        setState(() {
+          _report = freshReport;
+          // Sync rating jika baru saja disubmit dari backend lain
+          if (_report.rating != null) {
+            _rating = _report.rating!;
+            _feedbackController.text = _report.feedback ?? '';
+            _feedbackSubmitted = true;
+          }
+        });
+      }
+    } catch (_) {
+      // Abaikan error refresh, pakai data lama
     }
   }
 
@@ -255,11 +279,21 @@ class _PhotoSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (report.photoUrl.isNotEmpty) {
+      // Jika berisi base64 (diawali dengan data:image atau langsung string base64)
+      final isBase64 = !report.photoUrl.startsWith('http');
+      
       return SizedBox(
         height: 220,
         width: double.infinity,
-        child: Image.network(report.photoUrl, fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => _placeholder()),
+        child: isBase64 
+          ? Image.memory(
+              base64Decode(report.photoUrl.contains(',') 
+                ? report.photoUrl.split(',')[1] 
+                : report.photoUrl),
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => _placeholder())
+          : Image.network(report.photoUrl, fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => _placeholder()),
       );
     }
     return _placeholder();

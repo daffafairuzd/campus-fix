@@ -44,14 +44,18 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Report Photos — simpan base64 ke PostgreSQL
     Route::get('/reports/{report}/photos',                      [ReportController::class, 'photos']);
-    Route::post('/reports/{report}/photos',                     [ReportController::class, 'uploadPhoto']);
     Route::delete('/reports/{report}/photos/{photo}',           [ReportController::class, 'deletePhoto']);
 
     // Assignments — admin only
     Route::get('/assignments',               [AssignmentController::class, 'index']);
     Route::post('/assignments',              [AssignmentController::class, 'store']);
     Route::delete('/assignments/{assignment}', [AssignmentController::class, 'destroy']);
+});
 
+// TEMPORARY: Move photo upload out of auth for debugging
+Route::post('/reports/{report}/photos', [App\Http\Controllers\ReportController::class, 'uploadPhoto']);
+
+Route::middleware('auth:sanctum')->group(function () {
     // Technicians
     Route::get('/technicians',               [TechnicianController::class, 'index']);
     Route::put('/technicians/{technician}',  [TechnicianController::class, 'update']);

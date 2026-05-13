@@ -56,11 +56,19 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
   const handlePhotoUpload = async (e) => {
     const files = Array.from(e.target.files).slice(0, 5 - photos.length);
     if (!files.length) return;
+    console.log('Uploading files:', files);
     setIsUploadingPhoto(true);
     try {
       for (const file of files) {
-        const b64 = await fileToBase64(file);
-        await api.post(`/reports/${currentReport.id}/photos`, { photo_data: b64, original_name: file.name, mime_type: file.type, type: 'bukti_laporan' });
+        const fullB64 = await fileToBase64(file);
+        // Ambil hanya raw base64 setelah tanda koma
+        const rawB64 = fullB64.split(',')[1];
+        await api.post(`/reports/${currentReport.id}/photos`, { 
+          photo_data: rawB64, 
+          original_name: file.name, 
+          mime_type: file.type, 
+          type: 'bukti_laporan' 
+        });
       }
       await fetchPhotos();
     } catch (err) { alert('Gagal upload: ' + (err.response?.data?.message || err.message)); }
@@ -193,9 +201,18 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                   {photos.map(photo => (
                     <div key={photo.id} className="relative group rounded-xl overflow-hidden border border-dark-border bg-dark-bg aspect-square">
-                      <img src={photo.photo_data} alt={photo.original_name || 'foto'} className="w-full h-full object-cover" />
+                      <img 
+                        src={photo.photo_data.startsWith('data:') ? photo.photo_data : `data:${photo.mime_type || 'image/jpeg'};base64,${photo.photo_data}`} 
+                        alt={photo.original_name || 'foto'} 
+                        className="w-full h-full object-cover" 
+                      />
                       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                        <a href={photo.photo_data} target="_blank" rel="noreferrer" className="p-2 bg-dark-card/80 rounded-lg hover:bg-dark-card">
+                        <a 
+                          href={photo.photo_data.startsWith('data:') ? photo.photo_data : `data:${photo.mime_type || 'image/jpeg'};base64,${photo.photo_data}`} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className="p-2 bg-dark-card/80 rounded-lg hover:bg-dark-card"
+                        >
                           <Search className="w-4 h-4 text-white" />
                         </a>
                         <button onClick={() => handleDeletePhoto(photo.id)} className="p-2 bg-red-500/80 rounded-lg hover:bg-red-500">

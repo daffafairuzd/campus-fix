@@ -18,6 +18,16 @@ class ReportController extends Controller
     public function index(Request $request)
     {
         $query = Report::with(['reporter', 'activeTechnicians', 'histories'])
+            // Filter berdasarkan role
+            ->when($request->user()->isReporter(), function($q) use ($request) {
+                return $q->where('reporter_id', $request->user()->id);
+            })
+            ->when($request->user()->isTechnician(), function($q) use ($request) {
+                return $q->whereHas('activeTechnicians', function($q2) use ($request) {
+                    $q2->where('technician_id', $request->user()->id);
+                });
+            })
+            // Filter request
             ->when($request->status,   fn($q) => $q->where('status', $request->status))
             ->when($request->priority, fn($q) => $q->where('priority', $request->priority))
             ->when($request->category, fn($q) => $q->where('category', $request->category))
@@ -44,7 +54,7 @@ class ReportController extends Controller
     public function show(Report $report)
     {
         return response()->json(
-            $report->load(['reporter', 'activeTechnicians', 'histories.user', 'slaConfig'])
+            $report->load(['reporter', 'activeTechnicians', 'histories.user', 'slaConfig', 'photos'])
         );
     }
 
@@ -136,19 +146,26 @@ class ReportController extends Controller
      */
     public function uploadPhoto(Request $request, Report $report)
     {
-        $request->validate([
+        \Log::info('Upload photo attempt for report: ' . $report->id, $request->except('photo_data'));
+        
+        $validator = \Validator::make($request->all(), [
             'photo_data'    => 'required|string',
             'original_name' => 'nullable|string|max:255',
             'mime_type'     => 'nullable|string|max:50',
             'type'          => 'nullable|in:bukti_laporan,bukti_penyelesaian',
         ]);
 
+        if ($validator->fails()) {
+            \Log::error('Validation failed for photo upload', $validator->errors()->toArray());
+            return response()->json(['message' => 'Validation failed', 'errors' => $validator->errors()], 422);
+        }
+
         if ($report->photos()->count() >= 5) {
             return response()->json(['message' => 'Maksimal 5 foto per laporan.'], 422);
         }
 
         $photo = $report->photos()->create([
-            'uploader_id'   => $request->user()->id,
+            'uploader_id'   => $request->user()?->id,
             'photo_data'    => $request->photo_data,
             'original_name' => $request->original_name,
             'mime_type'     => $request->mime_type,

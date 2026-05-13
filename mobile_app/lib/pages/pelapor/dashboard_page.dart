@@ -4,7 +4,6 @@ import '../../models/user_model.dart';
 import '../../models/report_model.dart';
 import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/stat_card.dart';
 import '../../widgets/report_card.dart';
 import '../../widgets/campus_fix_logo.dart';
 import '../../widgets/theme_toggle_button.dart';
@@ -36,9 +35,6 @@ class _DashboardPageState extends State<DashboardPage> {
     if (mounted) setState(() { _reports = data; _isLoading = false; });
   }
 
-  int get _activeCount => _reports.where((r) => r.status == ReportStatus.dalamProses).length;
-  int get _completedCount => _reports.where((r) => r.status == ReportStatus.selesai).length;
-  int get _pendingCount => _reports.where((r) => r.status == ReportStatus.menunggu).length;
 
   @override
   Widget build(BuildContext context) {
@@ -72,8 +68,8 @@ class _DashboardPageState extends State<DashboardPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 8),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 20),
+                          const SizedBox(height: 32),
                           Text(
                             'Halo, ${widget.session.name.split(' ').first}! 👋',
                             style: GoogleFonts.spaceGrotesk(
@@ -98,40 +94,6 @@ class _DashboardPageState extends State<DashboardPage> {
               title: const CampusFixLogoLight(iconSize: 24, fontSize: 16),
               actions: [
                 const ThemeToggleButton(),
-                const SizedBox(width: 8),
-                Builder(
-                  builder: (context) => GestureDetector(
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => NotificationPage(session: widget.session),
-                      ),
-                    ),
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(7),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(Icons.notifications_outlined, color: Colors.white, size: 20),
-                        ),
-                        if (api.unreadCount > 0) // updated by api after getNotifications()
-                          Positioned(
-                            top: -2, right: -2,
-                            child: Container(
-                              width: 9, height: 9,
-                              decoration: const BoxDecoration(
-                                color: Colors.amber, shape: BoxShape.circle,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
                 const SizedBox(width: 12),
               ],
             ),
@@ -149,41 +111,6 @@ class _DashboardPageState extends State<DashboardPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Stats row
-                          Row(
-                            children: [
-                              Expanded(
-                                child: StatCard(
-                                  label: 'Aktif',
-                                  value: _activeCount.toString(),
-                                  subtitle: 'Dalam proses',
-                                  icon: Icons.pending_actions_rounded,
-                                  accentColor: AppColors.statusInProgress,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: StatCard(
-                                  label: 'Selesai',
-                                  value: _completedCount.toString(),
-                                  subtitle: 'Berhasil',
-                                  icon: Icons.task_alt_rounded,
-                                  accentColor: AppColors.statusCompleted,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: StatCard(
-                                  label: 'Menunggu',
-                                  value: _pendingCount.toString(),
-                                  subtitle: 'Antri Admin',
-                                  icon: Icons.hourglass_top_rounded,
-                                  accentColor: AppColors.statusAccepted,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
 
                           // Quick Action banner
                           Container(
@@ -282,6 +209,9 @@ class _DashboardPageState extends State<DashboardPage> {
                         ],
                       ),
                     ),
+            ),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 160),
             ),
           ],
         ),

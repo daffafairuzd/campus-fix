@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -160,14 +161,25 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
             // Photo
             Container(
               height: 200,
+              width: double.infinity,
               color: const Color(0xFF0A0F14),
               child: report.photoUrl.isNotEmpty
-                  ? Image.file(File(report.photoUrl), fit: BoxFit.cover, width: double.infinity)
+                  ? (report.photoUrl.startsWith('http')
+                      ? Image.network(report.photoUrl, fit: BoxFit.cover)
+                      : Image.memory(
+                          base64Decode(report.photoUrl.contains(',')
+                              ? report.photoUrl.split(',')[1]
+                              : report.photoUrl),
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const Center(
+                              child: Icon(Icons.broken_image, color: Colors.white24)),
+                        ))
                   : Center(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.image_outlined, size: 40, color: AppColors.textMuted),
+                          Icon(Icons.image_outlined,
+                              size: 40, color: AppColors.textMuted),
                           const SizedBox(height: 8),
                           Text('Foto dari pelapor belum tersedia',
                               style: GoogleFonts.spaceGrotesk(

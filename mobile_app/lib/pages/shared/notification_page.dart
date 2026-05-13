@@ -47,10 +47,7 @@ class _NotificationPageState extends State<NotificationPage> {
       appBar: AppBar(
         title: Text('Notifikasi',
             style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w800)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => Navigator.pop(context),
-        ),
+        automaticallyImplyLeading: false,
         actions: [
           if (unread > 0)
             TextButton(
@@ -71,7 +68,7 @@ class _NotificationPageState extends State<NotificationPage> {
                   onRefresh: _loadNotifications,
                   color: AppColors.primary,
                   child: ListView(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 160),
                     children: [
                       if (unread > 0) ...[
                         Container(

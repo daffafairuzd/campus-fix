@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../models/user_model.dart';
 import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
@@ -21,6 +22,9 @@ class _CreateReportPageState extends State<CreateReportPage> {
   String _category = 'Listrik';
   File? _selectedImage;
   bool _isLoading = false;
+  bool _isFetchingLocation = false;
+  double? _latitude;
+  double? _longitude;
   final _picker = ImagePicker();
 
   final List<Map<String, dynamic>> _categories = [
@@ -37,6 +41,51 @@ class _CreateReportPageState extends State<CreateReportPage> {
     _locationController.dispose();
     _descController.dispose();
     super.dispose();
+  }
+
+  Future<void> _getCurrentLocation() async {
+    debugPrint('GPS Button Pressed: Fetching location...');
+    setState(() => _isFetchingLocation = true);
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        throw 'Layanan lokasi (GPS) tidak aktif. Mohon aktifkan GPS Anda.';
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          throw 'Izin lokasi ditolak.';
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        throw 'Izin lokasi ditolak permanen, mohon aktifkan di pengaturan.';
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      if (mounted) {
+        setState(() {
+          _latitude = position.latitude;
+          _longitude = position.longitude;
+          _isFetchingLocation = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Lokasi GPS berhasil didapatkan!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isFetchingLocation = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.danger),
+        );
+      }
+    }
   }
 
   Future<void> _pickImage(ImageSource source) async {
@@ -135,14 +184,20 @@ class _CreateReportPageState extends State<CreateReportPage> {
             ? 'Lokasi belum ditentukan'
             : _locationController.text.trim(),
         description: _descController.text.trim(),
+        latitude: _latitude,
+        longitude: _longitude,
       );
 
       // Upload foto jika ada (base64 ke endpoint terpisah)
       if (_selectedImage != null && reportId > 0) {
         try {
           await api.uploadPhoto(reportId, _selectedImage!);
-        } catch (_) {
-          // Foto gagal upload — laporan tetap berhasil dibuat
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Foto gagal diunggah: $e')),
+            );
+          }
         }
       }
 
@@ -159,12 +214,9 @@ class _CreateReportPageState extends State<CreateReportPage> {
             ),
           ),
         );
-        _titleController.clear();
-        _locationController.clear();
-        _descController.clear();
-        setState(() {
-          _selectedImage = null;
-          _category = 'Listrik';
+        // Tunggu sebentar agar user bisa melihat SnackBar atau langsung pindah
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) Navigator.pop(context, true);
         });
       }
     } catch (e) {
@@ -193,7 +245,11 @@ class _CreateReportPageState extends State<CreateReportPage> {
       appBar: AppBar(
         title: Text('Buat Laporan Baru',
             style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w700)),
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -333,10 +389,24 @@ class _CreateReportPageState extends State<CreateReportPage> {
             _SectionLabel('LOKASI'),
             TextField(
               controller: _locationController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Gedung / lantai / ruangan',
-                prefixIcon: Icon(Icons.location_on_outlined),
-                suffixIcon: Icon(Icons.gps_fixed_rounded, color: AppColors.primary),
+                prefixIcon: const Icon(Icons.location_on_outlined),
+                helperText: _latitude != null ? 'GPS Aktif: $_latitude, $_longitude' : null,
+                helperStyle: GoogleFonts.spaceGrotesk(color: AppColors.success, fontSize: 11, fontWeight: FontWeight.w600),
+                suffixIcon: _isFetchingLocation
+                    ? const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                      )
+                    : IconButton(
+                        icon: Icon(
+                          _latitude != null ? Icons.gps_fixed_rounded : Icons.gps_not_fixed_rounded,
+                          color: _latitude != null ? AppColors.success : AppColors.primary,
+                        ),
+                        onPressed: _getCurrentLocation,
+                        tooltip: 'Ambil lokasi GPS saat ini',
+                      ),
               ),
             ),
             const SizedBox(height: 16),

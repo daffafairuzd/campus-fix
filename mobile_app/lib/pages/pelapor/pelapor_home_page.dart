@@ -43,38 +43,22 @@ class _PelaporHomePageState extends State<PelaporHomePage>
     _navSlide = CurvedAnimation(parent: _navAnim, curve: Curves.easeInOut);
 
     _pages = [
-      DashboardPage(session: widget.session, scrollController: _scrollController),
+      DashboardPage(session: widget.session),
       ReportHistoryPage(session: widget.session),
       NotificationPage(session: widget.session),
       ProfilePage(session: widget.session),
     ];
-
-    _scrollController.addListener(_handleScroll);
-  }
-
-  void _handleScroll() {
-    final direction = _scrollController.position.userScrollDirection;
-    if (direction == ScrollDirection.reverse && _navVisible) {
-      // Scroll ke bawah → sembunyikan navbar
-      setState(() => _navVisible = false);
-      _navAnim.reverse();
-    } else if (direction == ScrollDirection.forward && !_navVisible) {
-      // Scroll ke atas → tampilkan navbar
-      setState(() => _navVisible = true);
-      _navAnim.forward();
-    }
   }
 
   @override
   void dispose() {
-    _scrollController.removeListener(_handleScroll);
     _scrollController.dispose();
     _navAnim.dispose();
     super.dispose();
   }
 
-  void _openCreateReport() {
-    Navigator.push(
+  Future<void> _openCreateReport() async {
+    final result = await Navigator.push(
       context,
       PageRouteBuilder(
         pageBuilder: (_, __, ___) => CreateReportPage(session: widget.session),
@@ -88,6 +72,10 @@ class _PelaporHomePageState extends State<PelaporHomePage>
         transitionDuration: const Duration(milliseconds: 350),
       ),
     );
+
+    if (result == true && mounted) {
+      setState(() => _selectedIndex = 1); // Pindah ke tab Riwayat
+    }
   }
 
   @override
@@ -145,7 +133,7 @@ class _BottomNav extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 64,
+          height: 88,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [

@@ -60,7 +60,7 @@ class _ReportHistoryPageState extends State<ReportHistoryPage> {
             : _filtered.isEmpty
                 ? _EmptyState(hasFilter: _filterStatus != null)
                 : ListView.builder(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 160),
                     itemCount: _filtered.length,
                     itemBuilder: (context, i) {
                       final report = _filtered[i];

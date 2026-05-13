@@ -51,8 +51,8 @@ class FacilityReport {
     String photoUrl = '';
     if (json['photos'] != null && (json['photos'] as List).isNotEmpty) {
       final firstPhoto = json['photos'][0];
-      if (firstPhoto['data'] != null) {
-        photoUrl = firstPhoto['data'] as String; // base64
+      if (firstPhoto['photo_data'] != null) {
+        photoUrl = firstPhoto['photo_data'] as String; // base64
       }
     }
 
