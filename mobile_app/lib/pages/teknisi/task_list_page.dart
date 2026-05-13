@@ -42,7 +42,7 @@ class _TaskListPageState extends State<TaskListPage> {
         child: CustomScrollView(
           slivers: [
             SliverAppBar(
-              expandedHeight: 140,
+              expandedHeight: 160,
               pinned: true,
               floating: false,
               automaticallyImplyLeading: false,
@@ -57,27 +57,22 @@ class _TaskListPageState extends State<TaskListPage> {
                   ),
                   child: SafeArea(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const CampusFixLogoLight(iconSize: 30, fontSize: 18),
-                            ],
-                          ),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 20),
+                          const SizedBox(height: 32),
                           Text(
-                            'Daftar Tugas — ${widget.session.name.split(' ').first}',
+                            'Halo, ${widget.session.name.split(' ').first}! 👋',
                             style: GoogleFonts.spaceGrotesk(
-                              color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800,
+                              color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800,
                             ),
                           ),
                           Text(
-                            'Diurutkan berdasarkan Priority',
+                            widget.session.email,
                             style: GoogleFonts.spaceGrotesk(
-                              color: Colors.white60, fontSize: 11,
+                              color: Colors.white.withValues(alpha: 0.7), fontSize: 12,
                             ),
                           ),
                         ],
@@ -86,7 +81,7 @@ class _TaskListPageState extends State<TaskListPage> {
                   ),
                 ),
               ),
-              title: const CampusFixLogoLight(iconSize: 22, fontSize: 15),
+              title: const CampusFixLogoLight(iconSize: 24, fontSize: 16),
               actions: const [ThemeToggleButton(), SizedBox(width: 12)],
             ),
 

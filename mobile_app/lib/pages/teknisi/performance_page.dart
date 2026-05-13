@@ -6,6 +6,7 @@ import '../../models/report_model.dart';
 import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/stat_card.dart';
+import 'report_detail_teknisi.dart';
 
 class PerformancePage extends StatefulWidget {
   final UserSession session;
@@ -248,7 +249,21 @@ class _PerformancePageState extends State<PerformancePage> {
                       ),
                     )
                   else
-                    ..._history.map((r) => _HistoryCard(report: r, isDark: isDark)),
+                    ..._history.map((r) => _HistoryCard(
+                          report: r,
+                          isDark: isDark,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ReportDetailTeknisi(
+                                  report: r,
+                                  session: widget.session,
+                                ),
+                              ),
+                            ).then((_) => _loadData()); // reload data saat kembali jika ada perubahan
+                          },
+                        )),
                 ],
               ),
             ),
@@ -259,56 +274,65 @@ class _PerformancePageState extends State<PerformancePage> {
 class _HistoryCard extends StatelessWidget {
   final FacilityReport report;
   final bool isDark;
-  const _HistoryCard({required this.report, required this.isDark});
+  final VoidCallback onTap;
+  
+  const _HistoryCard({
+    required this.report,
+    required this.isDark,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.cardDark : AppColors.cardLight,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: isDark ? AppColors.borderDark : AppColors.borderLight),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40, height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.statusCompleted.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.cardDark : AppColors.cardLight,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: isDark ? AppColors.borderDark : AppColors.borderLight),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40, height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.statusCompleted.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.task_alt_rounded,
+                  size: 20, color: AppColors.statusCompleted),
             ),
-            child: const Icon(Icons.task_alt_rounded,
-                size: 20, color: AppColors.statusCompleted),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(report.title,
-                    style: GoogleFonts.spaceGrotesk(
-                        fontSize: 13, fontWeight: FontWeight.w700),
-                    maxLines: 1, overflow: TextOverflow.ellipsis),
-                const SizedBox(height: 3),
-                Text('${report.category} • ${report.completedAt ?? '-'}',
-                    style: GoogleFonts.spaceGrotesk(
-                        fontSize: 11, color: AppColors.textMuted)),
-              ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(report.title,
+                      style: GoogleFonts.spaceGrotesk(
+                          fontSize: 13, fontWeight: FontWeight.w700),
+                      maxLines: 1, overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 3),
+                  Text('${report.category} • ${report.completedAt ?? '-'}',
+                      style: GoogleFonts.spaceGrotesk(
+                          fontSize: 11, color: AppColors.textMuted)),
+                ],
+              ),
             ),
-          ),
-          if (report.rating != null)
-            Row(
-              children: [
-                const Icon(Icons.star_rounded, size: 14, color: Colors.amber),
-                const SizedBox(width: 3),
-                Text('${report.rating}',
-                    style: GoogleFonts.spaceGrotesk(
-                        fontSize: 12, fontWeight: FontWeight.w700)),
-              ],
-            ),
-        ],
+            if (report.rating != null)
+              Row(
+                children: [
+                  const Icon(Icons.star_rounded, size: 14, color: Colors.amber),
+                  const SizedBox(width: 3),
+                  Text('${report.rating}',
+                      style: GoogleFonts.spaceGrotesk(
+                          fontSize: 12, fontWeight: FontWeight.w700)),
+                ],
+              ),
+          ],
+        ),
       ),
     );
   }

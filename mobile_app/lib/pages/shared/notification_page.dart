@@ -4,6 +4,8 @@ import '../../models/user_model.dart';
 import '../../models/report_model.dart';
 import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
+import '../teknisi/report_detail_teknisi.dart';
+import '../pelapor/report_detail_pelapor.dart';
 
 class NotificationPage extends StatefulWidget {
   final UserSession session;
@@ -36,6 +38,47 @@ class _NotificationPageState extends State<NotificationPage> {
         n.isRead = true;
       }
     });
+  }
+
+  Future<void> _onNotifTap(AppNotification n) async {
+    final wasUnread = !n.isRead;
+    setState(() => n.isRead = true);
+    
+    if (wasUnread) {
+      api.markRead(n.id).catchError((_) => null); // update di backend diam-diam
+    }
+
+    if (n.reportId != null) {
+      try {
+        // Menampilkan dialog loader singkat
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+        );
+
+        final report = await api.getReport(n.reportId!);
+        if (mounted) Navigator.pop(context); // tutup loader
+
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => widget.session.role == UserRole.teknisi
+                  ? ReportDetailTeknisi(report: report, session: widget.session)
+                  : ReportDetailPelapor(report: report),
+            ),
+          ).then((_) => _loadNotifications()); // refresh status notif setelah kembali
+        }
+      } catch (e) {
+        if (mounted) Navigator.pop(context); // tutup loader jika gagal
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Gagal memuat detail laporan dari notifikasi')),
+          );
+        }
+      }
+    }
   }
 
   @override
@@ -98,9 +141,7 @@ class _NotificationPageState extends State<NotificationPage> {
                       ..._notifications.map((n) => _NotifCard(
                             notification: n,
                             isDark: isDark,
-                            onTap: () {
-                              setState(() => n.isRead = true);
-                            },
+                            onTap: () => _onNotifTap(n),
                           )),
                     ],
                   ),

@@ -12,7 +12,7 @@ import '../models/report_model.dart';
 /// - Device fisik (iOS/Android) → ganti dengan IP lokal PC kamu
 String get _baseUrl {
   // Alamat IP lokal laptop agar bisa diakses dari HP fisik (satu jaringan Wi-Fi)
-  const String localIp = '10.169.216.87';
+  const String localIp = '192.168.18.18';
 
   if (kIsWeb) return 'http://localhost:8000/api';
   if (Platform.isAndroid || Platform.isIOS) return 'http://$localIp:8000/api';
@@ -254,9 +254,7 @@ class ApiService {
           .toList();
       // Filter hanya yang masih aktif (bukan selesai)
       return reports
-          .where((r) =>
-              r.status != ReportStatus.selesai &&
-              r.assignedTechnician != null)
+          .where((r) => r.status != ReportStatus.selesai)
           .toList();
     }
     _handleError(res);
@@ -297,7 +295,7 @@ class ApiService {
   }
 
   /// Upload foto laporan dalam format base64
-  Future<void> uploadPhoto(int reportId, File imageFile) async {
+  Future<void> uploadPhoto(int reportId, File imageFile, {String type = 'bukti_laporan'}) async {
     final bytes = await imageFile.readAsBytes();
     final base64Str = base64Encode(bytes);
     // Tentukan mime type berdasarkan ekstensi
@@ -311,7 +309,7 @@ class ApiService {
         'photo_data': base64Str,
         'mime_type': mime,
         'original_name': imageFile.path.split('/').last,
-        'type': 'bukti_laporan',
+        'type': type,
       }),
     );
 
@@ -379,6 +377,15 @@ class ApiService {
     final res = await http.post(_uri('/notifications/read-all'), headers: _headers);
     if (res.statusCode == 200) {
       _unreadCount = 0;
+      return;
+    }
+    _handleError(res);
+  }
+
+  Future<void> markRead(int notificationId) async {
+    final res = await http.patch(_uri('/notifications/$notificationId/read'), headers: _headers);
+    if (res.statusCode == 200) {
+      if (_unreadCount > 0) _unreadCount--;
       return;
     }
     _handleError(res);

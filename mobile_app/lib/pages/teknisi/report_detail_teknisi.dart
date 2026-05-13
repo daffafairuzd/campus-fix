@@ -104,7 +104,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
     setState(() => _isSaving = true);
     try {
       // Upload foto bukti dulu (base64)
-      await api.uploadPhoto(widget.report.id, _buktiFoto!);
+      await api.uploadPhoto(widget.report.id, _buktiFoto!, type: 'bukti_penyelesaian');
       // Update status laporan
       await api.updateStatus(widget.report.id, _nextStatus!);
 
@@ -380,6 +380,33 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
                         ],
                       ),
                     ),
+                    if (widget.report.completionPhotoUrl.isNotEmpty) ...[
+                      const SizedBox(height: 24),
+                      const _Divider(),
+                      const SizedBox(height: 16),
+                      const _SLabel('Foto Hasil Perbaikan'),
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          height: 200,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0A0F14),
+                            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: widget.report.completionPhotoUrl.startsWith('http')
+                              ? Image.network(widget.report.completionPhotoUrl, fit: BoxFit.cover)
+                              : Image.memory(
+                                  base64Decode(widget.report.completionPhotoUrl.contains(',')
+                                      ? widget.report.completionPhotoUrl.split(',')[1]
+                                      : widget.report.completionPhotoUrl),
+                                  fit: BoxFit.cover,
+                                ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 32),
                   ],
                 ],
@@ -461,6 +488,8 @@ class _SLabel extends StatelessWidget {
 
 
 class _Divider extends StatelessWidget {
+  const _Divider({super.key});
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;

@@ -79,7 +79,7 @@ class AssignmentController extends Controller
             Notification::create([
                 'user_id'   => $techId,
                 'report_id' => $report->id,
-                'type'      => 'assignment_new',
+                'type'      => 'assignment',
                 'title'     => 'Penugasan Baru',
                 'message'   => "Anda ditugaskan untuk menangani laporan #{$report->report_number}: {$report->title}",
             ]);

@@ -12,6 +12,7 @@ class FacilityReport {
   final String location;
   final String description;
   final String photoUrl; // URL/base64 dari foto pertama (jika ada)
+  final String completionPhotoUrl; // Foto bukti perbaikan teknisi
   final ReportStatus status;
   final String priority; // 'kritis', 'tinggi', 'sedang', 'rendah'
   final String createdAt; // formatted string
@@ -30,6 +31,7 @@ class FacilityReport {
     required this.location,
     required this.description,
     required this.photoUrl,
+    required this.completionPhotoUrl,
     required this.status,
     required this.priority,
     required this.createdAt,
@@ -47,12 +49,33 @@ class FacilityReport {
     final statusStr = json['status'] as String? ?? 'menunggu';
     final status = _parseStatus(statusStr);
 
-    // Parse foto pertama jika ada
+    // Parse foto berdasarkan tipe (bukti_laporan vs bukti_penyelesaian)
     String photoUrl = '';
+    String completionPhotoUrl = '';
     if (json['photos'] != null && (json['photos'] as List).isNotEmpty) {
-      final firstPhoto = json['photos'][0];
-      if (firstPhoto['photo_data'] != null) {
-        photoUrl = firstPhoto['photo_data'] as String; // base64
+      final photos = json['photos'] as List;
+
+      // Cari foto keluhan/laporan dari pelapor
+      final reportPhoto = photos.firstWhere(
+        (p) => p['type'] == 'bukti_laporan',
+        orElse: () => null,
+      );
+      if (reportPhoto != null && reportPhoto['photo_data'] != null) {
+        photoUrl = reportPhoto['photo_data'] as String;
+      }
+
+      // Cari foto penyelesaian dari teknisi
+      final completionPhoto = photos.firstWhere(
+        (p) => p['type'] == 'bukti_penyelesaian',
+        orElse: () => null,
+      );
+      if (completionPhoto != null && completionPhoto['photo_data'] != null) {
+        completionPhotoUrl = completionPhoto['photo_data'] as String;
+      }
+
+      // Fallback: jika photoUrl kosong tapi ada foto pertama, set ke yang pertama
+      if (photoUrl.isEmpty && photos[0]['photo_data'] != null) {
+        photoUrl = photos[0]['photo_data'] as String;
       }
     }
 
@@ -106,6 +129,7 @@ class FacilityReport {
       location: json['location'] as String? ?? '',
       description: json['description'] as String? ?? '',
       photoUrl: photoUrl,
+      completionPhotoUrl: completionPhotoUrl,
       status: status,
       priority: json['priority'] as String? ?? 'rendah',
       createdAt: createdAt,
@@ -149,6 +173,7 @@ class FacilityReport {
     ReportStatus? status,
     String? assignedTechnician,
     String? photoUrl,
+    String? completionPhotoUrl,
     String? completedAt,
     int? rating,
     String? feedback,
@@ -161,6 +186,7 @@ class FacilityReport {
       location: location,
       description: description,
       photoUrl: photoUrl ?? this.photoUrl,
+      completionPhotoUrl: completionPhotoUrl ?? this.completionPhotoUrl,
       status: status ?? this.status,
       priority: priority,
       createdAt: createdAt,
@@ -176,6 +202,7 @@ class FacilityReport {
 
 class AppNotification {
   final int id;
+  final int? reportId;
   final String title;
   final String body;
   final String time;
@@ -184,6 +211,7 @@ class AppNotification {
 
   AppNotification({
     required this.id,
+    this.reportId,
     required this.title,
     required this.body,
     required this.time,
@@ -211,6 +239,7 @@ class AppNotification {
 
     return AppNotification(
       id: json['id'] as int,
+      reportId: json['report_id'] as int?,
       title: json['title'] as String? ?? '',
       body: json['message'] as String? ?? '', // backend pakai 'message'
       time: time,

@@ -24,7 +24,7 @@ class ReportController extends Controller
             })
             ->when($request->user()->isTechnician(), function($q) use ($request) {
                 return $q->whereHas('activeTechnicians', function($q2) use ($request) {
-                    $q2->where('technician_id', $request->user()->id);
+                    $q2->where('users.id', $request->user()->id);
                 });
             })
             // Filter request

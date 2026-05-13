@@ -190,57 +190,88 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
       )}
 
       {/* Tab: Foto Bukti */}
-      {activeTab === 'Foto Bukti' && (
-        <div className="animate-fade-in">
-          <div className="text-[11px] text-ui-muted font-bold uppercase tracking-wider mb-4">FOTO LAPORAN ({photos.length}/5)</div>
-          {isLoadingPhotos ? (
-            <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-brand-primary" /></div>
-          ) : (
-            <div className="flex flex-col gap-4">
-              {photos.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                  {photos.map(photo => (
-                    <div key={photo.id} className="relative group rounded-xl overflow-hidden border border-dark-border bg-dark-bg aspect-square">
-                      <img 
-                        src={photo.photo_data.startsWith('data:') ? photo.photo_data : `data:${photo.mime_type || 'image/jpeg'};base64,${photo.photo_data}`} 
-                        alt={photo.original_name || 'foto'} 
-                        className="w-full h-full object-cover" 
-                      />
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                        <a 
-                          href={photo.photo_data.startsWith('data:') ? photo.photo_data : `data:${photo.mime_type || 'image/jpeg'};base64,${photo.photo_data}`} 
-                          target="_blank" 
-                          rel="noreferrer" 
-                          className="p-2 bg-dark-card/80 rounded-lg hover:bg-dark-card"
-                        >
-                          <Search className="w-4 h-4 text-white" />
-                        </a>
-                        <button onClick={() => handleDeletePhoto(photo.id)} className="p-2 bg-red-500/80 rounded-lg hover:bg-red-500">
-                          <Trash2 className="w-4 h-4 text-white" />
-                        </button>
-                      </div>
-                      {photo.original_name && (
-                        <div className="absolute bottom-0 left-0 right-0 px-2 py-1 bg-black/60 text-[9px] text-white truncate">{photo.original_name}</div>
-                      )}
-                    </div>
-                  ))}
+      {activeTab === 'Foto Bukti' && (() => {
+        const reportPhotos = photos.filter(p => p.type !== 'bukti_penyelesaian');
+        const completionPhotos = photos.filter(p => p.type === 'bukti_penyelesaian');
+
+        const renderPhotoGrid = (photoList) => (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {photoList.map(photo => (
+              <div key={photo.id} className="relative group rounded-xl overflow-hidden border border-dark-border bg-dark-bg aspect-square">
+                <img 
+                  src={photo.photo_data.startsWith('data:') ? photo.photo_data : `data:${photo.mime_type || 'image/jpeg'};base64,${photo.photo_data}`} 
+                  alt={photo.original_name || 'foto'} 
+                  className="w-full h-full object-cover" 
+                />
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <a 
+                    href={photo.photo_data.startsWith('data:') ? photo.photo_data : `data:${photo.mime_type || 'image/jpeg'};base64,${photo.photo_data}`} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="p-2 bg-dark-card/80 rounded-lg hover:bg-dark-card"
+                  >
+                    <Search className="w-4 h-4 text-white" />
+                  </a>
+                  <button onClick={() => handleDeletePhoto(photo.id)} className="p-2 bg-red-500/80 rounded-lg hover:bg-red-500">
+                    <Trash2 className="w-4 h-4 text-white" />
+                  </button>
                 </div>
-              )}
-              {photos.length < 5 && (
-                <label className={`flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-xl transition-colors cursor-pointer group ${isUploadingPhoto ? 'border-brand-primary/50 bg-brand-primary/5' : 'border-dark-border bg-dark-bg hover:bg-dark-hover hover:border-brand-primary/50'}`}>
-                  {isUploadingPhoto ? <Loader2 className="w-10 h-10 animate-spin text-brand-primary mb-3" /> : <Upload className="w-10 h-10 text-ui-dim group-hover:text-brand-primary mb-3 transition-colors" />}
-                  <div className="text-[14px] text-ui-text font-medium mb-1">{isUploadingPhoto ? 'Mengupload...' : 'Klik atau drag & drop foto'}</div>
-                  <div className="text-[12px] text-ui-muted">PNG, JPG, WEBP — maks {5 - photos.length} foto lagi</div>
-                  <input type="file" accept="image/*" multiple className="hidden" disabled={isUploadingPhoto} onChange={handlePhotoUpload} />
-                </label>
-              )}
-              {photos.length === 0 && !isUploadingPhoto && (
-                <p className="text-center text-[13px] text-ui-muted py-4">Belum ada foto bukti yang diupload.</p>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+                {photo.original_name && (
+                  <div className="absolute bottom-0 left-0 right-0 px-2 py-1 bg-black/60 text-[9px] text-white truncate">{photo.original_name}</div>
+                )}
+              </div>
+            ))}
+          </div>
+        );
+
+        return (
+          <div className="animate-fade-in flex flex-col gap-8">
+            {isLoadingPhotos ? (
+              <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-brand-primary" /></div>
+            ) : (
+              <>
+                {/* Seksi 1: Foto Kerusakan */}
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-2 pb-2 border-b border-dark-border">
+                    <div className="w-1 h-4 rounded-full bg-brand-primary" />
+                    <div className="text-[12px] text-ui-text font-bold uppercase tracking-wider">FOTO KERUSAKAN DARI PELAPOR ({reportPhotos.length})</div>
+                  </div>
+                  {reportPhotos.length > 0 ? renderPhotoGrid(reportPhotos) : (
+                    <div className="p-8 border border-dashed border-dark-border/60 bg-dark-bg/20 rounded-xl text-center text-[13px] text-ui-dim">
+                      Belum ada foto laporan kerusakan.
+                    </div>
+                  )}
+                </div>
+
+                {/* Seksi 2: Foto Hasil Perbaikan */}
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-2 pb-2 border-b border-dark-border">
+                    <div className="w-1 h-4 rounded-full bg-emerald-500" />
+                    <div className="text-[12px] text-ui-text font-bold uppercase tracking-wider">FOTO HASIL PERBAIKAN TEKNISI ({completionPhotos.length})</div>
+                  </div>
+                  {completionPhotos.length > 0 ? renderPhotoGrid(completionPhotos) : (
+                    <div className="p-8 border border-dashed border-dark-border/60 bg-dark-bg/20 rounded-xl text-center text-[13px] text-ui-dim">
+                      Belum ada foto bukti penyelesaian tugas dari teknisi.
+                    </div>
+                  )}
+                </div>
+
+                {/* Upload area */}
+                {photos.length < 5 && (
+                  <div className="pt-4 border-t border-dark-border/30">
+                    <label className={`flex flex-col items-center justify-center p-10 border-2 border-dashed rounded-xl transition-colors cursor-pointer group ${isUploadingPhoto ? 'border-brand-primary/50 bg-brand-primary/5' : 'border-dark-border bg-dark-bg hover:bg-dark-hover hover:border-brand-primary/50'}`}>
+                      {isUploadingPhoto ? <Loader2 className="w-10 h-10 animate-spin text-brand-primary mb-3" /> : <Upload className="w-10 h-10 text-ui-dim group-hover:text-brand-primary mb-3 transition-colors" />}
+                      <div className="text-[14px] text-ui-text font-medium mb-1">{isUploadingPhoto ? 'Mengupload...' : 'Unggah Foto Laporan Baru (Admin)'}</div>
+                      <div className="text-[12px] text-ui-muted">PNG, JPG, WEBP — Maks. total 5 foto ({5 - photos.length} tersisa)</div>
+                      <input type="file" accept="image/*" multiple className="hidden" disabled={isUploadingPhoto} onChange={handlePhotoUpload} />
+                    </label>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Tab: Riwayat */}
       {activeTab === 'Riwayat' && (

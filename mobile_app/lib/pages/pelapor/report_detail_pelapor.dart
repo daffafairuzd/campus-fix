@@ -172,6 +172,34 @@ class _ReportDetailPelaporState extends State<ReportDetailPelapor> {
                   const SizedBox(height: 16),
                   StatusStepper(currentStatus: report.status),
 
+                  if (report.completionPhotoUrl.isNotEmpty) ...[
+                    const SizedBox(height: 24),
+                    const _Divider(),
+                    const SizedBox(height: 16),
+                    _SectionTitle('Foto Hasil Perbaikan'),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        height: 200,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0A0F14),
+                          border: Border.all(color: isDark ? AppColors.borderDark : AppColors.borderLight),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: report.completionPhotoUrl.startsWith('http')
+                            ? Image.network(report.completionPhotoUrl, fit: BoxFit.cover)
+                            : Image.memory(
+                                base64Decode(report.completionPhotoUrl.contains(',')
+                                    ? report.completionPhotoUrl.split(',')[1]
+                                    : report.completionPhotoUrl),
+                                fit: BoxFit.cover,
+                              ),
+                      ),
+                    ),
+                  ],
+
                   // Rating & Feedback (hanya jika selesai)
                   if (report.status == ReportStatus.selesai) ...[
                     const _Divider(),

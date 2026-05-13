@@ -25,6 +25,7 @@ class _TeknisiHomePageState extends State<TeknisiHomePage> {
     _pages = [
       TaskListPage(session: widget.session),
       PerformancePage(session: widget.session),
+      NotificationPage(session: widget.session),
       ProfilePage(session: widget.session),
     ];
   }
@@ -65,20 +66,15 @@ class _TeknisiHomePageState extends State<TeknisiHomePage> {
                 _NavItem(
                   icon: Icons.notifications_outlined,
                   label: 'Notif',
-                  selected: false,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => NotificationPage(session: widget.session),
-                    ),
-                  ),
+                  selected: _selectedIndex == 2,
+                  onTap: () => setState(() => _selectedIndex = 2),
                   badge: true,
                 ),
                 _NavItem(
                   icon: Icons.person_outline_rounded,
                   label: 'Profil',
-                  selected: _selectedIndex == 2,
-                  onTap: () => setState(() => _selectedIndex = 2),
+                  selected: _selectedIndex == 3,
+                  onTap: () => setState(() => _selectedIndex = 3),
                 ),
               ],
             ),
