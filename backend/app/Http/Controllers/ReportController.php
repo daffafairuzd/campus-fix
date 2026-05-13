@@ -7,6 +7,8 @@ use App\Models\ReportHistory;
 use App\Models\ReportPhoto;
 use App\Models\SlaConfig;
 use App\Models\Notification;
+use App\Models\User;
+use App\Events\ReportCreated;
 use App\Events\ReportStatusUpdated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -80,6 +82,21 @@ class ReportController extends Controller
             'user_id'   => $request->user()->id,
             'title'     => 'Laporan dibuat',
         ]);
+
+        // 1. Broadcast realtime event (ke channel 'reports')
+        broadcast(new ReportCreated($report->load('reporter')));
+
+        // 2. Simpan notifikasi ke semua admin
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            Notification::create([
+                'user_id'   => $admin->id,
+                'report_id' => $report->id,
+                'type'      => 'new_report',
+                'title'     => 'Laporan Baru Masuk',
+                'message'   => "Terdapat laporan baru #{$report->report_number}: {$report->title}",
+            ]);
+        }
 
         return response()->json($report->load('reporter'), 201);
     }
