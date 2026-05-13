@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/user_model.dart';
-import '../../services/mock_api_service.dart';
+import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
 
 class CreateReportPage extends StatefulWidget {
@@ -126,37 +126,64 @@ class _CreateReportPageState extends State<CreateReportPage> {
     }
 
     setState(() => _isLoading = true);
-    await api.createReport(
-      reporterSsoId: widget.session.ssoId,
-      title: _titleController.text.trim(),
-      category: _category,
-      location: _locationController.text.trim().isEmpty
-          ? 'Lokasi belum ditentukan'
-          : _locationController.text.trim(),
-      description: _descController.text.trim(),
-      photoUrl: _selectedImage?.path ?? '',
-    );
-    setState(() => _isLoading = false);
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle, color: AppColors.success, size: 16),
-              const SizedBox(width: 8),
-              Text('Laporan berhasil dikirim!',
-                  style: GoogleFonts.spaceGrotesk(fontSize: 13)),
-            ],
-          ),
-        ),
+    try {
+      // Buat laporan terlebih dahulu
+      final reportId = await api.createReport(
+        title: _titleController.text.trim(),
+        category: _category,
+        location: _locationController.text.trim().isEmpty
+            ? 'Lokasi belum ditentukan'
+            : _locationController.text.trim(),
+        description: _descController.text.trim(),
       );
-      _titleController.clear();
-      _locationController.clear();
-      _descController.clear();
-      setState(() { _selectedImage = null; _category = 'Listrik'; });
+
+      // Upload foto jika ada (base64 ke endpoint terpisah)
+      if (_selectedImage != null && reportId > 0) {
+        try {
+          await api.uploadPhoto(reportId, _selectedImage!);
+        } catch (_) {
+          // Foto gagal upload — laporan tetap berhasil dibuat
+        }
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: AppColors.success, size: 16),
+                const SizedBox(width: 8),
+                Text('Laporan berhasil dikirim!',
+                    style: GoogleFonts.spaceGrotesk(fontSize: 13)),
+              ],
+            ),
+          ),
+        );
+        _titleController.clear();
+        _locationController.clear();
+        _descController.clear();
+        setState(() {
+          _selectedImage = null;
+          _category = 'Listrik';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.toString().replaceAll('Exception: ', ''),
+              style: GoogleFonts.spaceGrotesk(fontSize: 13),
+            ),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -179,7 +206,8 @@ class _CreateReportPageState extends State<CreateReportPage> {
               onTap: _showImageSourceBottomSheet,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                height: 160,
+                height: 200,
+                width: double.infinity,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
                   color: isDark ? AppColors.hoverDark : AppColors.bgLight,
@@ -188,7 +216,7 @@ class _CreateReportPageState extends State<CreateReportPage> {
                         ? AppColors.primary
                         : (isDark ? AppColors.borderDark : AppColors.borderLight),
                     width: _selectedImage != null ? 2 : 1,
-                    style: _selectedImage != null ? BorderStyle.solid : BorderStyle.solid,
+                    style: BorderStyle.solid,
                   ),
                 ),
                 child: _selectedImage != null
@@ -218,18 +246,18 @@ class _CreateReportPageState extends State<CreateReportPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(14),
+                            padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: AppColors.primary.withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(Icons.add_a_photo_rounded,
-                                size: 28, color: AppColors.primary),
+                                size: 32, color: AppColors.primary),
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 12),
                           Text('Tap untuk tambah foto',
                               style: GoogleFonts.spaceGrotesk(
-                                  fontSize: 13, fontWeight: FontWeight.w600,
+                                  fontSize: 14, fontWeight: FontWeight.w600,
                                   color: AppColors.primary)),
                           const SizedBox(height: 4),
                           Text('Kamera atau pilih dari galeri',

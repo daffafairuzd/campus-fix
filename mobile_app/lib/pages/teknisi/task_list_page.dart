@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/user_model.dart';
 import '../../models/report_model.dart';
-import '../../services/mock_api_service.dart';
+import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/report_card.dart';
 import '../../widgets/campus_fix_logo.dart';
@@ -65,10 +65,6 @@ class _TaskListPageState extends State<TaskListPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               const CampusFixLogoLight(iconSize: 30, fontSize: 18),
-                              Row(children: [
-                                const ThemeToggleButton(),
-                                const SizedBox(width: 8),
-                              ]),
                             ],
                           ),
                           const SizedBox(height: 14),
@@ -79,7 +75,7 @@ class _TaskListPageState extends State<TaskListPage> {
                             ),
                           ),
                           Text(
-                            'Diurutkan berdasarkan Prioritas AI',
+                            'Diurutkan berdasarkan Priority',
                             style: GoogleFonts.spaceGrotesk(
                               color: Colors.white60, fontSize: 11,
                             ),
@@ -158,6 +154,8 @@ class _PriorityLegend extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
+          _LegendItem('Kritis', AppColors.danger, Icons.priority_high_rounded),
+          _LegendDivider(),
           _LegendItem('Tinggi', AppColors.priorityHigh, Icons.keyboard_double_arrow_up_rounded),
           _LegendDivider(),
           _LegendItem('Sedang', AppColors.priorityMedium, Icons.remove_rounded),

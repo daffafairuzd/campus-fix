@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/user_model.dart';
 import '../../models/report_model.dart';
-import '../../services/mock_api_service.dart';
+import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/stat_card.dart';
 import '../../widgets/report_card.dart';
@@ -13,7 +13,8 @@ import 'report_detail_pelapor.dart';
 
 class DashboardPage extends StatefulWidget {
   final UserSession session;
-  const DashboardPage({super.key, required this.session});
+  final ScrollController? scrollController;
+  const DashboardPage({super.key, required this.session, this.scrollController});
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
@@ -31,13 +32,13 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    final data = await api.getMyReports(widget.session.ssoId);
+    final data = await api.getMyReports();
     if (mounted) setState(() { _reports = data; _isLoading = false; });
   }
 
-  int get _activeCount => _reports.where((r) => r.status != ReportStatus.completed).length;
-  int get _completedCount => _reports.where((r) => r.status == ReportStatus.completed).length;
-  int get _pendingCount => _reports.where((r) => r.status == ReportStatus.submitted).length;
+  int get _activeCount => _reports.where((r) => r.status == ReportStatus.dalamProses).length;
+  int get _completedCount => _reports.where((r) => r.status == ReportStatus.selesai).length;
+  int get _pendingCount => _reports.where((r) => r.status == ReportStatus.menunggu).length;
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +49,7 @@ class _DashboardPageState extends State<DashboardPage> {
         onRefresh: _loadData,
         color: AppColors.primary,
         child: CustomScrollView(
+          controller: widget.scrollController, // sambung ke parent scroll
           slivers: [
             // App bar
             SliverAppBar(
@@ -70,48 +72,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const CampusFixLogoLight(iconSize: 30, fontSize: 18),
-                              Row(
-                                children: [
-                                  const ThemeToggleButton(),
-                                  const SizedBox(width: 8),
-                                  GestureDetector(
-                                    onTap: () => Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => NotificationPage(session: widget.session),
-                                      ),
-                                    ),
-                                    child: Stack(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(7),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white.withValues(alpha: 0.15),
-                                            borderRadius: BorderRadius.circular(10),
-                                          ),
-                                          child: const Icon(Icons.notifications_outlined, color: Colors.white, size: 20),
-                                        ),
-                                        if (api.unreadCount > 0)
-                                          Positioned(
-                                            top: 0, right: 0,
-                                            child: Container(
-                                              width: 8, height: 8,
-                                              decoration: const BoxDecoration(
-                                                color: Colors.amber, shape: BoxShape.circle,
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                          const SizedBox(height: 8),
                           const SizedBox(height: 14),
                           Text(
                             'Halo, ${widget.session.name.split(' ').first}! 👋',
@@ -137,6 +98,40 @@ class _DashboardPageState extends State<DashboardPage> {
               title: const CampusFixLogoLight(iconSize: 24, fontSize: 16),
               actions: [
                 const ThemeToggleButton(),
+                const SizedBox(width: 8),
+                Builder(
+                  builder: (context) => GestureDetector(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => NotificationPage(session: widget.session),
+                      ),
+                    ),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(7),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.notifications_outlined, color: Colors.white, size: 20),
+                        ),
+                        if (api.unreadCount > 0) // updated by api after getNotifications()
+                          Positioned(
+                            top: -2, right: -2,
+                            child: Container(
+                              width: 9, height: 9,
+                              decoration: const BoxDecoration(
+                                color: Colors.amber, shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 12),
               ],
             ),

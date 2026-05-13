@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../services/mock_api_service.dart';
+import '../../services/api_service.dart';
 import '../../models/user_model.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/campus_fix_logo.dart';
@@ -19,7 +19,6 @@ class _LoginPageState extends State<LoginPage>
     with SingleTickerProviderStateMixin {
   final _ssoController = TextEditingController();
   final _passwordController = TextEditingController();
-  UserRole _selectedRole = UserRole.pelapor;
   bool _isLoading = false;
   bool _obscurePassword = true;
   String _errorMessage = '';
@@ -63,7 +62,6 @@ class _LoginPageState extends State<LoginPage>
       final session = await api.login(
         ssoId: ssoId,
         password: password,
-        role: _selectedRole,
       );
 
       if (!mounted) return;
@@ -90,89 +88,91 @@ class _LoginPageState extends State<LoginPage>
 
   @override
   Widget build(BuildContext context) {
-    final h = MediaQuery.of(context).size.height;
-
-    return Scaffold(
-      body: Stack(
-        children: [
-          // Hero gradient background
-          Container(
-            height: h * 0.42,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF7F1D1D), AppColors.primary, Color(0xFFB91C1C)],
-              ),
-            ),
-          ),
-          // Decorative circles
-          Positioned(
-            top: -40,
-            right: -40,
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.05),
-              ),
-            ),
-          ),
-          Positioned(
-            top: 60,
-            left: -30,
-            child: Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.04),
-              ),
-            ),
-          ),
-          // Content
-          FadeTransition(
-            opacity: _fadeAnim,
-            child: Column(
-              children: [
-                // Top hero content
-                SizedBox(
-                  height: h * 0.42,
-                  child: SafeArea(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const SizedBox(height: 16),
-                          const CampusFixLogoLight(iconSize: 52, fontSize: 28),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Platform Pelaporan Fasilitas Kampus',
-                            style: GoogleFonts.spaceGrotesk(
-                              color: Colors.white.withValues(alpha: 0.75),
-                              fontSize: 13,
-                              letterSpacing: 0.2,
-                            ),
-                          ),
-                        ],
+    return SafeArea(
+      child: Scaffold(
+        body: SingleChildScrollView(
+          child: Stack(
+            children: [
+              // Hero gradient background (covers top portion)
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  return Container(
+                    height: 300,
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF7F1D1D), AppColors.primary, Color(0xFFB91C1C)],
                       ),
                     ),
+                  );
+                },
+              ),
+              // Decorative circles
+              Positioned(
+                top: -40,
+                right: -40,
+                child: Container(
+                  width: 200,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(alpha: 0.05),
                   ),
                 ),
-                // Form card rounded top
-                Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).scaffoldBackgroundColor,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(28),
-                        topRight: Radius.circular(28),
+              ),
+              Positioned(
+                top: 60,
+                left: -30,
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(alpha: 0.04),
+                  ),
+                ),
+              ),
+              // Content
+              FadeTransition(
+                opacity: _fadeAnim,
+                child: Column(
+                  children: [
+                    // Top hero content (scrollable)
+                    SizedBox(
+                      height: 260,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const SizedBox(height: 16),
+                            const CampusFixLogoLight(iconSize: 52, fontSize: 28),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Platform Pelaporan Fasilitas Kampus',
+                              style: GoogleFonts.spaceGrotesk(
+                                color: Colors.white.withValues(alpha: 0.75),
+                                fontSize: 13,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(24, 30, 24, 32),
+                    // Form card rounded top
+                    Container(
+                      width: double.infinity,
+                      constraints: const BoxConstraints(minHeight: 500),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(28),
+                          topRight: Radius.circular(28),
+                        ),
+                      ),
+                      padding: const EdgeInsets.fromLTRB(24, 30, 24, 40),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -312,36 +312,6 @@ class _LoginPageState extends State<LoginPage>
                           ),
                           const SizedBox(height: 20),
 
-                          // Role Selector
-                          Text(
-                            'LOGIN SEBAGAI',
-                            style: GoogleFonts.spaceGrotesk(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textMuted,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              _RoleButton(
-                                label: 'Pelapor',
-                                icon: Icons.person_rounded,
-                                selected: _selectedRole == UserRole.pelapor,
-                                onTap: () => setState(
-                                    () => _selectedRole = UserRole.pelapor),
-                              ),
-                              const SizedBox(width: 12),
-                              _RoleButton(
-                                label: 'Teknisi',
-                                icon: Icons.build_circle_rounded,
-                                selected: _selectedRole == UserRole.teknisi,
-                                onTap: () => setState(
-                                    () => _selectedRole = UserRole.teknisi),
-                              ),
-                            ],
-                          ),
                           const SizedBox(height: 28),
 
                           // Login Button
@@ -428,7 +398,7 @@ class _LoginPageState extends State<LoginPage>
                                         size: 13, color: AppColors.info),
                                     const SizedBox(width: 5),
                                     Text(
-                                      'Demo Credentials',
+                                      'Info Login',
                                       style: GoogleFonts.spaceGrotesk(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w700,
@@ -439,7 +409,7 @@ class _LoginPageState extends State<LoginPage>
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
-                                  'Pelapor → SSO: asep321 / PW: password\nTeknisi  → SSO: teknisi01 / PW: password',
+                                  'Gunakan SSO ID Telkom University dan password yang telah terdaftar di sistem.',
                                   style: GoogleFonts.spaceGrotesk(
                                     fontSize: 11,
                                     color: AppColors.textMuted,
@@ -452,63 +422,7 @@ class _LoginPageState extends State<LoginPage>
                         ],
                       ),
                     ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RoleButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _RoleButton({
-    required this.label,
-    required this.icon,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: selected
-                ? AppColors.primary.withValues(alpha: 0.1)
-                : (isDark ? AppColors.hoverDark : AppColors.bgLight),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: selected ? AppColors.primary : (isDark ? AppColors.borderDark : AppColors.borderLight),
-              width: selected ? 2 : 1,
-            ),
-          ),
-          child: Column(
-            children: [
-              Icon(
-                icon,
-                size: 22,
-                color: selected ? AppColors.primary : AppColors.textMuted,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: GoogleFonts.spaceGrotesk(
-                  fontSize: 13,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  color: selected ? AppColors.primary : AppColors.textMuted,
+                  ],
                 ),
               ),
             ],
@@ -518,3 +432,4 @@ class _RoleButton extends StatelessWidget {
     );
   }
 }
+

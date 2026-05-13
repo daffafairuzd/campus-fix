@@ -11,7 +11,7 @@ class StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (label, color, icon) = _resolve(status);
+    final (label, color, _) = _resolve(status);
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -48,16 +48,14 @@ class StatusBadge extends StatelessWidget {
 
   static (String, Color, IconData) _resolve(ReportStatus s) {
     switch (s) {
-      case ReportStatus.submitted:
-        return ('Dikirim', AppColors.statusSubmitted, Icons.upload_outlined);
-      case ReportStatus.accepted:
-        return ('Diterima', AppColors.statusAccepted, Icons.check_circle_outline);
-      case ReportStatus.assigned:
-        return ('Ditugaskan', AppColors.statusAssigned, Icons.assignment_ind_outlined);
-      case ReportStatus.inProgress:
-        return ('Dikerjakan', AppColors.statusInProgress, Icons.build_outlined);
-      case ReportStatus.completed:
+      case ReportStatus.menunggu:
+        return ('Menunggu', AppColors.statusSubmitted, Icons.hourglass_top_rounded);
+      case ReportStatus.dalamProses:
+        return ('Dalam Proses', AppColors.statusInProgress, Icons.build_outlined);
+      case ReportStatus.selesai:
         return ('Selesai', AppColors.statusCompleted, Icons.task_alt);
+      case ReportStatus.eskalasi:
+        return ('Eskalasi', AppColors.danger, Icons.warning_amber_rounded);
     }
   }
 }
@@ -88,7 +86,7 @@ class PriorityBadge extends StatelessWidget {
           Icon(icon, size: compact ? 10 : 11, color: color),
           const SizedBox(width: 4),
           Text(
-            priority,
+            _label(priority),
             style: GoogleFonts.spaceGrotesk(
               fontSize: compact ? 10 : 11,
               fontWeight: FontWeight.w700,
@@ -101,8 +99,23 @@ class PriorityBadge extends StatelessWidget {
     );
   }
 
+  static String _label(String p) {
+    switch (p.toLowerCase()) {
+      case 'kritis':
+        return 'Kritis';
+      case 'tinggi':
+        return 'Tinggi';
+      case 'sedang':
+        return 'Sedang';
+      default:
+        return 'Rendah';
+    }
+  }
+
   static (Color, IconData) _resolve(String p) {
     switch (p.toLowerCase()) {
+      case 'kritis':
+        return (AppColors.danger, Icons.priority_high_rounded);
       case 'tinggi':
         return (AppColors.priorityHigh, Icons.keyboard_double_arrow_up_rounded);
       case 'sedang':

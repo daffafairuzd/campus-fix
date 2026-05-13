@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../models/user_model.dart';
 import '../../models/report_model.dart';
-import '../../services/mock_api_service.dart';
+import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/stat_card.dart';
 
@@ -29,8 +29,8 @@ class _PerformancePageState extends State<PerformancePage> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     final perf = await api.getPerformance();
-    final all = await api.getAllReports();
-    final done = all.where((r) => r.status == ReportStatus.completed).toList();
+    final all = await api.getMyReports();
+    final done = all.where((r) => r.status == ReportStatus.selesai).toList();
     if (mounted) {
       setState(() {
         _perf = perf;

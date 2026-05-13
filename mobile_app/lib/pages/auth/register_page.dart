@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../services/mock_api_service.dart';
-import '../../models/user_model.dart';
+import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/campus_fix_logo.dart';
 
@@ -18,7 +17,6 @@ class _RegisterPageState extends State<RegisterPage> {
   final _nimController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
-  UserRole _selectedRole = UserRole.pelapor;
   bool _isLoading = false;
   bool _obscurePass = true;
   bool _obscureConfirm = true;
@@ -65,7 +63,7 @@ class _RegisterPageState extends State<RegisterPage> {
         name: name,
         nim: nim,
         password: password,
-        role: _selectedRole,
+        passwordConfirmation: confirm,
       );
 
       if (!mounted) return;
@@ -253,30 +251,6 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                         const SizedBox(height: 14),
 
-                        // Role
-                        _FieldLabel('DAFTAR SEBAGAI'),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            _RoleChip(
-                              label: 'Pelapor',
-                              icon: Icons.person_rounded,
-                              description: 'Mahasiswa / Staf',
-                              selected: _selectedRole == UserRole.pelapor,
-                              onTap: () =>
-                                  setState(() => _selectedRole = UserRole.pelapor),
-                            ),
-                            const SizedBox(width: 10),
-                            _RoleChip(
-                              label: 'Teknisi',
-                              icon: Icons.build_circle_rounded,
-                              description: 'Tim Sarana & Pra.',
-                              selected: _selectedRole == UserRole.teknisi,
-                              onTap: () =>
-                                  setState(() => _selectedRole = UserRole.teknisi),
-                            ),
-                          ],
-                        ),
                         const SizedBox(height: 14),
 
                         // Password
@@ -401,74 +375,3 @@ class _FieldLabel extends StatelessWidget {
   }
 }
 
-class _RoleChip extends StatelessWidget {
-  final String label;
-  final String description;
-  final IconData icon;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _RoleChip({
-    required this.label,
-    required this.description,
-    required this.icon,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: selected
-                ? AppColors.primary.withValues(alpha: 0.1)
-                : (isDark ? AppColors.hoverDark : AppColors.bgLight),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: selected
-                  ? AppColors.primary
-                  : (isDark ? AppColors.borderDark : AppColors.borderLight),
-              width: selected ? 2 : 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(icon,
-                  size: 20,
-                  color: selected ? AppColors.primary : AppColors.textMuted),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: selected ? AppColors.primary : AppColors.textMuted,
-                      ),
-                    ),
-                    Text(
-                      description,
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 10,
-                        color: AppColors.textDim,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}

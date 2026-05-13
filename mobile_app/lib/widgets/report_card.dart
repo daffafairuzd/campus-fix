@@ -46,7 +46,7 @@ class ReportCard extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Priority Score Avatar
+                  // Priority Avatar (berdasarkan priority string dari backend)
                   Container(
                     width: 46,
                     height: 46,
@@ -55,30 +55,13 @@ class ReportCard extends StatelessWidget {
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: _scoreColors(report.priorityScore),
+                        colors: _priorityColors(report.priority),
                       ),
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          report.priorityScore.toString(),
-                          style: GoogleFonts.spaceGrotesk(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                            height: 1,
-                          ),
-                        ),
-                        Text(
-                          'skor',
-                          style: GoogleFonts.spaceGrotesk(
-                            fontSize: 8,
-                            color: Colors.white.withValues(alpha: 0.8),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+                    child: Icon(
+                      _priorityIcon(report.priority),
+                      color: Colors.white,
+                      size: 22,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -87,21 +70,15 @@ class ReportCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                report.title,
-                                style: GoogleFonts.spaceGrotesk(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  color: textMain,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
+                        Text(
+                          report.title,
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: textMain,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 5),
                         Row(
@@ -130,7 +107,8 @@ class ReportCard extends StatelessWidget {
                             StatusBadge(status: report.status, compact: true),
                             if (showPriority) ...[
                               const SizedBox(width: 6),
-                              PriorityBadge(priority: report.priority, compact: true),
+                              PriorityBadge(
+                                  priority: report.priority, compact: true),
                             ],
                           ],
                         ),
@@ -143,13 +121,11 @@ class ReportCard extends StatelessWidget {
                 ],
               ),
             ),
-            // Bottom bar: date + report number
+            // Bottom bar: report number + date
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.hoverDark
-                    : AppColors.bgLight,
+                color: isDark ? AppColors.hoverDark : AppColors.bgLight,
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(16),
                   bottomRight: Radius.circular(16),
@@ -190,13 +166,30 @@ class ReportCard extends StatelessWidget {
     );
   }
 
-  List<Color> _scoreColors(int score) {
-    if (score >= 80) {
-      return [const Color(0xFFEF4444), const Color(0xFFDC2626)];
-    } else if (score >= 50) {
-      return [const Color(0xFFF59E0B), const Color(0xFFD97706)];
+  List<Color> _priorityColors(String priority) {
+    switch (priority.toLowerCase()) {
+      case 'kritis':
+        return [const Color(0xFFDC2626), const Color(0xFFB91C1C)];
+      case 'tinggi':
+        return [const Color(0xFFEF4444), const Color(0xFFDC2626)];
+      case 'sedang':
+        return [const Color(0xFFF59E0B), const Color(0xFFD97706)];
+      default:
+        return [const Color(0xFF10B981), const Color(0xFF059669)];
     }
-    return [const Color(0xFF10B981), const Color(0xFF059669)];
+  }
+
+  IconData _priorityIcon(String priority) {
+    switch (priority.toLowerCase()) {
+      case 'kritis':
+        return Icons.priority_high_rounded;
+      case 'tinggi':
+        return Icons.keyboard_double_arrow_up_rounded;
+      case 'sedang':
+        return Icons.remove_rounded;
+      default:
+        return Icons.keyboard_double_arrow_down_rounded;
+    }
   }
 }
 

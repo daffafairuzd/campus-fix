@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import '../../models/report_model.dart';
-import '../../services/mock_api_service.dart';
+import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/status_badge.dart';
 import '../../widgets/status_stepper.dart';
@@ -99,22 +99,6 @@ class _ReportDetailPelaporState extends State<ReportDetailPelapor> {
                     children: [
                       StatusBadge(status: report.status),
                       PriorityBadge(priority: report.priority),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-                        ),
-                        child: Text(
-                          'AI Score: ${report.priorityScore}',
-                          style: GoogleFonts.spaceGrotesk(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -160,12 +144,12 @@ class _ReportDetailPelaporState extends State<ReportDetailPelapor> {
                   const SizedBox(height: 16),
 
                   // Status Tracker
-                  _SectionTitle('Tracking Status (5 Tahap)'),
+                  _SectionTitle('Tracking Status'),
                   const SizedBox(height: 16),
                   StatusStepper(currentStatus: report.status),
 
                   // Rating & Feedback (hanya jika selesai)
-                  if (report.status == ReportStatus.completed) ...[
+                  if (report.status == ReportStatus.selesai) ...[
                     const _Divider(),
                     const SizedBox(height: 16),
                     _SectionTitle('Rating & Feedback'),

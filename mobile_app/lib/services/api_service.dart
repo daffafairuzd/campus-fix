@@ -1,0 +1,399 @@
+import 'dart:convert';
+import 'dart:io' show Platform, File;
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import '../models/user_model.dart';
+import '../models/report_model.dart';
+
+/// Base URL backend Laravel — otomatis menyesuaikan platform:
+/// - Web / Windows desktop → localhost:8000
+/// - Android Emulator      → 10.0.2.2:8000
+/// - Device fisik (iOS/Android) → ganti dengan IP lokal PC kamu
+String get _baseUrl {
+  if (kIsWeb) return 'http://localhost:8000/api';
+  if (Platform.isAndroid) return 'http://10.0.2.2:8000/api';
+  if (Platform.isIOS) return 'http://localhost:8000/api'; // iOS Simulator
+  return 'http://localhost:8000/api'; // Windows / macOS / Linux desktop
+}
+
+class ApiService {
+  // ── SharedPreferences Keys ──────────────────────────────
+  static const _keyToken = 'auth_token';
+  static const _keyUserId = 'auth_user_id';
+  static const _keyUserName = 'auth_user_name';
+  static const _keyUserEmail = 'auth_user_email';
+  static const _keyUserNim = 'auth_user_nim';
+  static const _keyUserRole = 'auth_user_role';
+
+  // ── Singleton ────────────────────────────────────────────
+  static final ApiService _instance = ApiService._internal();
+  factory ApiService() => _instance;
+  ApiService._internal();
+
+  String? _token;
+  int _unreadCount = 0;
+
+  int get unreadCount => _unreadCount;
+
+  // ── Helpers ─────────────────────────────────────────────
+  Map<String, String> get _headers => {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        if (_token != null) 'Authorization': 'Bearer $_token',
+      };
+
+  Uri _uri(String path) => Uri.parse('$_baseUrl$path');
+
+  /// Throw exception dengan pesan yang readable
+  void _handleError(http.Response res) {
+    try {
+      final body = jsonDecode(res.body) as Map<String, dynamic>;
+      final message = body['message'] as String? ??
+          body['error'] as String? ??
+          'Terjadi kesalahan (${res.statusCode})';
+
+      // Handle validation errors (422)
+      if (res.statusCode == 422 && body['errors'] != null) {
+        final errors = body['errors'] as Map<String, dynamic>;
+        final firstError = errors.values.first;
+        final errMsg = firstError is List ? firstError.first : firstError;
+        throw Exception(errMsg.toString());
+      }
+
+      throw Exception(message);
+    } catch (e) {
+      if (e is Exception) rethrow;
+      throw Exception('Terjadi kesalahan (${res.statusCode})');
+    }
+  }
+
+  // ── Token Persistence ───────────────────────────────────
+  Future<void> _saveSession(UserSession session) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyToken, session.token);
+    await prefs.setInt(_keyUserId, session.id);
+    await prefs.setString(_keyUserName, session.name);
+    await prefs.setString(_keyUserEmail, session.email);
+    await prefs.setString(_keyUserNim, session.nim);
+    await prefs.setString(_keyUserRole, session.role.name);
+    _token = session.token;
+  }
+
+  Future<UserSession?> getSavedSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString(_keyToken);
+    if (token == null || token.isEmpty) return null;
+    _token = token;
+
+    final roleStr = prefs.getString(_keyUserRole) ?? 'pelapor';
+    final email = prefs.getString(_keyUserEmail) ?? '';
+    final ssoId = email.contains('@') ? email.split('@').first : email;
+
+    return UserSession(
+      id: prefs.getInt(_keyUserId) ?? 0,
+      name: prefs.getString(_keyUserName) ?? '',
+      ssoId: ssoId,
+      nim: prefs.getString(_keyUserNim) ?? '',
+      email: email,
+      role: roleStr == 'teknisi' ? UserRole.teknisi : UserRole.pelapor,
+      token: token,
+    );
+  }
+
+  Future<void> clearSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    _token = null;
+  }
+
+  // ── AUTH ─────────────────────────────────────────────────
+
+  /// Login menggunakan SSO ID (akan dikonversi ke email @student.telkomuniversity.ac.id)
+  Future<UserSession> login({
+    required String ssoId,
+    required String password,
+  }) async {
+    // Konversi SSO ID ke format email
+    final email = ssoId.contains('@')
+        ? ssoId
+        : '$ssoId@student.telkomuniversity.ac.id';
+
+    final res = await http.post(
+      _uri('/auth/login'),
+      headers: _headers,
+      body: jsonEncode({'email': email, 'password': password}),
+    );
+
+    if (res.statusCode == 200) {
+      final body = jsonDecode(res.body) as Map<String, dynamic>;
+      final token = body['token'] as String;
+      final userJson = body['user'] as Map<String, dynamic>;
+      final session = UserSession.fromJson(userJson, token);
+      await _saveSession(session);
+      return session;
+    }
+    _handleError(res);
+    throw Exception('Login gagal');
+  }
+
+  /// Register — hanya untuk pelapor (backend hardcode role 'pelapor')
+  Future<void> register({
+    required String ssoId,
+    required String name,
+    required String nim,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    final email = ssoId.contains('@')
+        ? ssoId
+        : '$ssoId@student.telkomuniversity.ac.id';
+
+    final res = await http.post(
+      _uri('/auth/register'),
+      headers: _headers,
+      body: jsonEncode({
+        'name': name,
+        'email': email,
+        'nim': nim,
+        'password': password,
+        'password_confirmation': passwordConfirmation,
+      }),
+    );
+
+    if (res.statusCode == 201 || res.statusCode == 200) return;
+    _handleError(res);
+  }
+
+  /// Logout — hapus token dari backend & local
+  Future<void> logout() async {
+    try {
+      await http.post(_uri('/auth/logout'), headers: _headers);
+    } catch (_) {
+      // Ignore network errors saat logout
+    }
+    await clearSession();
+  }
+
+  // ── REPORTS ──────────────────────────────────────────────
+
+  /// Laporan milik user yang sedang login (pelapor)
+  Future<List<FacilityReport>> getMyReports() async {
+    final res = await http.get(_uri('/reports'), headers: _headers);
+
+    if (res.statusCode == 200) {
+      final body = jsonDecode(res.body);
+      List<dynamic> data;
+      if (body is List) {
+        data = body;
+      } else if (body is Map && body['data'] != null) {
+        data = body['data'] as List<dynamic>;
+      } else {
+        return [];
+      }
+      return data
+          .map((e) => FacilityReport.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+    _handleError(res);
+    return [];
+  }
+
+  /// Laporan yang di-assign ke teknisi yang sedang login
+  Future<List<FacilityReport>> getTeknisiTasks() async {
+    final res = await http.get(
+      _uri('/reports?assigned_to_me=1'),
+      headers: _headers,
+    );
+
+    if (res.statusCode == 200) {
+      final body = jsonDecode(res.body);
+      List<dynamic> data;
+      if (body is List) {
+        data = body;
+      } else if (body is Map && body['data'] != null) {
+        data = body['data'] as List<dynamic>;
+      } else {
+        return [];
+      }
+      final reports = data
+          .map((e) => FacilityReport.fromJson(e as Map<String, dynamic>))
+          .toList();
+      // Filter hanya yang masih aktif (bukan selesai)
+      return reports
+          .where((r) =>
+              r.status != ReportStatus.selesai &&
+              r.assignedTechnician != null)
+          .toList();
+    }
+    _handleError(res);
+    return [];
+  }
+
+  /// Buat laporan baru (tanpa foto — foto diupload terpisah)
+  Future<int> createReport({
+    required String title,
+    required String category,
+    required String location,
+    required String description,
+  }) async {
+    final res = await http.post(
+      _uri('/reports'),
+      headers: _headers,
+      body: jsonEncode({
+        'title': title,
+        'description': description,
+        'category': category,
+        'location': location,
+        'priority': 'rendah', // default, admin yang akan mengubah
+      }),
+    );
+
+    if (res.statusCode == 201 || res.statusCode == 200) {
+      final body = jsonDecode(res.body) as Map<String, dynamic>;
+      // Return report id untuk upload foto
+      return body['id'] as int? ?? body['report']?['id'] as int? ?? 0;
+    }
+    _handleError(res);
+    return 0;
+  }
+
+  /// Upload foto laporan dalam format base64
+  Future<void> uploadPhoto(int reportId, File imageFile) async {
+    final bytes = await imageFile.readAsBytes();
+    final base64Str = base64Encode(bytes);
+    // Tentukan mime type berdasarkan ekstensi
+    final ext = imageFile.path.split('.').last.toLowerCase();
+    final mime = ext == 'png' ? 'image/png' : 'image/jpeg';
+
+    final res = await http.post(
+      _uri('/reports/$reportId/photos'),
+      headers: _headers,
+      body: jsonEncode({
+        'data': base64Str,
+        'mime_type': mime,
+      }),
+    );
+
+    if (res.statusCode == 201 || res.statusCode == 200) return;
+    _handleError(res);
+  }
+
+  /// Update status laporan (oleh teknisi)
+  Future<void> updateStatus(int reportId, ReportStatus newStatus) async {
+    String statusStr;
+    switch (newStatus) {
+      case ReportStatus.dalamProses:
+        statusStr = 'dalam_proses';
+        break;
+      case ReportStatus.selesai:
+        statusStr = 'selesai';
+        break;
+      case ReportStatus.eskalasi:
+        statusStr = 'eskalasi';
+        break;
+      default:
+        statusStr = 'menunggu';
+    }
+
+    final res = await http.post(
+      _uri('/reports/$reportId/status'),
+      headers: _headers,
+      body: jsonEncode({'status': statusStr}),
+    );
+
+    if (res.statusCode == 200) return;
+    _handleError(res);
+  }
+
+  /// Submit rating & feedback (oleh pelapor setelah laporan selesai)
+  Future<void> submitRating(int reportId, int rating, String feedback) async {
+    final res = await http.post(
+      _uri('/reports/$reportId/rate'),
+      headers: _headers,
+      body: jsonEncode({'rating': rating, 'feedback': feedback}),
+    );
+
+    if (res.statusCode == 200) return;
+    _handleError(res);
+  }
+
+  // ── NOTIFICATIONS ────────────────────────────────────────
+
+  Future<List<AppNotification>> getNotifications() async {
+    final res = await http.get(_uri('/notifications'), headers: _headers);
+
+    if (res.statusCode == 200) {
+      final body = jsonDecode(res.body) as Map<String, dynamic>;
+      final notifList = body['notifications'] as List<dynamic>? ?? [];
+      _unreadCount = body['unread_count'] as int? ?? 0;
+      return notifList
+          .map((e) => AppNotification.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+    _handleError(res);
+    return [];
+  }
+
+  Future<void> markAllRead() async {
+    final res = await http.post(_uri('/notifications/read-all'), headers: _headers);
+    if (res.statusCode == 200) {
+      _unreadCount = 0;
+      return;
+    }
+    _handleError(res);
+  }
+
+  // ── PERFORMANCE (Teknisi) ────────────────────────────────
+
+  Future<TechnicianPerformance> getPerformance() async {
+    // Fetch data dari dua endpoint secara paralel
+    final results = await Future.wait([
+      http.get(_uri('/analytics/technicians'), headers: _headers),
+      http.get(_uri('/analytics/weekly'), headers: _headers),
+    ]);
+
+    final techRes = results[0];
+    final weeklyRes = results[1];
+
+    int completedTasks = 0;
+    double rating = 0.0;
+
+    if (techRes.statusCode == 200) {
+      final techList = jsonDecode(techRes.body) as List<dynamic>;
+      if (techList.isNotEmpty) {
+        // Ambil data teknisi pertama (yang sedang login)
+        final tech = techList[0] as Map<String, dynamic>;
+        completedTasks = tech['completed_count'] as int? ?? 0;
+        rating = (tech['rating_avg'] as num?)?.toDouble() ?? 0.0;
+      }
+    }
+
+    List<Map<String, dynamic>> weeklyData = List.generate(7, (i) {
+      final days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+      return {'day': days[i], 'selesai': 0};
+    });
+
+    if (weeklyRes.statusCode == 200) {
+      final weekList = jsonDecode(weeklyRes.body) as List<dynamic>;
+      weeklyData = weekList
+          .map((e) => {
+                'day': e['day'] as String? ?? '',
+                'selesai': e['selesai'] as int? ?? 0,
+              })
+          .toList();
+    }
+
+    return TechnicianPerformance(
+      completedTasks: completedTasks,
+      avgResolutionTime: '-',
+      rating: rating,
+      onTimeCount: 0,
+      lateCount: 0,
+      weeklyData: weeklyData,
+    );
+  }
+}
+
+/// Global singleton instance — menggantikan `api` dari mock
+final api = ApiService();

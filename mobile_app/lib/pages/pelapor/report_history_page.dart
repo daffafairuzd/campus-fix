@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/user_model.dart';
 import '../../models/report_model.dart';
-import '../../services/mock_api_service.dart';
+import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/report_card.dart';
 import 'report_detail_pelapor.dart';
@@ -28,7 +28,7 @@ class _ReportHistoryPageState extends State<ReportHistoryPage> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    final data = await api.getMyReports(widget.session.ssoId);
+    final data = await api.getMyReports();
     if (mounted) setState(() { _reports = data; _isLoading = false; });
   }
 

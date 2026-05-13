@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/user_model.dart';
+import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/campus_fix_logo.dart';
 import '../../widgets/theme_toggle_button.dart';
@@ -45,6 +46,9 @@ class _ProfilePageState extends State<ProfilePage> {
     );
 
     if (confirm == true && mounted) {
+      // Logout dari backend (hapus token Sanctum) dan bersihkan session lokal
+      await api.logout();
+      if (!mounted) return;
       Navigator.pushAndRemoveUntil(
         context,
         PageRouteBuilder(

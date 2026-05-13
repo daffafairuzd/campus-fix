@@ -8,10 +8,27 @@ class StatusStepper extends StatelessWidget {
 
   const StatusStepper({super.key, required this.currentStatus});
 
+  // Urutan status sesuai alur backend
+  static const List<ReportStatus> _steps = [
+    ReportStatus.menunggu,
+    ReportStatus.dalamProses,
+    ReportStatus.selesai,
+  ];
+
+  static const List<ReportStatus> _stepsEskalasi = [
+    ReportStatus.menunggu,
+    ReportStatus.dalamProses,
+    ReportStatus.eskalasi,
+  ];
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final steps = ReportStatus.values;
+
+    // Gunakan alur eskalasi jika status saat ini eskalasi
+    final steps = currentStatus == ReportStatus.eskalasi
+        ? _stepsEskalasi
+        : _steps;
     final currentIndex = steps.indexOf(currentStatus);
 
     return Column(
@@ -19,38 +36,46 @@ class StatusStepper extends StatelessWidget {
         final isCompleted = i < currentIndex;
         final isCurrent = i == currentIndex;
         final isLast = i == steps.length - 1;
+        final isEskalasi = steps[i] == ReportStatus.eskalasi;
+
+        final activeColor = isEskalasi ? AppColors.danger : AppColors.primary;
+        final completedColor =
+            isEskalasi ? AppColors.danger : AppColors.statusCompleted;
 
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Left column: connector + dot
+            // Left: dot + connector
             SizedBox(
               width: 28,
               child: Column(
                 children: [
-                  // Dot
                   Container(
                     width: 26,
                     height: 26,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: isCompleted
-                          ? AppColors.statusCompleted
+                          ? completedColor
                           : isCurrent
-                              ? AppColors.primary
-                              : (isDark ? AppColors.hoverDark : AppColors.bgLight),
+                              ? activeColor
+                              : (isDark
+                                  ? AppColors.hoverDark
+                                  : AppColors.bgLight),
                       border: Border.all(
                         color: isCompleted
-                            ? AppColors.statusCompleted
+                            ? completedColor
                             : isCurrent
-                                ? AppColors.primary
-                                : (isDark ? AppColors.borderDark : AppColors.borderLight),
+                                ? activeColor
+                                : (isDark
+                                    ? AppColors.borderDark
+                                    : AppColors.borderLight),
                         width: 2,
                       ),
                       boxShadow: isCurrent
                           ? [
                               BoxShadow(
-                                color: AppColors.primary.withValues(alpha: 0.35),
+                                color: activeColor.withValues(alpha: 0.35),
                                 blurRadius: 8,
                                 spreadRadius: 1,
                               ),
@@ -61,17 +86,20 @@ class StatusStepper extends StatelessWidget {
                       isCompleted
                           ? Icons.check_rounded
                           : isCurrent
-                              ? Icons.radio_button_checked_rounded
+                              ? (isEskalasi
+                                  ? Icons.warning_amber_rounded
+                                  : Icons.radio_button_checked_rounded)
                               : Icons.circle_outlined,
                       size: 14,
                       color: isCompleted
                           ? Colors.white
                           : isCurrent
                               ? Colors.white
-                              : (isDark ? AppColors.borderDark : AppColors.borderLight),
+                              : (isDark
+                                  ? AppColors.borderDark
+                                  : AppColors.borderLight),
                     ),
                   ),
-                  // Connector line
                   if (!isLast)
                     Container(
                       width: 2,
@@ -81,12 +109,19 @@ class StatusStepper extends StatelessWidget {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: isCompleted
-                              ? [AppColors.statusCompleted, AppColors.statusCompleted]
+                              ? [completedColor, completedColor]
                               : isCurrent
-                                  ? [AppColors.primary, AppColors.primary.withValues(alpha: 0.2)]
+                                  ? [
+                                      activeColor,
+                                      activeColor.withValues(alpha: 0.2)
+                                    ]
                                   : [
-                                      isDark ? AppColors.borderDark : AppColors.borderLight,
-                                      isDark ? AppColors.borderDark : AppColors.borderLight,
+                                      isDark
+                                          ? AppColors.borderDark
+                                          : AppColors.borderLight,
+                                      isDark
+                                          ? AppColors.borderDark
+                                          : AppColors.borderLight,
                                     ],
                         ),
                         borderRadius: BorderRadius.circular(1),
@@ -96,7 +131,7 @@ class StatusStepper extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            // Right column: label + sublabel
+            // Right: label
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(top: 2, bottom: 32),
@@ -107,12 +142,15 @@ class StatusStepper extends StatelessWidget {
                       statusLabel(steps[i]),
                       style: GoogleFonts.spaceGrotesk(
                         fontSize: 13,
-                        fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight:
+                            isCurrent ? FontWeight.w700 : FontWeight.w500,
                         color: isCompleted
-                            ? AppColors.statusCompleted
+                            ? completedColor
                             : isCurrent
-                                ? AppColors.primary
-                                : (isDark ? AppColors.textDim : AppColors.textDim),
+                                ? activeColor
+                                : (isDark
+                                    ? AppColors.textDim
+                                    : AppColors.textDim),
                       ),
                     ),
                     if (isCurrent)
@@ -122,7 +160,7 @@ class StatusStepper extends StatelessWidget {
                           'Status saat ini',
                           style: GoogleFonts.spaceGrotesk(
                             fontSize: 10,
-                            color: AppColors.primary.withValues(alpha: 0.7),
+                            color: activeColor.withValues(alpha: 0.7),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -134,7 +172,7 @@ class StatusStepper extends StatelessWidget {
                           'Selesai',
                           style: GoogleFonts.spaceGrotesk(
                             fontSize: 10,
-                            color: AppColors.statusCompleted.withValues(alpha: 0.7),
+                            color: completedColor.withValues(alpha: 0.7),
                             fontWeight: FontWeight.w600,
                           ),
                         ),

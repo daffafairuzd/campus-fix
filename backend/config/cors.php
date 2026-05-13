@@ -21,11 +21,14 @@ return [
 
     'allowed_origins' => [
         env('FRONTEND_URL', 'http://localhost:5173'),
-        'http://localhost:5174', // Added to handle Vite auto port increment
-        'http://localhost:3000', // Next.js / CRA fallback
+        'http://localhost:5174', // Vite auto port increment
+        'http://localhost:3000', // Next.js fallback
+        'http://localhost:8080', // Flutter Web default port
+        'http://localhost:54321', // Flutter Web dynamic port
+        'http://localhost',       // Flutter Web generic
     ],
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => ['#^http://localhost:\d+$#'], // semua port localhost
 
     'allowed_headers' => ['*'],
 
