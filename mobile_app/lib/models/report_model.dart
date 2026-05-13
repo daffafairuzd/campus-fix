@@ -77,19 +77,24 @@ class FacilityReport {
       }
     }
 
-    // Nama teknisi dari relasi assignment
+    // Nama teknisi dari relasi activeTechnicians
     String? assignedTechnician;
-    if (json['assignments'] != null && (json['assignments'] as List).isNotEmpty) {
-      final assignment = json['assignments'][0];
-      if (assignment['technician'] != null &&
-          assignment['technician']['user'] != null) {
-        assignedTechnician =
-            assignment['technician']['user']['name'] as String?;
+    try {
+      if (json['active_technicians'] != null && (json['active_technicians'] as List).isNotEmpty) {
+        assignedTechnician = json['active_technicians'][0]['name'] as String?;
+      } else if (json['assignments'] != null && (json['assignments'] as List).isNotEmpty) {
+        final assignment = json['assignments'][0];
+        if (assignment['technician'] != null) {
+          assignedTechnician = assignment['technician']['name'] as String?;
+        }
       }
+    } catch (e) {
+      print('Error parsing technician: $e');
     }
 
     // Pelapor
-    final reporterEmail = json['user']?['email'] as String? ??
+    final reporterEmail = json['reporter']?['email'] as String? ??
+        json['user']?['email'] as String? ??
         json['reporter_email'] as String? ??
         '';
 

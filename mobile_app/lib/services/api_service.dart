@@ -12,7 +12,7 @@ import '../models/report_model.dart';
 /// - Device fisik (iOS/Android) → ganti dengan IP lokal PC kamu
 String get _baseUrl {
   // Alamat IP lokal laptop agar bisa diakses dari HP fisik (satu jaringan Wi-Fi)
-  const String localIp = '192.168.18.15';
+  const String localIp = '10.169.216.87';
 
   if (kIsWeb) return 'http://localhost:8000/api';
   if (Platform.isAndroid || Platform.isIOS) return 'http://$localIp:8000/api';
@@ -137,6 +137,26 @@ class ApiService {
     }
     _handleError(res);
     throw Exception('Login gagal');
+  }
+
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    final res = await http.post(
+      _uri('/auth/change-password'),
+      headers: _headers,
+      body: jsonEncode({
+        'current_password': currentPassword,
+        'password': newPassword,
+        'password_confirmation': confirmPassword,
+      }),
+    );
+
+    if (res.statusCode != 200) {
+      _handleError(res);
+    }
   }
 
   /// Register — hanya untuk pelapor (backend hardcode role 'pelapor')

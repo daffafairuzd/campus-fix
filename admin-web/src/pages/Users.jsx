@@ -221,62 +221,84 @@ export default function Users() {
               <div className="font-bold text-ui-text text-[15px]">{isEditMode ? `Edit User: ${userForm.id}` : 'Tambah User Baru'}</div>
               <button className="text-ui-dim hover:text-ui-text" onClick={closeModal}><X className="w-4 h-4" /></button>
             </div>
-            <form onSubmit={handleSaveUser}>
-              <div className="px-6 py-5 flex flex-col gap-4">
-                <div>
-                  <label className="block text-[11px] font-semibold tracking-wider text-ui-muted mb-1.5">NAMA LENGKAP</label>
-                  <input type="text" className="input text-[12px]" placeholder="Masukkan nama..." value={userForm.name} onChange={e=>setUserForm({...userForm, name:e.target.value})} required/>
+            {tempPassword ? (
+              <div className="px-8 py-10 flex flex-col items-center text-center animate-fade-in">
+                <div className="w-16 h-16 bg-brand-primary/10 rounded-full flex items-center justify-center mb-6">
+                  <UserCheck className="w-8 h-8 text-brand-primary" />
                 </div>
-                <div>
-                  <label className="block text-[11px] font-semibold tracking-wider text-ui-muted mb-1.5">EMAIL AKADEMIK</label>
-                  <input type="email" className="input text-[12px]" placeholder="email@telkomuniversity.ac.id" value={userForm.email} onChange={e=>setUserForm({...userForm, email:e.target.value})} required/>
+                <h3 className="text-xl font-bold text-ui-text mb-2">Akun Berhasil Dibuat!</h3>
+                <p className="text-sm text-ui-dim mb-8 max-w-[280px]">
+                  Berikan password sementara di bawah ini kepada user tersebut.
+                </p>
+                
+                <div className="w-full bg-dark-bg border border-dark-border rounded-xl p-5 mb-8 flex flex-col gap-2 group relative">
+                  <span className="text-[10px] font-bold text-ui-muted tracking-widest uppercase">Password Sementara</span>
+                  <div className="text-2xl font-mono font-bold text-brand-primary tracking-wider select-all cursor-pointer">
+                    {tempPassword}
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+
+                <button className="btn btn-primary w-full py-3" onClick={closeModal}>
+                  Selesai & Tutup
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSaveUser}>
+                <div className="px-6 py-5 flex flex-col gap-4">
                   <div>
-                    <label className="block text-[11px] font-semibold tracking-wider text-ui-muted mb-1.5">NIP / NIM</label>
-                    <input type="text" className="input text-[12px] font-mono" placeholder="Kosongkan jika tidak ada" value={userForm.nim} onChange={e=>setUserForm({...userForm, nim:e.target.value})} />
+                    <label className="block text-[11px] font-semibold tracking-wider text-ui-muted mb-1.5">NAMA LENGKAP</label>
+                    <input type="text" className="input text-[12px]" placeholder="Masukkan nama..." value={userForm.name} onChange={e=>setUserForm({...userForm, name:e.target.value})} required/>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold tracking-wider text-ui-muted mb-1.5">ROLE AKSES</label>
-                    <select className="input text-[12px]" value={userForm.role} onChange={e=>setUserForm({...userForm, role:e.target.value})}>
-                      {/* Teknisi sebagai default karena paling sering dibuat */}
-                      {["Teknisi", "Admin", "Pelapor"].map(r => <option key={r} className="bg-dark-bg">{r}</option>)}
-                    </select>
+                    <label className="block text-[11px] font-semibold tracking-wider text-ui-muted mb-1.5">EMAIL AKADEMIK</label>
+                    <input type="email" className="input text-[12px]" placeholder="email@telkomuniversity.ac.id" value={userForm.email} onChange={e=>setUserForm({...userForm, email:e.target.value})} required/>
                   </div>
-                </div>
-                {!isEditMode && (
-                  <div className="bg-dark-bg border border-brand-primary/20 rounded-lg p-3">
-                    <div className="text-[10px] text-brand-primary font-bold mb-1">📌 INFO PEMBUATAN AKUN</div>
-                    <div className="text-[11px] text-ui-dim leading-relaxed">
-                      Password sementara akan digenerate otomatis. Teknisi/Admin akan diminta mengganti password saat login pertama kali.
-                    </div>
-                  </div>
-                )}
-                {isEditMode && (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[11px] font-semibold tracking-wider text-ui-muted mb-1.5">STATUS AKUN (LOGIN)</label>
-                      <select className="input text-[12px]" value={userForm.status} onChange={e=>setUserForm({...userForm, status:e.target.value})}>
-                        {["Aktif", "Nonaktif"].map(s => <option key={s} value={s.toLowerCase()} className="bg-dark-bg">{s}</option>)}
+                      <label className="block text-[11px] font-semibold tracking-wider text-ui-muted mb-1.5">NIP / NIM</label>
+                      <input type="text" className="input text-[12px] font-mono" placeholder="Kosongkan jika tidak ada" value={userForm.nim} onChange={e=>setUserForm({...userForm, nim:e.target.value})} />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold tracking-wider text-ui-muted mb-1.5">ROLE AKSES</label>
+                      <select className="input text-[12px]" value={userForm.role} onChange={e=>setUserForm({...userForm, role:e.target.value})}>
+                        {["Teknisi", "Admin", "Pelapor"].map(r => <option key={r} value={r.toLowerCase()} className="bg-dark-bg">{r}</option>)}
                       </select>
                     </div>
-                    {userForm.role === 'teknisi' && (
+                  </div>
+                  {!isEditMode && (
+                    <div className="bg-dark-bg border border-brand-primary/20 rounded-lg p-3">
+                      <div className="text-[10px] text-brand-primary font-bold mb-1">📌 INFO PEMBUATAN AKUN</div>
+                      <div className="text-[11px] text-ui-dim leading-relaxed">
+                        Password sementara akan digenerate otomatis. Teknisi/Admin akan diminta mengganti password saat login pertama kali.
+                      </div>
+                    </div>
+                  )}
+                  {isEditMode && (
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[11px] font-semibold tracking-wider text-ui-muted mb-1.5">KETERSEDIAAN TEKNISI</label>
-                        <select className="input text-[12px]" value={userForm.availability_status} onChange={e=>setUserForm({...userForm, availability_status:e.target.value})}>
-                          <option value="aktif" className="bg-dark-bg">Tersedia (Aktif)</option>
-                          <option value="cuti" className="bg-dark-bg">Sedang Cuti / Libur</option>
+                        <label className="block text-[11px] font-semibold tracking-wider text-ui-muted mb-1.5">STATUS AKUN (LOGIN)</label>
+                        <select className="input text-[12px]" value={userForm.status} onChange={e=>setUserForm({...userForm, status:e.target.value})}>
+                          {["Aktif", "Nonaktif"].map(s => <option key={s} value={s.toLowerCase()} className="bg-dark-bg">{s}</option>)}
                         </select>
                       </div>
-                    )}
-                  </div>
-                )}
-              </div>
-              <div className="px-6 py-4 bg-dark-hover flex justify-end gap-3 border-t border-dark-border">
-                <button type="button" className="btn btn-ghost" onClick={closeModal}>Batal</button>
-                <button type="submit" className="btn btn-primary">{isEditMode ? 'Simpan Perubahan' : 'Buat Akun'}</button>
-              </div>
-            </form>
+                      {userForm.role === 'teknisi' && (
+                        <div>
+                          <label className="block text-[11px] font-semibold tracking-wider text-ui-muted mb-1.5">KETERSEDIAAN TEKNISI</label>
+                          <select className="input text-[12px]" value={userForm.availability_status} onChange={e=>setUserForm({...userForm, availability_status:e.target.value})}>
+                            <option value="aktif" className="bg-dark-bg">Tersedia (Aktif)</option>
+                            <option value="cuti" className="bg-dark-bg">Sedang Cuti / Libur</option>
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div className="px-6 py-4 bg-dark-hover flex justify-end gap-3 border-t border-dark-border">
+                  <button type="button" className="btn btn-ghost" onClick={closeModal}>Batal</button>
+                  <button type="submit" className="btn btn-primary">{isEditMode ? 'Simpan Perubahan' : 'Buat Akun'}</button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

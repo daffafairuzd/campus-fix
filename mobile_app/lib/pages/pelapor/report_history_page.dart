@@ -28,8 +28,25 @@ class _ReportHistoryPageState extends State<ReportHistoryPage> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    final data = await api.getMyReports();
-    if (mounted) setState(() { _reports = data; _isLoading = false; });
+    try {
+      final data = await api.getMyReports();
+      if (mounted) {
+        setState(() {
+          _reports = data;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal memuat data: ${e.toString().replaceAll('Exception: ', '')}'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   List<FacilityReport> get _filtered {

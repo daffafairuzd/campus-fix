@@ -6,6 +6,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/campus_fix_logo.dart';
 import '../../widgets/theme_toggle_button.dart';
 import '../auth/login_page.dart';
+import 'change_password_page.dart';
 
 class ProfilePage extends StatefulWidget {
   final UserSession session;
@@ -162,9 +163,20 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           const SizedBox(height: 20),
 
-          // Settings
           _SectionHeader('Pengaturan'),
           _SettingsCard(isDark: isDark, children: [
+            // Ganti Password
+            _MenuTile(
+              Icons.lock_outline_rounded, 
+              'Ganti Password', 
+              'Perbarui keamanan akun', 
+              isDark,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ChangePasswordPage()),
+              ),
+            ),
+            Divider(height: 1, color: isDark ? AppColors.borderDark : AppColors.borderLight),
             // Dark mode toggle
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -364,23 +376,35 @@ class _MenuTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final bool isDark;
-  const _MenuTile(this.icon, this.title, this.subtitle, this.isDark);
+  final VoidCallback? onTap;
+
+  const _MenuTile(this.icon, this.title, this.subtitle, this.isDark, {this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: AppColors.textMuted),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(title,
-                style: GoogleFonts.spaceGrotesk(fontSize: 13, fontWeight: FontWeight.w600)),
-          ),
-          Text(subtitle,
-              style: GoogleFonts.spaceGrotesk(fontSize: 11, color: AppColors.textMuted)),
-        ],
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: AppColors.textMuted),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: GoogleFonts.spaceGrotesk(fontSize: 13, fontWeight: FontWeight.w600)),
+                  Text(subtitle,
+                      style: GoogleFonts.spaceGrotesk(fontSize: 11, color: AppColors.textMuted)),
+                ],
+              ),
+            ),
+            if (onTap != null)
+              Icon(Icons.chevron_right_rounded, size: 16, color: AppColors.textDim),
+          ],
+        ),
       ),
     );
   }

@@ -83,7 +83,13 @@ class _PelaporHomePageState extends State<PelaporHomePage>
     return Scaffold(
       // Extend body behind navbar agar konten bisa scroll full
       extendBody: true,
-      body: IndexedStack(index: _selectedIndex, children: _pages),
+      body: _selectedIndex == 0
+          ? DashboardPage(session: widget.session)
+          : _selectedIndex == 1
+              ? ReportHistoryPage(session: widget.session)
+              : _selectedIndex == 2
+                  ? NotificationPage(session: widget.session)
+                  : ProfilePage(session: widget.session),
       bottomNavigationBar: SizeTransition(
         sizeFactor: _navSlide,
         axisAlignment: 1.0, // slide dari bawah
