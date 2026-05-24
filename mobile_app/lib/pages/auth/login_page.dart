@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../services/api_service.dart';
+import '../../services/fcm_service.dart';
 import '../../models/user_model.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/campus_fix_logo.dart';
@@ -63,6 +64,9 @@ class _LoginPageState extends State<LoginPage>
         ssoId: ssoId,
         password: password,
       );
+
+      // Kirim FCM token ke backend setelah login berhasil
+      await FcmService.init();
 
       if (!mounted) return;
 

@@ -7,7 +7,9 @@ use App\Models\ReportAssignment;
 use App\Models\ReportHistory;
 use App\Models\Technician;
 use App\Models\Notification;
+use App\Models\User;
 use App\Events\TechnicianAssigned;
+use App\Services\FcmService;
 use Illuminate\Http\Request;
 
 class AssignmentController extends Controller
@@ -84,6 +86,17 @@ class AssignmentController extends Controller
                 'message'   => "Anda ditugaskan untuk menangani laporan #{$report->report_number}: {$report->title}",
             ]);
 
+            // Push notification FCM ke teknisi
+            $teknisi = User::find($techId);
+            if ($teknisi?->fcm_token) {
+                app(FcmService::class)->send(
+                    $teknisi->fcm_token,
+                    'Penugasan Baru',
+                    "Anda ditugaskan untuk menangani laporan #{$report->report_number}: {$report->title}",
+                    ['report_id' => (string) $report->id, 'type' => 'assignment'],
+                );
+            }
+
             // Broadcast realtime ke teknisi
             broadcast(new TechnicianAssigned($report, $techId))->toOthers();
         }
@@ -91,6 +104,25 @@ class AssignmentController extends Controller
         // Update status laporan ke dalam_proses jika masih menunggu
         if ($report->status === 'menunggu') {
             $report->update(['status' => 'dalam_proses']);
+
+            // Notifikasi + FCM ke pelapor
+            Notification::create([
+                'user_id'   => $report->reporter_id,
+                'report_id' => $report->id,
+                'type'      => 'status_update',
+                'title'     => 'Status Laporan Diperbarui',
+                'message'   => "Laporan #{$report->report_number} kini berstatus: dalam_proses.",
+            ]);
+
+            $pelapor = User::find($report->reporter_id);
+            if ($pelapor?->fcm_token) {
+                app(FcmService::class)->send(
+                    $pelapor->fcm_token,
+                    'Status Laporan Diperbarui',
+                    "Laporan #{$report->report_number} kini sedang dalam proses penanganan.",
+                    ['report_id' => (string) $report->id, 'type' => 'status_update'],
+                );
+            }
         }
 
         // Tambah history

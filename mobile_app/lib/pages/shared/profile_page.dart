@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/user_model.dart';
 import '../../services/api_service.dart';
+import '../../services/fcm_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/campus_fix_logo.dart';
 import '../../widgets/theme_toggle_button.dart';
@@ -18,6 +20,30 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   bool _notifEnabled = true;
+  static const _keyNotif = 'notif_enabled';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotifPreference();
+  }
+
+  Future<void> _loadNotifPreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() => _notifEnabled = prefs.getBool(_keyNotif) ?? true);
+  }
+
+  Future<void> _toggleNotif(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyNotif, value);
+    setState(() => _notifEnabled = value);
+
+    if (value) {
+      await FcmService.enableNotifications();
+    } else {
+      await FcmService.disableNotifications();
+    }
+  }
 
   Future<void> _logout() async {
     final confirm = await showDialog<bool>(
@@ -224,7 +250,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   Switch.adaptive(
                     value: _notifEnabled,
-                    onChanged: (v) => setState(() => _notifEnabled = v),
+                    onChanged: _toggleNotif,
                     activeTrackColor: AppColors.primary,
                   ),
                 ],

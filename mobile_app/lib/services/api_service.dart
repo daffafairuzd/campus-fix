@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
+import 'fcm_service.dart';
 import '../models/report_model.dart';
 
 /// Base URL backend Laravel — otomatis menyesuaikan platform:
@@ -12,7 +13,7 @@ import '../models/report_model.dart';
 /// - Device fisik (iOS/Android) → ganti dengan IP lokal PC kamu
 String get _baseUrl {
   // Alamat IP lokal laptop agar bisa diakses dari HP fisik (satu jaringan Wi-Fi)
-  const String localIp = '192.168.18.18';
+  const String localIp = '192.168.18.5';
 
   if (kIsWeb) return 'http://localhost:8000/api';
   if (Platform.isAndroid || Platform.isIOS) return 'http://$localIp:8000/api';
@@ -190,6 +191,7 @@ class ApiService {
   /// Logout — hapus token dari backend & local
   Future<void> logout() async {
     try {
+      await FcmService.clearToken();
       await http.post(_uri('/auth/logout'), headers: _headers);
     } catch (_) {
       // Ignore network errors saat logout
@@ -354,6 +356,20 @@ class ApiService {
 
     if (res.statusCode == 200) return;
     _handleError(res);
+  }
+
+  // ── FCM TOKEN ────────────────────────────────────────────
+
+  Future<void> sendFcmToken(String token) async {
+    try {
+      await http.post(
+        _uri('/auth/fcm-token'),
+        headers: _headers,
+        body: jsonEncode({'fcm_token': token}),
+      );
+    } catch (_) {
+      // Gagal kirim token tidak perlu crash app
+    }
   }
 
   // ── NOTIFICATIONS ────────────────────────────────────────

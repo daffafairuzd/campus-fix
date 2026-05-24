@@ -10,8 +10,11 @@ use App\Models\Notification;
 use App\Models\User;
 use App\Events\ReportCreated;
 use App\Events\ReportStatusUpdated;
+use App\Services\FcmService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class ReportController extends Controller
 {
@@ -146,8 +149,20 @@ class ReportController extends Controller
      */
     public function uploadPhoto(Request $request, Report $report)
     {
+        if ($request->user()->isTechnician()) {
+            $isAssigned = $report->activeTechnicians()
+                ->where('users.id', $request->user()->id)
+                ->exists();
+
+            if (!$isAssigned) {
+                return response()->json([
+                    'message' => 'Anda tidak lagi ditugaskan pada laporan ini.',
+                ], 403);
+            }
+        }
+
         \Log::info('Upload photo attempt for report: ' . $report->id, $request->except('photo_data'));
-        
+
         $validator = \Validator::make($request->all(), [
             'photo_data'    => 'required|string',
             'original_name' => 'nullable|string|max:255',
@@ -204,6 +219,19 @@ class ReportController extends Controller
             'description' => 'nullable|string',
         ]);
 
+        // Teknisi harus masih assigned aktif ke laporan ini
+        if ($request->user()->isTechnician()) {
+            $isAssigned = $report->activeTechnicians()
+                ->where('users.id', $request->user()->id)
+                ->exists();
+
+            if (!$isAssigned) {
+                return response()->json([
+                    'message' => 'Anda tidak lagi ditugaskan pada laporan ini.',
+                ], 403);
+            }
+        }
+
         $oldStatus = $report->status;
         $newStatus = $request->status;
 
@@ -233,6 +261,17 @@ class ReportController extends Controller
             'title'     => 'Status Laporan Diperbarui',
             'message'   => "Laporan #{$report->report_number} kini berstatus: {$newStatus}.",
         ]);
+
+        // Push notification FCM ke pelapor
+        $pelapor = User::find($report->reporter_id);
+        if ($pelapor?->fcm_token) {
+            app(FcmService::class)->send(
+                $pelapor->fcm_token,
+                'Status Laporan Diperbarui',
+                "Laporan #{$report->report_number} kini berstatus: {$newStatus}.",
+                ['report_id' => (string) $report->id, 'type' => 'status_update'],
+            );
+        }
 
         return response()->json($report->fresh()->load(['reporter', 'activeTechnicians', 'histories.user']));
     }

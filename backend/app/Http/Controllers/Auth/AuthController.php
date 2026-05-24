@@ -87,6 +87,7 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
+        $request->user()->update(['fcm_token' => null]);
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Logged out successfully.']);
     }
@@ -103,6 +104,14 @@ class AuthController extends Controller
     /**
      * Change password — untuk first login teknisi/admin
      */
+    public function saveFcmToken(Request $request)
+    {
+        $request->validate(['fcm_token' => 'required|string']);
+        $token = $request->fcm_token;
+        $request->user()->update(['fcm_token' => $token === '' ? null : $token]);
+        return response()->json(['message' => 'FCM token saved.']);
+    }
+
     public function changePassword(Request $request)
     {
         $request->validate([
