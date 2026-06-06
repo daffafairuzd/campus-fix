@@ -12,7 +12,7 @@ import '../models/report_model.dart';
 /// - Device fisik (iOS/Android) → ganti dengan IP lokal PC kamu
 String get _baseUrl {
   // Alamat IP lokal laptop agar bisa diakses dari HP fisik (satu jaringan Wi-Fi)
-  const String localIp = '10.33.187.26';
+  const String localIp = '10.57.189.92';
 
   if (kIsWeb) return 'http://localhost:8000/api';
   if (Platform.isAndroid || Platform.isIOS) return 'http://$localIp:8000/api';
@@ -195,6 +195,56 @@ class ApiService {
       // Ignore network errors saat logout
     }
     await clearSession();
+  }
+
+
+
+  // ── FORGOT PASSWORD (OTP Flow) ────────────────────────────
+
+  /// Step 1: Kirim OTP ke email
+  Future<void> sendForgotPasswordOtp({required String email}) async {
+    final res = await http.post(
+      _uri('/auth/forgot-password/send-otp'),
+      headers: _headers,
+      body: jsonEncode({'email': email}),
+    );
+    if (res.statusCode == 200) return;
+    _handleError(res);
+  }
+
+  /// Step 2: Verifikasi OTP
+  Future<void> verifyForgotPasswordOtp({
+    required String email,
+    required String otp,
+  }) async {
+    final res = await http.post(
+      _uri('/auth/forgot-password/verify-otp'),
+      headers: _headers,
+      body: jsonEncode({'email': email, 'otp': otp}),
+    );
+    if (res.statusCode == 200) return;
+    _handleError(res);
+  }
+
+  /// Step 3: Reset password dengan OTP yang sudah terverifikasi
+  Future<void> resetPassword({
+    required String email,
+    required String otp,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    final res = await http.post(
+      _uri('/auth/forgot-password/reset'),
+      headers: _headers,
+      body: jsonEncode({
+        'email': email,
+        'otp': otp,
+        'password': password,
+        'password_confirmation': passwordConfirmation,
+      }),
+    );
+    if (res.statusCode == 200) return;
+    _handleError(res);
   }
 
   // ── REPORTS ──────────────────────────────────────────────

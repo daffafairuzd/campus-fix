@@ -7,6 +7,7 @@ import '../../widgets/campus_fix_logo.dart';
 import '../pelapor/pelapor_home_page.dart';
 import '../teknisi/teknisi_home_page.dart';
 import 'register_page.dart';
+import 'forgot_password_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -190,7 +191,7 @@ class _LoginPageState extends State<LoginPage>
                             const SizedBox(height: 16),
                           ],
 
-                          // SSO ID Field
+                          // Email Field
                           Text(
                             'SSO ID',
                             style: GoogleFonts.inter(
@@ -203,15 +204,15 @@ class _LoginPageState extends State<LoginPage>
                           const SizedBox(height: 6),
                           TextField(
                             controller: _ssoController,
-                            keyboardType: TextInputType.text,
+                            keyboardType: TextInputType.emailAddress,
                             onChanged: (_) {
                               if (_errorMessage.isNotEmpty) {
                                 setState(() => _errorMessage = '');
                               }
                             },
                             decoration: InputDecoration(
-                              hintText: 'contoh: asep321',
-                              prefixIcon: const Icon(Icons.person_outline_rounded),
+                              hintText: 'contoh: nama@student.telkomuniversity.ac.id',
+                              prefixIcon: const Icon(Icons.mail_outline_rounded),
                               suffixIcon: _ssoController.text.isNotEmpty
                                   ? IconButton(
                                       icon: const Icon(Icons.clear, size: 18),
@@ -279,7 +280,7 @@ class _LoginPageState extends State<LoginPage>
                           ),
                           const SizedBox(height: 20),
 
-                          const SizedBox(height: 28),
+                          // const SizedBox(height: 28),
 
                           // Login Button
                           AnimatedSwitcher(
@@ -311,6 +312,28 @@ class _LoginPageState extends State<LoginPage>
                                       elevation: 0,
                                     ),
                                   ),
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Lupa Password Link
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: GestureDetector(
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const ForgotPasswordPage(),
+                                ),
+                              ),
+                              child: Text(
+                                'Lupa Password?',
+                                style: GoogleFonts.spaceGrotesk(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
                           ),
                           const SizedBox(height: 20),
 
