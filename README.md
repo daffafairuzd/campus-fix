@@ -9,7 +9,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 
-*Campus Fix adalah platform terpadu yang dirancang khusus untuk Telkom University guna mendigitalisasi pelaporan, penugasan, dan pemantauan perbaikan fasilitas kampus secara _real-time_.*
+*Campus Fix adalah platform terpadu yang dirancang guna mendigitalisasi pelaporan, penugasan, dan pemantauan perbaikan fasilitas kampus secara _real-time_.*
 
 </div>
 

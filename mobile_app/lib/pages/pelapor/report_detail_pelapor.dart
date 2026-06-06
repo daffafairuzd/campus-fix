@@ -7,6 +7,7 @@ import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/status_badge.dart';
 import '../../widgets/status_stepper.dart';
+import '../../widgets/photo_gallery.dart';
 
 class ReportDetailPelapor extends StatefulWidget {
   final FacilityReport report;
@@ -100,7 +101,13 @@ class _ReportDetailPelaporState extends State<ReportDetailPelapor> {
         child: Column(
           children: [
             // Photo / placeholder
-            _PhotoSection(report: report),
+            if (report.reportPhotos.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 16, left: 20, right: 20),
+                child: PhotoGallery(photoUrls: report.reportPhotos, title: 'laporan'),
+              )
+            else
+              _PhotoSection(report: report),
 
             Padding(
               padding: const EdgeInsets.all(20),
@@ -171,32 +178,13 @@ class _ReportDetailPelaporState extends State<ReportDetailPelapor> {
                   const SizedBox(height: 16),
                   StatusStepper(currentStatus: report.status),
 
-                  if (report.completionPhotoUrl.isNotEmpty) ...[
+                  if (report.completionPhotos.isNotEmpty) ...[
                     const SizedBox(height: 24),
                     const _Divider(),
                     const SizedBox(height: 16),
                     _SectionTitle('Foto Hasil Perbaikan'),
                     const SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        height: 200,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0A0F14),
-                          border: Border.all(color: isDark ? AppColors.borderDark : AppColors.borderLight),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: report.completionPhotoUrl.startsWith('http')
-                            ? Image.network(report.completionPhotoUrl, fit: BoxFit.cover)
-                            : Image.memory(
-                                base64Decode(report.completionPhotoUrl.contains(',')
-                                    ? report.completionPhotoUrl.split(',')[1]
-                                    : report.completionPhotoUrl),
-                                fit: BoxFit.cover,
-                              ),
-                      ),
-                    ),
+                    PhotoGallery(photoUrls: report.completionPhotos, title: 'penyelesaian'),
                   ],
 
                   // Rating & Feedback (hanya jika selesai)

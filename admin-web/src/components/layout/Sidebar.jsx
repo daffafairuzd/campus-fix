@@ -45,7 +45,7 @@ export default function Sidebar() {
       <div className="px-[18px] py-[20px] pb-[16px] border-b border-dark-border">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden bg-white p-0.5 shadow-sm">
-            <img src="/logo.png" alt="CampusFix" className="w-full h-full object-contain" />
+            <img src="/logo.svg" alt="CampusFix" className="w-full h-full object-contain" />
           </div>
           <div>
             <div className="font-display font-bold text-[15px] text-brand-secondary leading-tight">

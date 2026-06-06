@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Report;
+use App\Models\ReportAssignment;
+use App\Models\Technician;
 use Faker\Factory as Faker;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -31,10 +33,21 @@ class MassDataSeeder extends Seeder
             ]);
         }
 
+        // Ambil semua teknisi yang sudah ada (dari UserSeeder)
+        $technicians = Technician::with('user')->get();
+        $technicianUserIds = $technicians->pluck('user.id')->toArray();
+
+        // Ambil admin untuk assigned_by
+        $admin = User::where('role', 'admin')->first();
+
         // Create 150 Reports
-        $categories = ['Listrik & AC', 'Air & Pipa', 'Gedung & Fasilitas', 'IT & Jaringan', 'Kebersihan', 'Lainnya'];
+        $categories = ['HVAC', 'Listrik', 'Lab', 'Plumbing', 'Jaringan', 'Lift', 'Lainnya'];
         $priorities = ['kritis', 'tinggi', 'sedang', 'rendah'];
         $statuses = ['menunggu', 'assessment', 'dalam_proses', 'selesai', 'eskalasi'];
+
+        // Koordinat sekitar Tel-U Bandung
+        $campusLat = -6.9731;
+        $campusLng = 107.6312;
 
         $telULocations = [
             'Gedung SEBATIK' => ['Aula FIK Lantai 5'],
@@ -55,38 +68,44 @@ class MassDataSeeder extends Seeder
         ];
 
         $realisticIssues = [
-            'Listrik & AC' => [
-                ['title' => 'AC mati mendadak', 'desc' => 'AC di ruangan tiba-tiba mati dan tidak bisa dinyalakan lagi dengan remote. Udara jadi sangat panas.'],
-                ['title' => 'Lampu putus', 'desc' => 'Ada beberapa lampu yang mati sehingga ruangan menjadi gelap dan kurang nyaman untuk aktivitas.'],
-                ['title' => 'Stop kontak tidak berfungsi', 'desc' => 'Stop kontak di area sudut ruangan tidak ada arusnya, sudah dicoba dengan beberapa perangkat.'],
-                ['title' => 'AC bocor', 'desc' => 'Air menetes dari unit AC indoor hingga membasahi lantai, mohon segera ditangani agar tidak licin.'],
+            'Listrik' => [
+                ['title' => 'Lampu putus', 'desc' => 'Ada beberapa lampu yang mati sehingga ruangan menjadi gelap dan kurang nyaman.'],
+                ['title' => 'Stop kontak rusak', 'desc' => 'Stop kontak tidak ada arusnya.'],
+                ['title' => 'Listrik jeglek', 'desc' => 'MCB turun terus saat menyalakan komputer.'],
             ],
-            'Air & Pipa' => [
-                ['title' => 'Keran air patah', 'desc' => 'Keran wastafel patah dan air terus mengalir deras, butuh perbaikan segera sebelum banjir.'],
-                ['title' => 'Saluran air mampet', 'desc' => 'Saluran pembuangan air tersumbat dan menimbulkan genangan air serta bau tidak sedap.'],
-                ['title' => 'Air mati', 'desc' => 'Air di toilet tidak menyala sama sekali dari pagi hari.'],
+            'HVAC' => [
+                ['title' => 'AC mati mendadak', 'desc' => 'AC tiba-tiba mati dan tidak bisa dinyalakan.'],
+                ['title' => 'AC bocor', 'desc' => 'Air menetes dari unit AC indoor.'],
+                ['title' => 'AC tidak dingin', 'desc' => 'AC menyala tapi anginnya kurang dingin.'],
             ],
-            'Gedung & Fasilitas' => [
-                ['title' => 'Gagang pintu rusak', 'desc' => 'Gagang pintu masuk ruangan copot dan pintunya jadi sulit untuk dibuka tutup.'],
-                ['title' => 'Plafon bocor', 'desc' => 'Ada rembesan air dari plafon saat hujan deras kemarin, terlihat bercak coklat di langit-langit.'],
-                ['title' => 'Kursi rusak', 'desc' => 'Ada beberapa kursi mahasiswa yang patah di bagian sandarannya, sangat berbahaya jika diduduki.'],
-                ['title' => 'Kaca jendela retak', 'desc' => 'Kaca jendela di bagian ujung retak panjang, butuh penggantian sebelum pecah.'],
+            'Lab' => [
+                ['title' => 'PC Lab error', 'desc' => 'Komputer di meja 3 tidak bisa masuk Windows.'],
+                ['title' => 'Monitor bergaris', 'desc' => 'Layar monitor bergetar dan ada garis vertikal.'],
+                ['title' => 'Software tidak lisensi', 'desc' => 'Aplikasi SPSS minta aktivasi.'],
             ],
-            'IT & Jaringan' => [
-                ['title' => 'Koneksi WiFi lambat', 'desc' => 'Sinyal WiFi penuh tapi tidak bisa dipakai browsing sama sekali atau sangat lambat.'],
-                ['title' => 'Proyektor tidak terdeteksi', 'desc' => 'Kabel HDMI sudah dipasang ke laptop tapi proyektor tetap menunjukkan no signal.'],
-                ['title' => 'Kabel LAN terputus', 'desc' => 'Koneksi internet via kabel LAN di meja dosen tidak berfungsi, indikator port mati.'],
+            'Plumbing' => [
+                ['title' => 'Keran air patah', 'desc' => 'Keran wastafel patah dan air terus mengalir.'],
+                ['title' => 'Saluran mampet', 'desc' => 'Saluran pembuangan air tersumbat dan bau.'],
+                ['title' => 'Air toilet mati', 'desc' => 'Air di toilet tidak menyala sama sekali dari pagi.'],
             ],
-            'Kebersihan' => [
-                ['title' => 'Area kotor belum disapu', 'desc' => 'Lantai terlihat sangat kotor seperti belum dibersihkan dari kemarin.'],
-                ['title' => 'Tempat sampah penuh', 'desc' => 'Tempat sampah di area ini sudah penuh dan menumpuk hingga keluar, mohon segera diangkut.'],
-                ['title' => 'Toilet bau', 'desc' => 'Toilet tercium bau tidak sedap dan lantainya licin kotor.'],
+            'Jaringan' => [
+                ['title' => 'Koneksi WiFi lambat', 'desc' => 'Sinyal WiFi penuh tapi tidak bisa dipakai browsing.'],
+                ['title' => 'Kabel LAN terputus', 'desc' => 'Koneksi internet via kabel LAN tidak berfungsi.'],
+                ['title' => 'SSID hilang', 'desc' => 'WiFi TUPublic tidak terdeteksi.'],
+            ],
+            'Lift' => [
+                ['title' => 'Lift anjlok', 'desc' => 'Lift terasa turun mendadak saat di lantai 4.'],
+                ['title' => 'Tombol lift macet', 'desc' => 'Tombol lantai 3 tidak bisa ditekan.'],
+                ['title' => 'Pintu lift lambat', 'desc' => 'Pintu lift butuh waktu lama untuk menutup.'],
             ],
             'Lainnya' => [
-                ['title' => 'Kunci ruangan macet', 'desc' => 'Anak kunci tersangkut di lubang kunci dan tidak bisa ditarik keluar.'],
-                ['title' => 'Suara bising dari atap', 'desc' => 'Terdengar suara bising mesin yang mengganggu konsentrasi dari bagian atap ruangan.'],
+                ['title' => 'Kunci ruangan macet', 'desc' => 'Anak kunci tersangkut di lubang kunci.'],
+                ['title' => 'Suara bising atap', 'desc' => 'Terdengar suara bising mesin dari atap.'],
+                ['title' => 'Gagang pintu copot', 'desc' => 'Gagang pintu utama ruangan copot.'],
             ]
         ];
+
+        $completedCountPerTech = [];
 
         foreach ($users as $user) {
             // Each user creates 3 reports
@@ -94,30 +113,106 @@ class MassDataSeeder extends Seeder
                 $priority = $faker->randomElement($priorities);
                 $status = $faker->randomElement($statuses);
                 
-                // Random creation date within last 3 months
-                $createdAt = Carbon::now()->subDays(rand(0, 90));
+                // Random creation date within the last 5 days so it falls in 'Bulan Ini'
+                $createdAt = Carbon::now()->subDays(rand(0, 5));
 
                 $building = $faker->randomElement(array_keys($telULocations));
                 $location = $faker->randomElement($telULocations[$building]);
                 $category = $faker->randomElement($categories);
                 $issue = $faker->randomElement($realisticIssues[$category]);
 
-                Report::create([
+                // SLA deadline: 1-7 hari setelah dibuat
+                $slaDeadline = $createdAt->copy()->addDays(rand(1, 7));
+
+                // closed_at & rating untuk laporan selesai
+                $closedAt = null;
+                $rating = null;
+                $feedbackText = null;
+
+                if ($status === 'selesai') {
+                    // 70% tepat waktu (closed sebelum deadline), 30% terlambat
+                    if ($faker->boolean(70)) {
+                        // Tepat waktu: close 1-5 hari setelah dibuat, tapi sebelum deadline
+                        $closedAt = $createdAt->copy()->addDays(rand(1, max(1, $slaDeadline->diffInDays($createdAt) - 1)));
+                        if ($closedAt->gt($slaDeadline)) {
+                            $closedAt = $slaDeadline->copy()->subHours(rand(1, 12));
+                        }
+                    } else {
+                        // Terlambat: close setelah deadline
+                        $closedAt = $slaDeadline->copy()->addDays(rand(1, 5));
+                    }
+                    
+                    $rating = $faker->randomElement([3, 4, 4, 5, 5, 5]);
+                    $feedbackText = $faker->randomElement([
+                        'Perbaikan cepat dan memuaskan!',
+                        'Teknisi ramah dan profesional.',
+                        'Lumayan, tapi agak lama prosesnya.',
+                        'Bagus, terima kasih atas penanganannya.',
+                        'Cepat tanggap, sangat membantu.',
+                        null,
+                    ]);
+                }
+
+                // Latitude & Longitude random di sekitar kampus Tel-U
+                $latitude = $campusLat + ($faker->randomFloat(4, -0.003, 0.003));
+                $longitude = $campusLng + ($faker->randomFloat(4, -0.003, 0.003));
+
+                $report = Report::create([
                     'title' => $issue['title'],
                     'description' => $issue['desc'],
                     'category' => $category,
                     'location' => $location,
+                    'building' => $building,
+                    'latitude' => $latitude,
+                    'longitude' => $longitude,
                     'priority' => $priority,
                     'status' => $status,
                     'reporter_id' => $user->id,
                     'is_analyzed' => $status !== 'menunggu' ? true : $faker->boolean,
-                    'sla_deadline' => $createdAt->copy()->addDays(rand(1, 7)),
+                    'sla_deadline' => $slaDeadline,
+                    'closed_at' => $closedAt,
+                    'rating' => $rating,
+                    'feedback_text' => $feedbackText,
                     'created_at' => $createdAt,
-                    'updated_at' => $createdAt,
+                    'updated_at' => $closedAt ?? $createdAt,
                 ]);
+
+                // Assign teknisi untuk status assessment, dalam_proses, selesai, eskalasi
+                if (in_array($status, ['assessment', 'dalam_proses', 'selesai', 'eskalasi']) && !empty($technicianUserIds)) {
+                    $techUserId = $faker->randomElement($technicianUserIds);
+
+                    ReportAssignment::create([
+                        'report_id' => $report->id,
+                        'technician_id' => $techUserId,
+                        'assigned_by' => $admin ? $admin->id : $techUserId,
+                        'is_active' => $status !== 'selesai',
+                    ]);
+
+                    // Track completed count
+                    if ($status === 'selesai') {
+                        if (!isset($completedCountPerTech[$techUserId])) {
+                            $completedCountPerTech[$techUserId] = 0;
+                        }
+                        $completedCountPerTech[$techUserId]++;
+                    }
+                }
             }
         }
 
-        $this->command->info('MassDataSeeder completed: Created 50 users and 150 reports.');
+        // Update completed_count dan rating_avg di tabel technicians
+        foreach ($technicians as $tech) {
+            $userId = $tech->user->id;
+            $assignedReportIds = ReportAssignment::where('technician_id', $userId)->pluck('report_id');
+            
+            $completedCount = Report::whereIn('id', $assignedReportIds)->where('status', 'selesai')->count();
+            $avgRating = Report::whereIn('id', $assignedReportIds)->where('status', 'selesai')->whereNotNull('rating')->avg('rating');
+
+            $tech->update([
+                'completed_count' => $completedCount,
+                'rating_avg' => $avgRating ? round($avgRating, 1) : null,
+            ]);
+        }
+
+        $this->command->info('MassDataSeeder completed: Created 50 users and 150 reports with assignments, ratings & SLA data.');
     }
 }

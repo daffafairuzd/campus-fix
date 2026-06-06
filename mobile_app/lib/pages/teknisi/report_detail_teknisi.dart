@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -7,6 +6,8 @@ import '../../models/report_model.dart';
 import '../../models/user_model.dart';
 import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../widgets/photo_gallery.dart';
 import '../../widgets/status_badge.dart';
 import '../../widgets/status_stepper.dart';
 
@@ -25,13 +26,34 @@ class ReportDetailTeknisi extends StatefulWidget {
 }
 
 class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
-  File? _buktiFoto;
+  late FacilityReport _report;
+  List<File> _buktiFotos = [];
   bool _isSaving = false;
   final _picker = ImagePicker();
 
+  @override
+  void initState() {
+    super.initState();
+    _report = widget.report;
+    _refreshReport();
+  }
+
+  Future<void> _refreshReport() async {
+    try {
+      final freshReport = await api.getReport(_report.id);
+      if (mounted) {
+        setState(() {
+          _report = freshReport;
+        });
+      }
+    } catch (_) {
+      // Abaikan error refresh, pakai data lama
+    }
+  }
+
   /// Tentukan status berikutnya berdasarkan status saat ini
   ReportStatus? get _nextStatus {
-    switch (widget.report.status) {
+    switch (_report.status) {
       case ReportStatus.menunggu:
         return ReportStatus.assessment;
       case ReportStatus.assessment:
@@ -44,7 +66,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
   }
 
   String get _actionLabel {
-    switch (widget.report.status) {
+    switch (_report.status) {
       case ReportStatus.menunggu:
       case ReportStatus.assessment:
         return 'Mulai Kerjakan';
@@ -56,7 +78,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
   }
 
   IconData get _actionIcon {
-    switch (widget.report.status) {
+    switch (_report.status) {
       case ReportStatus.menunggu:
       case ReportStatus.assessment:
         return Icons.play_circle_outline_rounded;
@@ -67,14 +89,26 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
     }
   }
 
-  Future<void> _takeBuktiFoto() async {
+  Future<void> _pickImage(ImageSource source) async {
+    if (_buktiFotos.length >= 5) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Maksimal 5 foto per laporan')));
+      return;
+    }
     try {
-      final file = await _picker.pickImage(
-        source: ImageSource.camera,
-        imageQuality: 80,
-      );
-      if (file != null && mounted) {
-        setState(() => _buktiFoto = File(file.path));
+      if (source == ImageSource.gallery) {
+        final files = await _picker.pickMultiImage(imageQuality: 80);
+        if (files.isNotEmpty && mounted) {
+          setState(() {
+            for (var f in files) {
+              if (_buktiFotos.length < 5) _buktiFotos.add(File(f.path));
+            }
+          });
+        }
+      } else {
+        final file = await _picker.pickImage(source: source, imageQuality: 80);
+        if (file != null && mounted) {
+          setState(() => _buktiFotos.add(File(file.path)));
+        }
       }
     } catch (_) {
       if (mounted) {
@@ -142,7 +176,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
 
       setState(() => _isSaving = true);
       try {
-        await api.updateStatus(widget.report.id, _nextStatus!, description: noteController.text.trim());
+        await api.updateStatus(_report.id, _nextStatus!, description: noteController.text.trim());
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Berhasil memulai pekerjaan!')));
           Navigator.pop(context);
@@ -157,7 +191,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
 
     // Transition: dalamProses -> selesai (require foto)
     if (_nextStatus == ReportStatus.selesai) {
-      if (_buktiFoto == null) {
+      if (_buktiFotos.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
@@ -176,8 +210,10 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
 
       setState(() => _isSaving = true);
       try {
-        await api.uploadPhoto(widget.report.id, _buktiFoto!, type: 'bukti_penyelesaian');
-        await api.updateStatus(widget.report.id, _nextStatus!);
+        for (final photo in _buktiFotos) {
+          await api.uploadPhoto(_report.id, photo, type: 'bukti_penyelesaian');
+        }
+        await api.updateStatus(_report.id, _nextStatus!);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Laporan diselesaikan!')));
@@ -244,7 +280,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
 
     setState(() => _isSaving = true);
     try {
-      await api.requestEscalation(widget.report.id, noteController.text.trim());
+      await api.requestEscalation(_report.id, noteController.text.trim());
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pengajuan eskalasi berhasil dikirim!')));
         Navigator.pop(context);
@@ -259,7 +295,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final report = widget.report;
+    final report = _report;
 
     return Scaffold(
       appBar: AppBar(
@@ -274,35 +310,30 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
         child: Column(
           children: [
             // Photo
-            Container(
-              height: 200,
-              width: double.infinity,
-              color: const Color(0xFF0A0F14),
-              child: report.photoUrl.isNotEmpty
-                  ? (report.photoUrl.startsWith('http')
-                      ? Image.network(report.photoUrl, fit: BoxFit.cover)
-                      : Image.memory(
-                          base64Decode(report.photoUrl.contains(',')
-                              ? report.photoUrl.split(',')[1]
-                              : report.photoUrl),
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const Center(
-                              child: Icon(Icons.broken_image, color: Colors.white24)),
-                        ))
-                  : Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.image_outlined,
-                              size: 40, color: AppColors.textMuted),
-                          const SizedBox(height: 8),
-                          Text('Foto dari pelapor belum tersedia',
-                              style: GoogleFonts.spaceGrotesk(
-                                  fontSize: 12, color: AppColors.textMuted)),
-                        ],
-                      ),
-                    ),
-            ),
+            if (report.reportPhotos.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 16, left: 20, right: 20),
+                child: PhotoGallery(photoUrls: report.reportPhotos, title: 'laporan'),
+              )
+            else
+              Container(
+                height: 200,
+                width: double.infinity,
+                color: const Color(0xFF0A0F14),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.image_not_supported_outlined,
+                          size: 48, color: AppColors.textMuted),
+                      const SizedBox(height: 8),
+                      Text('Belum ada foto',
+                          style: GoogleFonts.spaceGrotesk(
+                              fontSize: 13, color: AppColors.textMuted)),
+                    ],
+                  ),
+                ),
+              ),
 
             Padding(
               padding: const EdgeInsets.all(20),
@@ -396,47 +427,55 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
                     if (_nextStatus == ReportStatus.selesai) ...[
                       // Upload bukti foto – kamera saja
                       _SLabel('FOTO BUKTI (WAJIB)'),
-                      const SizedBox(height: 8),
-                      if (_buktiFoto != null) ...[
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Stack(
-                            children: [
-                              Image.file(_buktiFoto!,
-                                  height: 160, width: double.infinity, fit: BoxFit.cover),
-                              Positioned(
-                                top: 8, right: 8,
-                                child: GestureDetector(
-                                  onTap: () => setState(() => _buktiFoto = null),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: BoxDecoration(
-                                        color: Colors.black54, borderRadius: BorderRadius.circular(8)),
-                                    child: const Icon(Icons.close, color: Colors.white, size: 16),
+                      if (_buktiFotos.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          height: 120,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _buktiFotos.length,
+                            separatorBuilder: (_, __) => const SizedBox(width: 12),
+                            itemBuilder: (_, i) {
+                              return Stack(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.file(_buktiFotos[i], width: 120, height: 120, fit: BoxFit.cover),
                                   ),
-                                ),
-                              ),
-                            ],
+                                  Positioned(
+                                    top: 4, right: 4,
+                                    child: GestureDetector(
+                                      onTap: () => setState(() => _buktiFotos.removeAt(i)),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(8)),
+                                        child: const Icon(Icons.close, color: Colors.white, size: 16),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
                           ),
                         ),
-                        const SizedBox(height: 8),
                       ],
+                      const SizedBox(height: 16),
                       OutlinedButton.icon(
-                        onPressed: _takeBuktiFoto,
-                        icon: const Icon(Icons.camera_alt_rounded, size: 18),
+                        icon: const Icon(Icons.camera_alt_outlined),
                         label: Text(
-                          _buktiFoto != null ? 'Ambil Ulang Foto' : 'Ambil Foto Bukti (Kamera)',
-                          style: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w600),
+                          _buktiFotos.isNotEmpty ? 'Tambah Foto (${_buktiFotos.length}/5)' : 'Ambil Foto Bukti (Kamera)',
+                          style: GoogleFonts.spaceGrotesk(fontSize: 13, fontWeight: FontWeight.w600),
                         ),
+                        onPressed: () => _pickImage(ImageSource.camera),
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size(double.infinity, 48),
                           side: BorderSide(
-                            color: _buktiFoto == null ? AppColors.danger : AppColors.primary,
+                            color: _buktiFotos.isEmpty ? AppColors.danger : AppColors.primary,
                           ),
-                          foregroundColor: _buktiFoto == null ? AppColors.danger : AppColors.primary,
+                          foregroundColor: _buktiFotos.isEmpty ? AppColors.danger : AppColors.primary,
                         ),
                       ),
-                      if (_buktiFoto == null) ...[
+                      if (_buktiFotos.isEmpty) ...[
                         const SizedBox(height: 6),
                         Text(
                           '* Foto bukti wajib diambil dari kamera sebelum update status',
@@ -462,7 +501,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
                             ),
                           )
                         : FilledButton.icon(
-                            onPressed: (_nextStatus != ReportStatus.selesai || _buktiFoto != null) && !widget.report.isEscalationRequested ? _saveUpdate : null,
+                            onPressed: (_nextStatus != ReportStatus.selesai || _buktiFotos.isNotEmpty) && !_report.isEscalationRequested ? _saveUpdate : null,
                             icon: Icon(_actionIcon, size: 18),
                             label: Text(_actionLabel),
                             style: FilledButton.styleFrom(
@@ -472,7 +511,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
                           ),
                     const SizedBox(height: 16),
                     
-                    if (widget.report.isEscalationRequested) ...[
+                    if (_report.isEscalationRequested) ...[
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
@@ -493,7 +532,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
                           ],
                         ),
                       ),
-                    ] else if (_nextStatus != null && widget.report.status != ReportStatus.menunggu && widget.report.status != ReportStatus.eskalasi) ...[
+                    ] else if (_nextStatus != null && _report.status != ReportStatus.menunggu && _report.status != ReportStatus.eskalasi) ...[
                       OutlinedButton.icon(
                         onPressed: _requestEscalation,
                         icon: const Icon(Icons.report_problem_outlined, size: 18),
@@ -532,32 +571,13 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
                         ],
                       ),
                     ),
-                    if (widget.report.completionPhotoUrl.isNotEmpty) ...[
+                    if (_report.completionPhotos.isNotEmpty) ...[
                       const SizedBox(height: 24),
                       const _Divider(),
                       const SizedBox(height: 16),
                       const _SLabel('Foto Hasil Perbaikan'),
                       const SizedBox(height: 8),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          height: 200,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF0A0F14),
-                            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: widget.report.completionPhotoUrl.startsWith('http')
-                              ? Image.network(widget.report.completionPhotoUrl, fit: BoxFit.cover)
-                              : Image.memory(
-                                  base64Decode(widget.report.completionPhotoUrl.contains(',')
-                                      ? widget.report.completionPhotoUrl.split(',')[1]
-                                      : widget.report.completionPhotoUrl),
-                                  fit: BoxFit.cover,
-                                ),
-                        ),
-                      ),
+                      PhotoGallery(photoUrls: _report.completionPhotos, title: 'penyelesaian'),
                     ],
                     const SizedBox(height: 32),
                   ],
@@ -593,6 +613,31 @@ class _InfoGrid extends StatelessWidget {
           _InfoRow(Icons.category_outlined, 'Kategori', report.category),
           const Divider(height: 14),
           _InfoRow(Icons.location_on_outlined, 'Lokasi', report.location),
+          if (report.latitude != null && report.longitude != null) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const SizedBox(width: 110),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      final url = Uri.parse('https://www.google.com/maps/search/?api=1&query=${report.latitude},${report.longitude}');
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    icon: const Icon(Icons.map_outlined, size: 16),
+                    label: Text('Buka di Maps', style: GoogleFonts.spaceGrotesk(fontSize: 12)),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
           const Divider(height: 14),
           _InfoRow(Icons.calendar_today_outlined, 'Tanggal', report.createdAt),
           const Divider(height: 14),

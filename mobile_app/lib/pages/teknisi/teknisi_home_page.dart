@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../models/user_model.dart';
 import '../../theme/app_theme.dart';
 import 'task_list_page.dart';
@@ -17,26 +19,52 @@ class TeknisiHomePage extends StatefulWidget {
 class _TeknisiHomePageState extends State<TeknisiHomePage> {
   int _selectedIndex = 0;
 
-  late final List<Widget> _pages;
-
   @override
   void initState() {
     super.initState();
-    _pages = [
-      TaskListPage(session: widget.session),
-      PerformancePage(session: widget.session),
-      NotificationPage(session: widget.session),
-      ProfilePage(session: widget.session),
-    ];
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: _pages),
-      bottomNavigationBar: Container(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldPop = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            title: Text('Keluar Aplikasi?', style: GoogleFonts.spaceGrotesk(fontSize: 16, fontWeight: FontWeight.w700)),
+            content: Text('Apakah kamu yakin ingin keluar dari aplikasi CampusFix?', style: GoogleFonts.spaceGrotesk(fontSize: 13, color: AppColors.textMuted)),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text('Batal', style: GoogleFonts.spaceGrotesk(color: AppColors.textMuted)),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+                child: Text('Keluar', style: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w700)),
+              ),
+            ],
+          ),
+        ) ?? false;
+
+        if (shouldPop && context.mounted) {
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        body: _selectedIndex == 0
+            ? TaskListPage(session: widget.session)
+            : _selectedIndex == 1
+                ? PerformancePage(session: widget.session)
+                : _selectedIndex == 2
+                    ? NotificationPage(session: widget.session)
+                    : ProfilePage(session: widget.session),
+        bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: isDark ? AppColors.cardDark : AppColors.cardLight,
           border: Border(
@@ -68,7 +96,6 @@ class _TeknisiHomePageState extends State<TeknisiHomePage> {
                   label: 'Notif',
                   selected: _selectedIndex == 2,
                   onTap: () => setState(() => _selectedIndex = 2),
-                  badge: true,
                 ),
                 _NavItem(
                   icon: Icons.person_outline_rounded,
@@ -79,10 +106,11 @@ class _TeknisiHomePageState extends State<TeknisiHomePage> {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
+        ), // closes SafeArea
+      ), // closes Container
+    ), // closes Scaffold
+  ); // closes PopScope
+}
 }
 
 class _NavItem extends StatelessWidget {

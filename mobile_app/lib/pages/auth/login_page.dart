@@ -18,7 +18,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage>
     with SingleTickerProviderStateMixin {
-  final _ssoController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -39,18 +39,18 @@ class _LoginPageState extends State<LoginPage>
 
   @override
   void dispose() {
-    _ssoController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     _animController.dispose();
     super.dispose();
   }
 
   Future<void> _handleLogin() async {
-    final ssoId = _ssoController.text.trim();
+    final email = _emailController.text.trim();
     final password = _passwordController.text;
 
-    if (ssoId.isEmpty || password.isEmpty) {
-      setState(() => _errorMessage = 'SSO ID dan password tidak boleh kosong.');
+    if (email.isEmpty || password.isEmpty) {
+      setState(() => _errorMessage = 'Email dan password tidak boleh kosong.');
       return;
     }
 
@@ -61,7 +61,7 @@ class _LoginPageState extends State<LoginPage>
 
     try {
       final session = await api.login(
-        ssoId: ssoId,
+        ssoId: email,
         password: password,
       );
 
@@ -153,7 +153,7 @@ class _LoginPageState extends State<LoginPage>
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Gunakan SSO Telkom University kamu',
+                            'Gunakan email Telkom University kamu',
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               color: AppColors.textMuted,
@@ -193,7 +193,7 @@ class _LoginPageState extends State<LoginPage>
 
                           // Email Field
                           Text(
-                            'SSO ID',
+                            'Email',
                             style: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
@@ -203,49 +203,25 @@ class _LoginPageState extends State<LoginPage>
                           ),
                           const SizedBox(height: 6),
                           TextField(
-                            controller: _ssoController,
+                            controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
+                            autocorrect: false,
+                            enableSuggestions: false,
                             onChanged: (_) {
                               if (_errorMessage.isNotEmpty) {
                                 setState(() => _errorMessage = '');
                               }
                             },
                             decoration: InputDecoration(
-                              hintText: 'contoh: nama@student.telkomuniversity.ac.id',
+                              hintText: 'nama@student.telkomuniversity.ac.id',
                               prefixIcon: const Icon(Icons.mail_outline_rounded),
-                              suffixIcon: _ssoController.text.isNotEmpty
+                              suffixIcon: _emailController.text.isNotEmpty
                                   ? IconButton(
                                       icon: const Icon(Icons.clear, size: 18),
-                                      onPressed: () => _ssoController.clear(),
+                                      onPressed: () => _emailController.clear(),
                                     )
                                   : null,
                             ),
-                          ),
-                          // Auto-display email
-                          ValueListenableBuilder(
-                            valueListenable: _ssoController,
-                            builder: (_, __, ___) {
-                              final sso = _ssoController.text.trim();
-                              if (sso.isEmpty) return const SizedBox(height: 10);
-                              return Padding(
-                                padding: const EdgeInsets.only(top: 6),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.mail_outline_rounded,
-                                        size: 12, color: AppColors.primary),
-                                    const SizedBox(width: 5),
-                                    Text(
-                                      '$sso@student.telkomuniversity.ac.id',
-                                      style: GoogleFonts.inter(
-                                        fontSize: 11,
-                                        color: AppColors.primary,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
                           ),
                           const SizedBox(height: 16),
 

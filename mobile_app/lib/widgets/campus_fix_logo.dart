@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 
@@ -32,11 +33,11 @@ class CampusFixLogo extends StatelessWidget {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(iconSize * 0.28),
-            child: Image.asset(
-              'assets/logo.png',
+            child: SvgPicture.asset(
+              'assets/logo.svg',
               width: iconSize * 0.6,
               height: iconSize * 0.6,
-              fit: BoxFit.cover,
+              fit: BoxFit.contain,
             ),
           ),
         ),
@@ -100,11 +101,11 @@ class CampusFixLogoLight extends StatelessWidget {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(iconSize * 0.28),
-            child: Image.asset(
-              'assets/logo.png',
+            child: SvgPicture.asset(
+              'assets/logo.svg',
               width: iconSize * 0.58,
               height: iconSize * 0.58,
-              fit: BoxFit.cover,
+              fit: BoxFit.contain,
             ),
           ),
         ),

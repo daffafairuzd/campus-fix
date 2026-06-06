@@ -177,7 +177,7 @@ class AnalyticsController extends Controller
             ->count();
         $slaMiss = $totalSelesai - $slaHit;
 
-        $allCategories = ['Listrik', 'HVAC', 'Jaringan', 'Lab', 'Plumbing', 'Lift', 'Lainnya'];
+        $allCategories = ['HVAC', 'Listrik', 'Lab', 'Plumbing', 'Jaringan', 'Lift', 'Lainnya'];
 
         // 2b. SLA Ratio Per Category
         $slaCategoriesRaw = (clone $scopedQuery)->where('status', 'selesai')

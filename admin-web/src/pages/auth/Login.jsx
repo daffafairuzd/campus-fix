@@ -44,7 +44,7 @@ export default function Login() {
 
         <div className="flex items-center gap-2 mb-8 relative z-10">
           <div className="w-9 h-9 rounded-md flex items-center justify-center overflow-hidden bg-transparent">
-            <img src="/logo.png" alt="CampusFix" className="w-full h-full object-contain" />
+            <img src="/logo.svg" alt="CampusFix" className="w-full h-full object-contain" />
           </div>
           <div>
             <div className="font-display font-bold text-lg text-ui-text leading-tight tracking-tight">

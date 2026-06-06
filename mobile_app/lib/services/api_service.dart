@@ -12,7 +12,7 @@ import '../models/report_model.dart';
 /// - Device fisik (iOS/Android) → ganti dengan IP lokal PC kamu
 String get _baseUrl {
   // Alamat IP lokal laptop agar bisa diakses dari HP fisik (satu jaringan Wi-Fi)
-  const String localIp = '10.57.189.92';
+  const String localIp = '10.33.187.26';
 
   if (kIsWeb) return 'http://localhost:8000/api';
   if (Platform.isAndroid || Platform.isIOS) return 'http://$localIp:8000/api';
@@ -464,53 +464,37 @@ class ApiService {
   // ── PERFORMANCE (Teknisi) ────────────────────────────────
 
   Future<TechnicianPerformance> getPerformance() async {
-    // Fetch data dari dua endpoint secara paralel
-    final results = await Future.wait([
-      http.get(_uri('/analytics/technicians'), headers: _headers),
-      http.get(_uri('/analytics/weekly'), headers: _headers),
-    ]);
+    final res = await http.get(_uri('/technicians/my-performance'), headers: _headers);
+    
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      
+      final weeklyDataRaw = data['weekly_data'] as List<dynamic>? ?? [];
+      final weeklyData = weeklyDataRaw.map((e) => {
+        'day': e['day'] as String? ?? '',
+        'selesai': e['selesai'] as int? ?? 0,
+      }).toList();
 
-    final techRes = results[0];
-    final weeklyRes = results[1];
-
-    int completedTasks = 0;
-    double rating = 0.0;
-
-    if (techRes.statusCode == 200) {
-      final techList = jsonDecode(techRes.body) as List<dynamic>;
-      if (techList.isNotEmpty) {
-        // Ambil data teknisi pertama (yang sedang login)
-        final tech = techList[0] as Map<String, dynamic>;
-        completedTasks = tech['completed_count'] as int? ?? 0;
-        rating = (tech['rating_avg'] as num?)?.toDouble() ?? 0.0;
-      }
+      return TechnicianPerformance(
+        completedTasks: data['completed_count'] as int? ?? 0,
+        avgResolutionTime: data['avg_resolution'] as String? ?? '-',
+        rating: (data['rating_avg'] as num?)?.toDouble() ?? 0.0,
+        onTimeCount: data['on_time_count'] as int? ?? 0,
+        lateCount: data['late_count'] as int? ?? 0,
+        weeklyData: weeklyData,
+      );
     }
-
-    List<Map<String, dynamic>> weeklyData = List.generate(7, (i) {
-      final days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
-      return {'day': days[i], 'selesai': 0};
-    });
-
-    if (weeklyRes.statusCode == 200) {
-      final weekList = jsonDecode(weeklyRes.body) as List<dynamic>;
-      weeklyData = weekList
-          .map((e) => {
-                'day': e['day'] as String? ?? '',
-                'selesai': e['selesai'] as int? ?? 0,
-              })
-          .toList();
-    }
-
+    
+    _handleError(res);
     return TechnicianPerformance(
-      completedTasks: completedTasks,
+      completedTasks: 0,
       avgResolutionTime: '-',
-      rating: rating,
+      rating: 0.0,
       onTimeCount: 0,
       lateCount: 0,
-      weeklyData: weeklyData,
+      weeklyData: [],
     );
   }
 }
-
 /// Global singleton instance — menggantikan `api` dari mock
 final api = ApiService();

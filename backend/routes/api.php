@@ -61,6 +61,7 @@ Route::post('/reports/{report}/photos', [App\Http\Controllers\ReportController::
 Route::middleware('auth:sanctum')->group(function () {
     // Technicians
     Route::get('/technicians',               [TechnicianController::class, 'index']);
+    Route::get('/technicians/my-performance',[TechnicianController::class, 'myPerformance']);
     Route::put('/technicians/{technician}',  [TechnicianController::class, 'update']);
 
     // Users

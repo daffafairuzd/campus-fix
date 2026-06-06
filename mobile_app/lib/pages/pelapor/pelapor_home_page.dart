@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/user_model.dart';
 import '../../theme/app_theme.dart';
@@ -68,23 +69,52 @@ class _PelaporHomePageState extends State<PelaporHomePage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // Extend body behind navbar agar konten bisa scroll full
-      extendBody: true,
-      body: _selectedIndex == 0
-          ? DashboardPage(session: widget.session)
-          : _selectedIndex == 1
-              ? ReportHistoryPage(session: widget.session)
-              : _selectedIndex == 2
-                  ? NotificationPage(session: widget.session)
-                  : ProfilePage(session: widget.session),
-      bottomNavigationBar: SizeTransition(
-        sizeFactor: _navSlide,
-        axisAlignment: 1.0, // slide dari bawah
-        child: _BottomNav(
-          selectedIndex: _selectedIndex,
-          onTap: (i) => setState(() => _selectedIndex = i),
-          onLapor: _openCreateReport,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldPop = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            title: Text('Keluar Aplikasi?', style: GoogleFonts.spaceGrotesk(fontSize: 16, fontWeight: FontWeight.w700)),
+            content: Text('Apakah kamu yakin ingin keluar dari aplikasi CampusFix?', style: GoogleFonts.spaceGrotesk(fontSize: 13, color: AppColors.textMuted)),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text('Batal', style: GoogleFonts.spaceGrotesk(color: AppColors.textMuted)),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+                child: Text('Keluar', style: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w700)),
+              ),
+            ],
+          ),
+        ) ?? false;
+
+        if (shouldPop && context.mounted) {
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        // Extend body behind navbar agar konten bisa scroll full
+        extendBody: true,
+        body: _selectedIndex == 0
+            ? DashboardPage(session: widget.session)
+            : _selectedIndex == 1
+                ? ReportHistoryPage(session: widget.session)
+                : _selectedIndex == 2
+                    ? NotificationPage(session: widget.session)
+                    : ProfilePage(session: widget.session),
+        bottomNavigationBar: SizeTransition(
+          sizeFactor: _navSlide,
+          axisAlignment: 1.0, // slide dari bawah
+          child: _BottomNav(
+            selectedIndex: _selectedIndex,
+            onTap: (i) => setState(() => _selectedIndex = i),
+            onLapor: _openCreateReport,
+          ),
         ),
       ),
     );

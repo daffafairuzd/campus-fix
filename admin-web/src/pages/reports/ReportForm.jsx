@@ -10,7 +10,7 @@ const CAMPUS_BOUNDS = [
   [-6.9655, 107.6365], // Northeast corner
 ];
 const CAMPUS_MIN_ZOOM = 15;
-const CATEGORIES = ['Listrik','HVAC','Plumbing','Lab','Jaringan','Lift','Bangunan','Umum'];
+const CATEGORIES = ['HVAC', 'Listrik', 'Lab', 'Plumbing', 'Jaringan', 'Lift', 'Lainnya'];
 
 const fileToBase64 = (file) => new Promise((resolve, reject) => {
   const reader = new FileReader();

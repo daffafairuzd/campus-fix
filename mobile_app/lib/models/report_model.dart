@@ -13,6 +13,8 @@ class FacilityReport {
   final String description;
   final String photoUrl; // URL/base64 dari foto pertama (jika ada)
   final String completionPhotoUrl; // Foto bukti perbaikan teknisi
+  final List<String> reportPhotos;
+  final List<String> completionPhotos;
   final ReportStatus status;
   final String priority; // 'kritis', 'tinggi', 'sedang', 'rendah'
   final String createdAt; // formatted string
@@ -24,6 +26,8 @@ class FacilityReport {
   final String? slaDeadline;
   final bool isEscalationRequested;
   final String? escalationReason;
+  final double? latitude;
+  final double? longitude;
 
   FacilityReport({
     required this.id,
@@ -34,6 +38,8 @@ class FacilityReport {
     required this.description,
     required this.photoUrl,
     required this.completionPhotoUrl,
+    required this.reportPhotos,
+    required this.completionPhotos,
     required this.status,
     required this.priority,
     required this.createdAt,
@@ -45,6 +51,8 @@ class FacilityReport {
     this.slaDeadline,
     this.isEscalationRequested = false,
     this.escalationReason,
+    this.latitude,
+    this.longitude,
   });
 
   /// Membuat FacilityReport dari JSON response backend Laravel
@@ -56,29 +64,34 @@ class FacilityReport {
     // Parse foto berdasarkan tipe (bukti_laporan vs bukti_penyelesaian)
     String photoUrl = '';
     String completionPhotoUrl = '';
+    List<String> reportPhotos = [];
+    List<String> completionPhotos = [];
+
     if (json['photos'] != null && (json['photos'] as List).isNotEmpty) {
       final photos = json['photos'] as List;
 
-      // Cari foto keluhan/laporan dari pelapor
-      final reportPhoto = photos.firstWhere(
-        (p) => p['type'] == 'bukti_laporan',
-        orElse: () => null,
-      );
-      if (reportPhoto != null && reportPhoto['photo_data'] != null) {
-        photoUrl = reportPhoto['photo_data'] as String;
+      // Kumpulkan foto pelapor
+      for (final p in photos) {
+        if (p['type'] == 'bukti_laporan' && p['photo_data'] != null) {
+          reportPhotos.add(p['photo_data'] as String);
+        }
+      }
+      if (reportPhotos.isNotEmpty) {
+        photoUrl = reportPhotos.first;
       }
 
-      // Cari foto penyelesaian dari teknisi
-      final completionPhoto = photos.firstWhere(
-        (p) => p['type'] == 'bukti_penyelesaian',
-        orElse: () => null,
-      );
-      if (completionPhoto != null && completionPhoto['photo_data'] != null) {
-        completionPhotoUrl = completionPhoto['photo_data'] as String;
+      // Kumpulkan foto teknisi
+      for (final p in photos) {
+        if (p['type'] == 'bukti_penyelesaian' && p['photo_data'] != null) {
+          completionPhotos.add(p['photo_data'] as String);
+        }
+      }
+      if (completionPhotos.isNotEmpty) {
+        completionPhotoUrl = completionPhotos.first;
       }
 
       // Fallback: jika photoUrl kosong tapi ada foto pertama, set ke yang pertama
-      if (photoUrl.isEmpty && photos[0]['photo_data'] != null) {
+      if (photoUrl.isEmpty && photos.isNotEmpty && photos[0]['photo_data'] != null) {
         photoUrl = photos[0]['photo_data'] as String;
       }
     }
@@ -134,6 +147,8 @@ class FacilityReport {
       description: json['description'] as String? ?? '',
       photoUrl: photoUrl,
       completionPhotoUrl: completionPhotoUrl,
+      reportPhotos: reportPhotos,
+      completionPhotos: completionPhotos,
       status: status,
       priority: json['priority'] as String? ?? 'belum_ditentukan',
       createdAt: createdAt,
@@ -145,6 +160,8 @@ class FacilityReport {
       slaDeadline: json['sla_deadline'] as String?,
       isEscalationRequested: json['is_escalation_requested'] == true || json['is_escalation_requested'] == 1,
       escalationReason: json['escalation_reason'] as String?,
+      latitude: json['latitude'] != null ? double.tryParse(json['latitude'].toString()) : null,
+      longitude: json['longitude'] != null ? double.tryParse(json['longitude'].toString()) : null,
     );
   }
 
@@ -184,6 +201,8 @@ class FacilityReport {
     String? assignedTechnician,
     String? photoUrl,
     String? completionPhotoUrl,
+    List<String>? reportPhotos,
+    List<String>? completionPhotos,
     String? completedAt,
     int? rating,
     String? feedback,
@@ -197,6 +216,8 @@ class FacilityReport {
       description: description,
       photoUrl: photoUrl ?? this.photoUrl,
       completionPhotoUrl: completionPhotoUrl ?? this.completionPhotoUrl,
+      reportPhotos: reportPhotos ?? this.reportPhotos,
+      completionPhotos: completionPhotos ?? this.completionPhotos,
       status: status ?? this.status,
       priority: priority,
       createdAt: createdAt,

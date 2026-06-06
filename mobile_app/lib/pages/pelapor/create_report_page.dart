@@ -20,7 +20,7 @@ class _CreateReportPageState extends State<CreateReportPage> {
   final _locationController = TextEditingController();
   final _descController = TextEditingController();
   String _category = 'Listrik';
-  File? _selectedImage;
+  List<File> _selectedImages = [];
   bool _isLoading = false;
   bool _isFetchingLocation = false;
   double? _latitude;
@@ -31,7 +31,9 @@ class _CreateReportPageState extends State<CreateReportPage> {
     {'value': 'Listrik', 'icon': Icons.bolt_rounded, 'color': Color(0xFFF59E0B)},
     {'value': 'HVAC', 'icon': Icons.ac_unit_rounded, 'color': Color(0xFF3B82F6)},
     {'value': 'Lab', 'icon': Icons.computer_rounded, 'color': Color(0xFF8B5CF6)},
+    {'value': 'Plumbing', 'icon': Icons.water_drop_rounded, 'color': Color(0xFF06B6D4)},
     {'value': 'Jaringan', 'icon': Icons.wifi_rounded, 'color': Color(0xFF10B981)},
+    {'value': 'Lift', 'icon': Icons.elevator_rounded, 'color': Color(0xFFEC4899)},
     {'value': 'Lainnya', 'icon': Icons.build_rounded, 'color': Color(0xFF64748B)},
   ];
 
@@ -89,10 +91,29 @@ class _CreateReportPageState extends State<CreateReportPage> {
   }
 
   Future<void> _pickImage(ImageSource source) async {
+    if (_selectedImages.length >= 5) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Maksimal 5 foto per laporan'),
+      ));
+      return;
+    }
     try {
-      final file = await _picker.pickImage(source: source, imageQuality: 80);
-      if (file != null && mounted) {
-        setState(() => _selectedImage = File(file.path));
+      if (source == ImageSource.gallery) {
+        final files = await _picker.pickMultiImage(imageQuality: 80);
+        if (files.isNotEmpty && mounted) {
+          setState(() {
+            for (var f in files) {
+              if (_selectedImages.length < 5) {
+                _selectedImages.add(File(f.path));
+              }
+            }
+          });
+        }
+      } else {
+        final file = await _picker.pickImage(source: source, imageQuality: 80);
+        if (file != null && mounted) {
+          setState(() => _selectedImages.add(File(file.path)));
+        }
       }
     } catch (_) {
       if (mounted) {
@@ -189,9 +210,11 @@ class _CreateReportPageState extends State<CreateReportPage> {
       );
 
       // Upload foto jika ada (base64 ke endpoint terpisah)
-      if (_selectedImage != null && reportId > 0) {
+      if (_selectedImages.isNotEmpty && reportId > 0) {
         try {
-          await api.uploadPhoto(reportId, _selectedImage!);
+          for (final image in _selectedImages) {
+            await api.uploadPhoto(reportId, image);
+          }
         } catch (e) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -257,73 +280,81 @@ class _CreateReportPageState extends State<CreateReportPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Foto kerusakan
-            _SectionLabel('FOTO KERUSAKAN'),
-            GestureDetector(
-              onTap: _showImageSourceBottomSheet,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                height: 200,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  color: isDark ? AppColors.hoverDark : AppColors.bgLight,
-                  border: Border.all(
-                    color: _selectedImage != null
-                        ? AppColors.primary
-                        : (isDark ? AppColors.borderDark : AppColors.borderLight),
-                    width: _selectedImage != null ? 2 : 1,
-                    style: BorderStyle.solid,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _SectionLabel('FOTO KERUSAKAN (${_selectedImages.length}/5)'),
+                if (_selectedImages.length < 5)
+                  GestureDetector(
+                    onTap: _showImageSourceBottomSheet,
+                    child: Text('+ Tambah', style: GoogleFonts.spaceGrotesk(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600)),
+                  ),
+              ],
+            ),
+            if (_selectedImages.isEmpty)
+              GestureDetector(
+                onTap: _showImageSourceBottomSheet,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  height: 160,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    color: isDark ? AppColors.hoverDark : AppColors.bgLight,
+                    border: Border.all(
+                      color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          shape: BoxShape.rectangle,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.add_a_photo_rounded, size: 32, color: AppColors.primary),
+                      ),
+                      const SizedBox(height: 12),
+                      Text('Tap untuk tambah foto', style: GoogleFonts.spaceGrotesk(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primary)),
+                      const SizedBox(height: 4),
+                      Text('Kamera atau pilih dari galeri', style: GoogleFonts.spaceGrotesk(fontSize: 11, color: AppColors.textMuted)),
+                    ],
                   ),
                 ),
-                child: _selectedImage != null
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Image.file(_selectedImage!, fit: BoxFit.cover),
-                            Positioned(
-                              top: 8, right: 8,
-                              child: GestureDetector(
-                                onTap: () => setState(() => _selectedImage = null),
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black54, borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  child: const Icon(Icons.close, color: Colors.white, size: 16),
-                                ),
-                              ),
-                            ),
-                          ],
+              )
+            else
+              SizedBox(
+                height: 120,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _selectedImages.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 12),
+                  itemBuilder: (_, i) {
+                    return Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.file(_selectedImages[i], width: 120, height: 120, fit: BoxFit.cover),
                         ),
-                      )
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.1),
-                              shape: BoxShape.rectangle,
-                              borderRadius: BorderRadius.circular(8),
+                        Positioned(
+                          top: 4, right: 4,
+                          child: GestureDetector(
+                            onTap: () => setState(() => _selectedImages.removeAt(i)),
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(8)),
+                              child: const Icon(Icons.close, color: Colors.white, size: 16),
                             ),
-                            child: const Icon(Icons.add_a_photo_rounded,
-                                size: 32, color: AppColors.primary),
                           ),
-                          const SizedBox(height: 12),
-                          Text('Tap untuk tambah foto',
-                              style: GoogleFonts.spaceGrotesk(
-                                  fontSize: 14, fontWeight: FontWeight.w600,
-                                  color: AppColors.primary)),
-                          const SizedBox(height: 4),
-                          Text('Kamera atau pilih dari galeri',
-                              style: GoogleFonts.spaceGrotesk(
-                                  fontSize: 11, color: AppColors.textMuted)),
-                        ],
-                      ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
               ),
-            ),
             const SizedBox(height: 20),
 
             // Judul
