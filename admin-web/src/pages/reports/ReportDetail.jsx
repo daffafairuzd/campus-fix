@@ -63,11 +63,11 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
         const fullB64 = await fileToBase64(file);
         // Ambil hanya raw base64 setelah tanda koma
         const rawB64 = fullB64.split(',')[1];
-        await api.post(`/reports/${currentReport.id}/photos`, { 
-          photo_data: rawB64, 
-          original_name: file.name, 
-          mime_type: file.type, 
-          type: 'bukti_laporan' 
+        await api.post(`/reports/${currentReport.id}/photos`, {
+          photo_data: rawB64,
+          original_name: file.name,
+          mime_type: file.type,
+          type: 'bukti_laporan'
         });
       }
       await fetchPhotos();
@@ -82,9 +82,9 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
   };
 
   const handleUpdateStatus = async () => {
-    const FLOW = { menunggu:'assessment', assessment:'dalam_proses', dalam_proses:'selesai', selesai:'menunggu', eskalasi:'dalam_proses' };
+    const FLOW = { menunggu: 'assessment', assessment: 'dalam_proses', dalam_proses: 'selesai', selesai: 'menunggu', eskalasi: 'dalam_proses' };
     const next = FLOW[currentReport.status] || 'menunggu';
-    
+
     let desc = `Status diupdate ke ${next}`;
     if (currentReport.status === 'assessment' && next === 'dalam_proses') {
       const note = window.prompt("Masukkan catatan asesmen / pengerjaan (Wajib):", "");
@@ -123,7 +123,7 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
     catch (err) { alert('Gagal hapus: ' + (err.response?.data?.message || err.message)); }
   };
 
-  const NEXT_LABEL = { menunggu:'Assessment', assessment:'Dalam Proses', dalam_proses:'Selesai', selesai:'Menunggu', eskalasi:'Dalam Proses' };
+  const NEXT_LABEL = { menunggu: 'Assessment', assessment: 'Dalam Proses', dalam_proses: 'Selesai', selesai: 'Menunggu', eskalasi: 'Dalam Proses' };
 
   return (
     <div className="flex flex-col gap-6 animate-fade-in">
@@ -140,9 +140,6 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0 mt-1">
-          <button className="btn btn-primary" onClick={handleUpdateStatus}>
-            Update Status <span className="font-normal opacity-70 ml-1">→ {NEXT_LABEL[currentReport.status]}</span>
-          </button>
           <button className="btn btn-ghost px-3" onClick={() => onEdit(currentReport)} title="Edit"><Edit2 className="w-4 h-4" /></button>
           <button className="btn btn-danger px-3" onClick={handleDelete} title="Hapus"><Trash2 className="w-4 h-4" /></button>
         </div>
@@ -168,7 +165,7 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
 
       {/* Tabs */}
       <div className="flex gap-6 border-b border-dark-border">
-        {['Detail','Foto Bukti','Riwayat'].map(tab => (
+        {['Detail', 'Foto Bukti', 'Riwayat'].map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`pb-3 text-[13px] font-bold transition-colors border-b-2 ${activeTab === tab ? 'border-brand-primary text-brand-primary' : 'border-transparent text-ui-muted hover:text-ui-text'}`}>
             {tab}{tab === 'Foto Bukti' && photos.length > 0 ? ` (${photos.length})` : ''}
@@ -195,9 +192,9 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
                 ['Tanggal', new Date(currentReport.created_at).toLocaleString('id-ID')],
                 ['Prioritas', <Badge key="p" label={currentReport.priority} priority={currentReport.priority} />],
                 ['Status', <Badge key="s" label={currentReport.status} status={currentReport.status} />],
-                ['Teknisi', (currentReport.active_technicians||[]).map(t=>t.name).join(', ') || 'Belum ditugaskan'],
+                ['Teknisi', (currentReport.active_technicians || []).map(t => t.name).join(', ') || 'Belum ditugaskan'],
                 ['Deadline SLA', new Date(currentReport.sla_deadline).toLocaleString('id-ID')],
-              ].map(([k,v]) => (
+              ].map(([k, v]) => (
                 <div key={k} className="card p-4">
                   <div className="text-[10px] text-ui-muted font-bold tracking-wider mb-1.5">{k.toUpperCase()}</div>
                   <div className="text-[14px] text-ui-text font-semibold">{v}</div>
@@ -207,7 +204,7 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
             {currentReport.rating && (
               <div className="card p-4 flex justify-between items-center">
                 <div className="text-[10px] text-ui-muted font-bold tracking-wider">RATING PENYELESAIAN</div>
-                <div className="text-ui-warning text-xl tracking-widest">{'★'.repeat(currentReport.rating)}{'☆'.repeat(5-currentReport.rating)}</div>
+                <div className="text-ui-warning text-xl tracking-widest">{'★'.repeat(currentReport.rating)}{'☆'.repeat(5 - currentReport.rating)}</div>
               </div>
             )}
           </div>
@@ -242,16 +239,16 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {photoList.map(photo => (
               <div key={photo.id} className="relative group rounded-xl overflow-hidden border border-dark-border bg-dark-bg aspect-square">
-                <img 
-                  src={photo.photo_data.startsWith('data:') ? photo.photo_data : `data:${photo.mime_type || 'image/jpeg'};base64,${photo.photo_data}`} 
-                  alt={photo.original_name || 'foto'} 
-                  className="w-full h-full object-cover" 
+                <img
+                  src={photo.photo_data.startsWith('data:') ? photo.photo_data : `data:${photo.mime_type || 'image/jpeg'};base64,${photo.photo_data}`}
+                  alt={photo.original_name || 'foto'}
+                  className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  <a 
-                    href={photo.photo_data.startsWith('data:') ? photo.photo_data : `data:${photo.mime_type || 'image/jpeg'};base64,${photo.photo_data}`} 
-                    target="_blank" 
-                    rel="noreferrer" 
+                  <a
+                    href={photo.photo_data.startsWith('data:') ? photo.photo_data : `data:${photo.mime_type || 'image/jpeg'};base64,${photo.photo_data}`}
+                    target="_blank"
+                    rel="noreferrer"
                     className="p-2 bg-dark-card/80 rounded-lg hover:bg-dark-card"
                   >
                     <Search className="w-4 h-4 text-white" />

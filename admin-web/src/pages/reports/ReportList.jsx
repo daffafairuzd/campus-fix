@@ -2,7 +2,31 @@ import React from 'react';
 import { Search, Plus, Loader2, AlertTriangle } from 'lucide-react';
 import { Badge } from '../../components/ui';
 
-const PRIORITY_WEIGHT = { kritis:4, tinggi:3, sedang:2, rendah:1, Kritis:4, Tinggi:3, Sedang:2, Rendah:1 };
+const PRIORITY_WEIGHT = { kritis: 4, tinggi: 3, sedang: 2, rendah: 1, Kritis: 4, Tinggi: 3, Sedang: 2, Rendah: 1 };
+
+const STATUS_OPTIONS = [
+  { value: 'Semua', label: 'Semua Status' },
+  { value: 'Menunggu', label: 'Menunggu' },
+  { value: 'Assessment', label: 'Assessment' },
+  { value: 'Dalam Proses', label: 'Dalam Proses' },
+  { value: 'Selesai', label: 'Selesai' },
+  { value: 'Eskalasi', label: 'Eskalasi' },
+];
+
+const PRIORITY_OPTIONS = [
+  { value: 'Semua', label: 'Semua Prioritas' },
+  { value: 'Kritis', label: 'Kritis' },
+  { value: 'Tinggi', label: 'Tinggi' },
+  { value: 'Sedang', label: 'Sedang' },
+  { value: 'Rendah', label: 'Rendah' },
+];
+
+const SORT_OPTIONS = [
+  { value: 'Waktu Terbaru', label: 'Waktu Terbaru' },
+  { value: 'Waktu Terlama', label: 'Waktu Terlama' },
+  { value: 'Deadline Mendekat', label: 'Deadline Mendekat' },
+  { value: 'Prioritas Tertinggi', label: 'Prioritas Tertinggi' },
+];
 
 export default function ReportList({ reportsData, isLoading, onAdd, onDetail }) {
   const [search, setSearch] = React.useState('');
@@ -23,7 +47,7 @@ export default function ReportList({ reportsData, isLoading, onAdd, onDetail }) 
       if (sortBy === 'Waktu Terbaru') return new Date(b.created_at) - new Date(a.created_at);
       if (sortBy === 'Waktu Terlama') return new Date(a.created_at) - new Date(b.created_at);
       if (sortBy === 'Deadline Mendekat') return new Date(a.sla_deadline) - new Date(b.sla_deadline);
-      if (sortBy === 'Prioritas Tertinggi') return (PRIORITY_WEIGHT[b.priority]||0) - (PRIORITY_WEIGHT[a.priority]||0);
+      if (sortBy === 'Prioritas Tertinggi') return (PRIORITY_WEIGHT[b.priority] || 0) - (PRIORITY_WEIGHT[a.priority] || 0);
       return 0;
     });
 
@@ -35,18 +59,27 @@ export default function ReportList({ reportsData, isLoading, onAdd, onDetail }) 
           <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-ui-muted" />
           <input className="input pl-9" placeholder="Cari laporan, ID, atau lokasi..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
+
+        {/* Filter Status */}
         <select className="input w-[160px]" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-          {['Semua','Menunggu','Assessment','Dalam Proses','Selesai','Eskalasi'].map(s => <option key={s} className="bg-dark-bg">{s}</option>)}
+          {STATUS_OPTIONS.map(({ value, label }) => (
+            <option key={value} value={value} className="bg-dark-bg">{label}</option>
+          ))}
         </select>
-        <select className="input w-[140px]" value={filterPriority} onChange={e => setFilterPriority(e.target.value)}>
-          {['Semua','Kritis','Tinggi','Sedang','Rendah'].map(p => <option key={p} className="bg-dark-bg">{p}</option>)}
+
+        {/* Filter Prioritas */}
+        <select className="input w-[160px]" value={filterPriority} onChange={e => setFilterPriority(e.target.value)}>
+          {PRIORITY_OPTIONS.map(({ value, label }) => (
+            <option key={value} value={value} className="bg-dark-bg">{label}</option>
+          ))}
         </select>
-        <select className="input w-[180px]" value={sortBy} onChange={e => setSortBy(e.target.value)}>
-          {['Waktu Terbaru','Waktu Terlama','Deadline Mendekat','Prioritas Tertinggi'].map(p => <option key={p} className="bg-dark-bg">{p}</option>)}
+
+        {/* Urutkan */}
+        <select className="input w-[190px]" value={sortBy} onChange={e => setSortBy(e.target.value)}>
+          {SORT_OPTIONS.map(({ value, label }) => (
+            <option key={value} value={value} className="bg-dark-bg">{label}</option>
+          ))}
         </select>
-        <button className="btn btn-primary" onClick={onAdd}>
-          <Plus className="w-3.5 h-3.5" /> Tambah Laporan
-        </button>
       </div>
 
       {/* Table */}
@@ -54,7 +87,7 @@ export default function ReportList({ reportsData, isLoading, onAdd, onDetail }) 
         <table className="w-full text-left border-collapse min-w-[900px]">
           <thead>
             <tr className="bg-dark-bg border-b border-dark-border">
-              {['ID','Judul & Lokasi','Kategori','Prioritas','Status','Pelapor','SLA','Teknisi','Aksi'].map(h => (
+              {['ID', 'Judul & Lokasi', 'Kategori', 'Prioritas', 'Status', 'Pelapor', 'SLA', 'Teknisi', 'Aksi'].map(h => (
                 <th key={h} className="py-3 px-3.5 text-[10px] text-ui-muted font-bold tracking-wider uppercase">{h}</th>
               ))}
             </tr>

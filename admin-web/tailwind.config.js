@@ -31,7 +31,7 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['"Space Grotesk"', 'sans-serif'],
+        sans: ['"Inter"', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'monospace'],
       },
       animation: {
