@@ -22,7 +22,7 @@ const ProtectedRoute = ({ children }) => {
 // A temporary placeholder page for incomplete routes
 const TempPage = ({ title }) => (
   <div className="flex flex-col items-center justify-center p-20 text-center animate-fade-in">
-    <div className="w-16 h-16 rounded-2xl bg-dark-hover flex items-center justify-center border border-dark-border mb-4">
+    <div className="w-16 h-16 rounded-lg bg-dark-hover flex items-center justify-center border border-dark-border mb-4">
       <span className="text-2xl text-ui-muted">🚧</span>
     </div>
     <h2 className="text-xl font-bold text-ui-text mb-2">{title}</h2>

@@ -4,8 +4,7 @@ import { Avatar, Badge } from '../components/ui';
 import api from '../api';
 
 const StatCard = ({ label, value, sub, icon: IconCard, accentColor, trend, className }) => (
-  <div className={`card overflow-hidden relative px-5 py-5 ${className}`}>
-    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-brand-glow/30 pointer-events-none" style={{ background: `linear-gradient(135deg, transparent 60%, ${accentColor}15)` }}></div>
+  <div className={`card overflow-hidden relative px-5 py-5 group ${className}`}>
     <div className="flex items-start justify-between relative z-10">
       <div>
         <div className="text-xs text-ui-muted tracking-wider mb-2 font-semibold uppercase">{label}</div>
@@ -13,17 +12,16 @@ const StatCard = ({ label, value, sub, icon: IconCard, accentColor, trend, class
         {sub && <div className="text-[11px] text-ui-muted mt-2">{sub}</div>}
       </div>
       <div 
-        className="w-[42px] h-[42px] rounded-xl flex items-center justify-center border"
-        style={{ backgroundColor: `${accentColor}18`, borderColor: `${accentColor}30`, color: accentColor }}
+        className="w-[44px] h-[44px] rounded-lg flex items-center justify-center border transition-colors duration-200"
+        style={{ backgroundColor: `${accentColor}12`, borderColor: `${accentColor}25`, color: accentColor }}
       >
         <IconCard size={20} />
       </div>
     </div>
-    <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-b-xl" style={{ background: `linear-gradient(90deg, ${accentColor}, transparent)` }}></div>
   </div>
 );
 
-const MiniBarChart = ({ data, dataKey, maxKey, gradientFrom = "from-brand-primary", gradientTo = "to-brand-primary/50", shadowColor = "rgba(220,38,38,0.4)" }) => {
+const MiniBarChart = ({ data, dataKey, maxKey, gradientFrom = "from-brand-primary", gradientTo = "to-brand-primary/50", shadowColor = "rgba(225,29,72,0.3)" }) => {
   const max = Math.max(...data.map(d => Math.max(d[dataKey] || 0, d[maxKey] || 0)));
   if (!max) return <div className="h-20 flex items-center justify-center text-[10px] text-ui-muted">Tidak ada data</div>;
   
@@ -42,8 +40,8 @@ const MiniBarChart = ({ data, dataKey, maxKey, gradientFrom = "from-brand-primar
               ></div>
             )}
             <div 
-              className={`w-full bg-gradient-to-b ${gradientFrom} ${gradientTo} rounded-t-sm min-h-[3px] absolute bottom-0 left-0 z-10`}
-              style={{ height: `${(d[dataKey] / max) * 100}%`, boxShadow: `0 0 8px ${shadowColor}` }}
+              className={`w-full bg-brand-primary rounded-t-sm min-h-[3px] absolute bottom-0 left-0 z-10`}
+              style={{ height: `${(d[dataKey] / max) * 100}%` }}
             ></div>
           </div>
           <div className="text-[9px] text-ui-muted tracking-widest">{d.day || d.month}</div>
@@ -96,15 +94,15 @@ export default function Dashboard() {
       {overview.sla_alert > 0 && (
         <div className="bg-ui-danger/10 border border-ui-danger/25 rounded-xl px-4 py-3 flex items-center gap-3">
           <AlertTriangle className="w-4 h-4 text-ui-danger flex-shrink-0" />
-          <span className="text-[13px] text-red-300">
-            <strong className="text-ui-danger font-bold">{overview.sla_alert} laporan</strong> mendekati atau melewati batas SLA — segera tindak lanjuti!
+          <span className="text-[13px] text-ui-danger">
+            <strong className="font-bold">{overview.sla_alert} laporan</strong> mendekati atau melewati batas SLA — segera tindak lanjuti!
           </span>
         </div>
       )}
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Total Laporan" value={overview.total_laporan} sub="Bulan Ini" icon={FileText} accentColor="#dc2626" />
+        <StatCard label="Total Laporan" value={overview.total_laporan} sub="Bulan Ini" icon={FileText} accentColor="#4F46E5" />
         <StatCard label="Dalam Proses" value={overview.dalam_proses} sub="Sedang dikerjakan" icon={Clock} accentColor="#f59e0b" />
         <StatCard label="Selesai" value={overview.selesai} sub={`SLA compliance ${overview.sla_compliance}%`} icon={CheckCircle2} accentColor="#10b981" />
         <StatCard label="Eskalasi" value={overview.eskalasi} sub="Perlu Vendor Eksternal" icon={AlertTriangle} accentColor="#ef4444" />
@@ -137,9 +135,6 @@ export default function Dashboard() {
             <MiniBarChart 
               data={weekly} 
               dataKey="selesai" 
-              gradientFrom="from-emerald-500" 
-              gradientTo="to-emerald-500/50" 
-              shadowColor="rgba(16,185,129,0.4)"
             />
           </div>
         </div>
@@ -157,7 +152,7 @@ export default function Dashboard() {
                 </div>
                 <div className="h-1.5 bg-dark-border rounded-full overflow-hidden">
                   <div 
-                    className="h-full rounded-full bg-gradient-to-r from-brand-primary to-brand-secondary shadow-[0_0_8px_rgba(220,38,38,0.5)]"
+                    className="h-full rounded-full bg-brand-primary"
                     style={{ width: `${c.percentage}%` }}
                   />
                 </div>
@@ -174,7 +169,7 @@ export default function Dashboard() {
           <thead>
             <tr className="border-b border-dark-border">
               {["ID", "Judul", "Kategori", "Prioritas", "Status", "Teknisi"].map(h => (
-                <th key={h} className="py-2 px-3 text-[11px] text-ui-muted font-semibold tracking-wider uppercase bg-dark-bg/50">
+                <th key={h} className="py-2.5 px-3 text-[11px] text-ui-muted font-semibold tracking-wider uppercase first:rounded-tl-lg last:rounded-tr-lg bg-dark-hover/50">
                   {h}
                 </th>
               ))}
@@ -209,7 +204,7 @@ export default function Dashboard() {
         <div className="text-[13px] font-semibold text-ui-text mb-4">Kesiapan Teknisi</div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           {technicians.length === 0 ? <div className="text-[11px] text-ui-muted col-span-5 text-center">Belum ada teknisi data</div> : technicians.map(t => (
-            <div key={t.id} className="text-center p-3.5 bg-dark-bg rounded-xl border border-dark-border flex flex-col items-center group relative overflow-hidden">
+            <div key={t.id} className="text-center p-3.5 bg-dark-bg/60 rounded-lg border border-dark-border/60 flex flex-col items-center group relative overflow-hidden transition-colors duration-200 hover:border-dark-border">
               <Avatar initials={t.avatar} size={40} success={t.workload_status === "Tersedia"} warning={t.workload_status !== "Tersedia" && t.workload_status !== "Cuti"} muted={t.workload_status === "Cuti"} />
               <div className="text-[12px] font-semibold text-ui-text mt-2.5 truncate w-full">{t.name.split(" ")[0]}</div>
               <div className="text-[10px] text-ui-muted mt-0.5">{t.active_count}/{t.max_capacity} tugas</div>

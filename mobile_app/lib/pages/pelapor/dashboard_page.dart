@@ -7,7 +7,6 @@ import '../../theme/app_theme.dart';
 import '../../widgets/report_card.dart';
 import '../../widgets/campus_fix_logo.dart';
 import '../../widgets/theme_toggle_button.dart';
-import '../shared/notification_page.dart';
 import 'report_detail_pelapor.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -73,36 +72,38 @@ class _DashboardPageState extends State<DashboardPage> {
               flexibleSpace: FlexibleSpaceBar(
                 background: Container(
                   decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFF7F1D1D), AppColors.primary],
-                    ),
+                    gradient: AppColors.brandGradient,
                   ),
                   child: SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 20),
-                          const SizedBox(height: 32),
-                          Text(
-                            'Halo, ${widget.session.name.split(' ').first}! 👋',
-                            style: GoogleFonts.spaceGrotesk(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
+                    child: Align(
+                      alignment: Alignment.bottomLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Halo, ${widget.session.name.split(' ').first}! 👋',
+                              style: GoogleFonts.inter(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                          Text(
-                            widget.session.email,
-                            style: GoogleFonts.spaceGrotesk(
-                              color: Colors.white.withValues(alpha: 0.7),
-                              fontSize: 12,
+                            Text(
+                              widget.session.email,
+                              style: GoogleFonts.inter(
+                                color: Colors.white.withValues(alpha: 0.7),
+                                fontSize: 12,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -133,19 +134,14 @@ class _DashboardPageState extends State<DashboardPage> {
                           Container(
                             padding: const EdgeInsets.all(18),
                             decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  AppColors.primary,
-                                  AppColors.primary.withValues(alpha: 0.7),
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(16),
+                              gradient: AppColors.brandGradient,
+                              borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
                                   color: AppColors.primary.withValues(alpha: 0.3),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 6),
-                                ),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                )
                               ],
                             ),
                             child: Row(
@@ -156,7 +152,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                     children: [
                                       Text(
                                         'Ada yang rusak?',
-                                        style: GoogleFonts.spaceGrotesk(
+                                        style: GoogleFonts.inter(
                                           color: Colors.white,
                                           fontSize: 16,
                                           fontWeight: FontWeight.w800,
@@ -165,7 +161,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                       const SizedBox(height: 4),
                                       Text(
                                         'Laporkan sekarang, kami akan tangani segera.',
-                                        style: GoogleFonts.spaceGrotesk(
+                                        style: GoogleFonts.inter(
                                           color: Colors.white.withValues(alpha: 0.8),
                                           fontSize: 12,
                                         ),
@@ -190,7 +186,7 @@ class _DashboardPageState extends State<DashboardPage> {
                             children: [
                               Text(
                                 'Laporan Terbaru',
-                                style: GoogleFonts.spaceGrotesk(
+                                style: GoogleFonts.inter(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w800,
                                 ),
@@ -198,7 +194,7 @@ class _DashboardPageState extends State<DashboardPage> {
                               if (_reports.isNotEmpty)
                                 Text(
                                   'Lihat semua →',
-                                  style: GoogleFonts.spaceGrotesk(
+                                  style: GoogleFonts.inter(
                                     fontSize: 12,
                                     color: AppColors.primary,
                                     fontWeight: FontWeight.w700,
@@ -249,14 +245,15 @@ class _EmptyState extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
+                shape: BoxShape.rectangle,
+                borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(Icons.inbox_rounded, size: 40, color: AppColors.primary),
             ),
             const SizedBox(height: 16),
             Text(
               'Belum ada laporan',
-              style: GoogleFonts.spaceGrotesk(
+              style: GoogleFonts.inter(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
               ),
@@ -264,7 +261,7 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               'Tekan "Lapor" untuk membuat laporan pertamamu',
-              style: GoogleFonts.spaceGrotesk(
+              style: GoogleFonts.inter(
                 fontSize: 12,
                 color: AppColors.textMuted,
               ),

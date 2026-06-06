@@ -29,11 +29,11 @@ class ThemeToggleButton extends StatelessWidget {
             padding: const EdgeInsets.all(3),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
-              color: isDark ? AppColors.primary : AppColors.borderLight,
+              color: isDark ? AppColors.primary : AppColors.textDim.withValues(alpha: 0.8),
               border: Border.all(
                 color: isDark
                     ? AppColors.primary.withValues(alpha: 0.5)
-                    : AppColors.textDim.withValues(alpha: 0.3),
+                    : Colors.transparent,
               ),
             ),
             child: AnimatedAlign(
@@ -47,10 +47,10 @@ class ThemeToggleButton extends StatelessWidget {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
+                      offset: const Offset(0, 2),
+                    )
                   ],
                 ),
                 child: Icon(

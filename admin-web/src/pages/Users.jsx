@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Plus, X, Edit, Trash2, AlertTriangle, UserCheck } from 'lucide-react';
+import { Search, Plus, X, Edit, Trash2, AlertTriangle, UserCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Avatar, Badge } from '../components/ui';
 import api from '../api';
 
 export default function Users() {
-  const [search, setSearch] = useState("");
-  const [filterRole, setFilterRole] = useState("Semua");
+  const [filters, setFilters] = useState({ search: "", role: "Semua", page: 1, per_page: 10 });
+  const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [usersData, setUsersData] = useState([]);
   const [deleteConfirm, setDeleteConfirm] = useState(null); 
   const [isLoading, setIsLoading] = useState(true);
+  const [userSummary, setUserSummary] = useState({ admin: 0, teknisi: 0, pelapor: 0 });
   const [tempPassword, setTempPassword] = useState(null); // for new accounts
 
   const [userForm, setUserForm] = useState({ id:'', name:'', email:'', nim:'', role:'teknisi', status:'aktif', specialty:'', availability_status:'aktif' });
@@ -21,13 +22,25 @@ export default function Users() {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [filters]);
 
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
-      const res = await api.get('/users');
-      setUsersData(res.data);
+      const params = new URLSearchParams();
+      params.append('page', filters.page);
+      params.append('per_page', filters.per_page);
+      if (filters.search) params.append('search', filters.search);
+      if (filters.role && filters.role !== 'Semua') params.append('role', filters.role.toLowerCase());
+
+      const res = await api.get('/users?' + params.toString());
+      setUsersData(res.data.data || []);
+      if (res.data.summary) setUserSummary(res.data.summary);
+      setPagination({
+        current_page: res.data.current_page || 1,
+        last_page: res.data.last_page || 1,
+        total: res.data.total || 0
+      });
     } catch (err) {
       console.error(err);
     } finally {
@@ -37,15 +50,8 @@ export default function Users() {
 
   const summary = ["admin", "teknisi", "pelapor"].map(r => ({
     role: r.charAt(0).toUpperCase() + r.slice(1), 
-    count: usersData.filter(u => u.role === r).length
+    count: userSummary[r] || 0
   }));
-
-  const filtered = usersData.filter(u => {
-    const q = search.toLowerCase();
-    const matchSearch = u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || (u.nim && u.nim.toLowerCase().includes(q));
-    const matchRole = filterRole === "Semua" || u.role === filterRole.toLowerCase();
-    return matchSearch && matchRole;
-  });
 
   const handleSaveUser = async (e) => {
     e.preventDefault();
@@ -112,8 +118,8 @@ export default function Users() {
       
       {/* Confirm Delete Dialog */}
       {deleteConfirm && createPortal(
-        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-dark-bg/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-dark-card border border-ui-danger/40 rounded-xl w-full max-w-sm shadow-2xl p-6">
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-dark-bg/80 animate-fade-in">
+          <div className="bg-dark-card border border-ui-danger/40 rounded-lg w-full max-w-sm p-6">
             <div className="flex items-center gap-3 mb-4">
               <AlertTriangle className="w-5 h-5 text-ui-danger flex-shrink-0" />
               <div className="font-bold text-ui-text text-[15px]">Hapus User</div>
@@ -136,7 +142,7 @@ export default function Users() {
           <div key={s.role} className="card p-5 flex justify-between items-center group">
             <div>
               <div className="text-[11px] text-ui-muted font-bold tracking-widest uppercase mb-1">{s.role}</div>
-              <div className="text-[28px] font-bold text-ui-text transition-transform group-hover:-translate-y-1">{s.count}</div>
+              <div className="text-[28px] font-bold text-ui-text">{s.count}</div>
             </div>
             <Badge label={s.role} role={s.role} />
           </div>
@@ -150,13 +156,25 @@ export default function Users() {
           <input 
             className="input pl-9" 
             placeholder="Cari nama, email, atau NIM/NIP..." 
-            value={search} 
-            onChange={e => setSearch(e.target.value)} 
+            value={filters.search} 
+            onChange={e => setFilters(prev => ({ ...prev, search: e.target.value, page: 1 }))} 
           />
         </div>
-        <select className="input w-[160px]" value={filterRole} onChange={e => setFilterRole(e.target.value)}>
-          {["Semua", "Admin", "Teknisi", "Pelapor"].map(s => <option key={s} className="bg-dark-bg">{s}</option>)}
+        <select className="input w-[160px]" value={filters.role} onChange={e => setFilters(prev => ({ ...prev, role: e.target.value, page: 1 }))}>
+          {["Semua", "Admin", "Teknisi", "Pelapor"].map(s => <option key={s} value={s} className="bg-dark-bg">{s}</option>)}
         </select>
+        <div className="flex items-center gap-2">
+          <span className="text-[12px] text-ui-muted font-semibold">Tampilkan:</span>
+          <select 
+            className="input w-[75px]" 
+            value={filters.per_page} 
+            onChange={e => setFilters(prev => ({ ...prev, per_page: parseInt(e.target.value), page: 1 }))}
+          >
+            {[10, 20, 50].map(val => (
+              <option key={val} value={val} className="bg-dark-bg">{val}</option>
+            ))}
+          </select>
+        </div>
         <button className="btn btn-primary" onClick={() => { setIsEditMode(false); setShowModal(true); }}>
           <Plus className="w-3.5 h-3.5" /> Tambah User
         </button>
@@ -173,7 +191,7 @@ export default function Users() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map(u => {
+            {usersData.map(u => {
               const isSelf = u.id === CURRENT_USER_ID;
               return (
                 <tr key={u.id} className="table-row border-b border-dark-border/40 last:border-0 hover:bg-dark-hover transition-colors">
@@ -212,13 +230,58 @@ export default function Users() {
             })}
           </tbody>
         </table>
-        {filtered.length === 0 && <div className="p-10 text-center text-ui-muted text-[13px]">User tidak ditemukan.</div>}
+        {usersData.length === 0 && <div className="p-10 text-center text-ui-muted text-[13px]">User tidak ditemukan.</div>}
       </div>
+
+      {/* Pagination Controls */}
+      {pagination && pagination.last_page > 1 && (
+        <div className="flex items-center justify-between px-2 mt-2">
+          <div className="text-[12px] text-ui-muted">
+            Menampilkan halaman <span className="font-bold text-ui-text">{pagination.current_page}</span> dari <span className="font-bold text-ui-text">{pagination.last_page}</span> 
+            <span className="ml-2">({pagination.total} total user)</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button 
+              className={`p-1.5 rounded-md border ${pagination.current_page === 1 ? 'border-transparent text-ui-muted opacity-50 cursor-not-allowed' : 'border-dark-border text-ui-text hover:bg-dark-hover'}`}
+              onClick={() => setFilters(prev => ({ ...prev, page: pagination.current_page - 1 }))}
+              disabled={pagination.current_page === 1}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <div className="flex gap-1">
+              {[...Array(pagination.last_page)].map((_, i) => {
+                const pageNum = i + 1;
+                if (pageNum === 1 || pageNum === pagination.last_page || (pageNum >= pagination.current_page - 1 && pageNum <= pagination.current_page + 1)) {
+                  return (
+                    <button
+                      key={pageNum}
+                      className={`w-7 h-7 flex items-center justify-center rounded-md text-[11px] font-bold transition-colors ${pageNum === pagination.current_page ? 'bg-brand-primary text-white border-none' : 'border border-dark-border text-ui-text hover:bg-dark-hover'}`}
+                      onClick={() => setFilters(prev => ({ ...prev, page: pageNum }))}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                } else if (pageNum === pagination.current_page - 2 || pageNum === pagination.current_page + 2) {
+                  return <span key={pageNum} className="text-ui-muted px-1">...</span>;
+                }
+                return null;
+              })}
+            </div>
+            <button 
+              className={`p-1.5 rounded-md border ${pagination.current_page === pagination.last_page ? 'border-transparent text-ui-muted opacity-50 cursor-not-allowed' : 'border-dark-border text-ui-text hover:bg-dark-hover'}`}
+              onClick={() => setFilters(prev => ({ ...prev, page: pagination.current_page + 1 }))}
+              disabled={pagination.current_page === pagination.last_page}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Add/Edit User Modal */}
       {showModal && createPortal(
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-dark-bg/80 backdrop-blur-sm animate-fade-in" onClick={closeModal}>
-          <div className="bg-dark-card border border-dark-border rounded-xl w-full max-w-md shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-dark-bg/80 animate-fade-in" onClick={closeModal}>
+          <div className="bg-dark-card border border-dark-border rounded-lg w-full max-w-md overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="px-6 py-4 border-b border-dark-border flex justify-between items-center bg-dark-hover">
               <div className="font-bold text-ui-text text-[15px]">{isEditMode ? `Edit User: ${userForm.id}` : 'Tambah User Baru'}</div>
               <button className="text-ui-dim hover:text-ui-text" onClick={closeModal}><X className="w-4 h-4" /></button>

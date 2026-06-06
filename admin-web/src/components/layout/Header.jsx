@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Bell, Sun, Moon, X } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { getEcho } from '../../echo';
@@ -154,27 +154,66 @@ export default function Header() {
     }
   };
 
+  const notifRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setShowNotif(false);
+      }
+    };
+    if (showNotif) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showNotif]);
+
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formattedDate = currentTime.toLocaleDateString('id-ID', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+  const formattedTime = currentTime.toLocaleTimeString('id-ID', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+
   return (
-    <header className="sticky top-0 z-50 bg-dark-card/80 backdrop-blur-md border-b border-dark-border px-7 py-3.5 flex items-center justify-between">
+    <header className="sticky top-0 z-50 bg-dark-bg border-b border-dark-border px-7 py-3.5 flex items-center justify-between">
       <div>
-        <h1 className="text-[18px] font-bold text-ui-text">{meta.title}</h1>
+        <h1 className="text-[18px] font-bold text-ui-text tracking-tight">{meta.title}</h1>
         {meta.subtitle && (
           <p className="text-xs text-ui-muted mt-0.5">{meta.subtitle}</p>
         )}
       </div>
-      <div className="flex items-center gap-3">
-        <div className="relative border-l border-dark-border pl-3">
+      <div className="flex items-center gap-5">
+        <div className="text-right hidden md:block">
+          <div className="text-sm font-semibold text-brand-primary">{formattedTime}</div>
+          <div className="text-xs font-medium text-ui-text/90">{formattedDate}</div>
+        </div>
+        <div className="relative border-l border-dark-border pl-3" ref={notifRef}>
           <button
-            className="p-2 text-ui-dim hover:text-ui-text transition-colors bg-transparent border-none cursor-pointer relative"
+            className="p-2 text-ui-dim hover:text-brand-primary transition-colors duration-200 bg-transparent border-none cursor-pointer relative"
             onClick={() => setShowNotif(!showNotif)}
           >
             <Bell className="w-4 h-4" />
-            {unreadCount > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-ui-danger rounded-full border-2 border-dark-card animate-pulse-slow pointer-events-none"></span>}
+            {unreadCount > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-ui-danger rounded-full pointer-events-none"></span>}
           </button>
 
           {showNotif && (
-            <div className="absolute right-0 top-12 w-80 bg-dark-card border border-dark-border rounded-xl shadow-2xl overflow-hidden animate-fade-in z-50">
-              <div className="px-4 py-3 border-b border-dark-border bg-dark-hover flex justify-between items-center">
+            <div className="absolute right-0 top-12 w-80 bg-dark-card border border-dark-border rounded-md shadow-lg overflow-hidden animate-fade-in z-50">
+              <div className="px-4 py-3.5 border-b border-dark-border/60 bg-dark-hover/50 flex justify-between items-center">
                 <span className="text-[13px] font-bold text-ui-text">Notifikasi Baru</span>
                 <div className="flex gap-3">
                   {notifications.length > 0 && (
@@ -210,9 +249,6 @@ export default function Header() {
               </div>
             </div>
           )}
-        </div>
-        <div className="text-xs text-ui-muted font-mono tracking-wide">
-          {new Date().toLocaleDateString("id-ID", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
         </div>
       </div>
     </header>

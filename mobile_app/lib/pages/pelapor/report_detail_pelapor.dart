@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -150,7 +149,7 @@ class _ReportDetailPelaporState extends State<ReportDetailPelapor> {
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: isDark ? AppColors.hoverDark : AppColors.bgLight,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                           color: isDark ? AppColors.borderDark : AppColors.borderLight),
                     ),
@@ -179,14 +178,14 @@ class _ReportDetailPelaporState extends State<ReportDetailPelapor> {
                     _SectionTitle('Foto Hasil Perbaikan'),
                     const SizedBox(height: 8),
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(8),
                       child: Container(
                         height: 200,
                         width: double.infinity,
                         decoration: BoxDecoration(
                           color: const Color(0xFF0A0F14),
                           border: Border.all(color: isDark ? AppColors.borderDark : AppColors.borderLight),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: report.completionPhotoUrl.startsWith('http')
                             ? Image.network(report.completionPhotoUrl, fit: BoxFit.cover)
@@ -273,7 +272,7 @@ class _ReportDetailPelaporState extends State<ReportDetailPelapor> {
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: AppColors.success.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                               color: AppColors.success.withValues(alpha: 0.3)),
                         ),
@@ -359,7 +358,7 @@ class _InfoCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: isDark ? AppColors.hoverDark : AppColors.bgLight,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
             color: isDark ? AppColors.borderDark : AppColors.borderLight),
       ),

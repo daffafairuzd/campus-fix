@@ -22,17 +22,14 @@ export default function Register() {
   return (
     <div className="min-h-screen bg-dark-bg flex flex-col justify-center items-center font-sans">
       <div className="w-full max-w-md p-8 card relative overflow-hidden my-8">
-        {/* Glow decoration */}
-        <div className="absolute top-0 right-0 w-48 h-48 bg-brand-primary opacity-10 rounded-full blur-[60px] pointer-events-none"></div>
+
 
         <div className="flex items-center gap-2 mb-8 relative z-10">
-          <div className="w-8 h-8 rounded bg-gradient-to-br from-brand-primary to-brand-secondary flex items-center justify-center shadow-[0_0_16px_rgba(220,38,38,0.3)]">
-             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-white">
-               <path d="M12 3L1 9l4 2.18V17h2v-4.82L12 15l11-6-11-6zm6.18 6L12 12.72 5.82 9 12 5.28 18.18 9zM17 16l-5 3-5-3v2l5 3 5-3v-2z" />
-            </svg>
+          <div className="w-8 h-8 rounded flex items-center justify-center overflow-hidden bg-brand-primary">
+            <img src="/logo.png" alt="CampusFix" className="w-full h-full object-cover" />
           </div>
           <div>
-            <div className="font-bold text-lg text-ui-text leading-tight">
+            <div className="font-display font-bold text-lg text-ui-text leading-tight">
               Campus<span className="text-brand-primary">Fix</span>
             </div>
             <div className="text-[10px] text-ui-muted tracking-widest mt-0.5">ADMIN REGISTRATION</div>

@@ -3,10 +3,15 @@ import React from 'react';
 export const Badge = ({ label, status, priority, role }) => {
   let colorClass = "bg-ui-muted/15 text-ui-muted border-ui-muted/30";
 
-  // helper to title case ("dalam_proses" -> "Dalam Proses")
+  // helper to title case ("dalam_proses" or "dalam proses" -> "Dalam Proses")
   const formatStr = (str) => {
     if (!str) return '';
-    return str.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    return String(str)
+      .replace(/_/g, ' ')
+      .split(' ')
+      .filter(Boolean)
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(' ');
   };
 
   const fStatus = formatStr(status);
@@ -37,6 +42,7 @@ export const Badge = ({ label, status, priority, role }) => {
       "Tinggi": "bg-ui-warning/15  text-ui-warning  border-ui-warning/30",
       "Sedang": "bg-ui-info/15     text-ui-info     border-ui-info/30",
       "Rendah": "bg-ui-success/15  text-ui-success  border-ui-success/30",
+      "Belum Ditentukan": "bg-ui-muted/15    text-ui-muted    border-ui-muted/30",
     }[fPriority] || colorClass;
 
   // --- ROLE badge ---
@@ -58,7 +64,7 @@ export const Badge = ({ label, status, priority, role }) => {
     "Eskalasi":    "bg-ui-danger",
   }[fStatus] || "bg-ui-muted";
 
-  const displayLabel = label || fStatus || fPriority || fRole;
+  const displayLabel = label ? formatStr(label) : (fStatus || fPriority || fRole);
 
   return (
     <span className={`badge border ${colorClass}`}>
@@ -69,7 +75,7 @@ export const Badge = ({ label, status, priority, role }) => {
 };
 
 export const Avatar = ({ initials, size = 32, success = false, warning = false, danger = false, muted = false }) => {
-  let colorCode = "#dc2626"; // primary red (default)
+  let colorCode = "#E11D48"; // deep rose primary (default)
   if (success) colorCode = "#10b981";
   if (warning) colorCode = "#f59e0b";
   if (danger)  colorCode = "#ef4444";
@@ -77,13 +83,13 @@ export const Avatar = ({ initials, size = 32, success = false, warning = false, 
 
   return (
     <div 
-      className="flex-shrink-0 flex items-center justify-center font-bold tracking-wide rounded-full border-2"
+      className="flex-shrink-0 flex items-center justify-center font-bold tracking-wider rounded-full border-2 transition-all duration-300"
       style={{
         width: size, 
         height: size, 
         fontSize: size * 0.35,
         color: colorCode,
-        background: `linear-gradient(135deg, ${colorCode}22, ${colorCode}44)`,
+        background: `${colorCode}33`,
         borderColor: `${colorCode}44`,
       }}
     >

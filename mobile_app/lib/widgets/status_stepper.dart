@@ -72,15 +72,7 @@ class StatusStepper extends StatelessWidget {
                                     : AppColors.borderLight),
                         width: 2,
                       ),
-                      boxShadow: isCurrent
-                          ? [
-                              BoxShadow(
-                                color: activeColor.withValues(alpha: 0.35),
-                                blurRadius: 8,
-                                spreadRadius: 1,
-                              ),
-                            ]
-                          : null,
+
                     ),
                     child: Icon(
                       isCompleted
@@ -105,25 +97,13 @@ class StatusStepper extends StatelessWidget {
                       width: 2,
                       height: 32,
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: isCompleted
-                              ? [completedColor, completedColor]
-                              : isCurrent
-                                  ? [
-                                      activeColor,
-                                      activeColor.withValues(alpha: 0.2)
-                                    ]
-                                  : [
-                                      isDark
-                                          ? AppColors.borderDark
-                                          : AppColors.borderLight,
-                                      isDark
-                                          ? AppColors.borderDark
-                                          : AppColors.borderLight,
-                                    ],
-                        ),
+                        color: isCompleted
+                            ? completedColor
+                            : isCurrent
+                                ? activeColor
+                                : (isDark
+                                    ? AppColors.borderDark
+                                    : AppColors.borderLight),
                         borderRadius: BorderRadius.circular(1),
                       ),
                     ),

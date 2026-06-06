@@ -119,7 +119,7 @@ class _NotificationPageState extends State<NotificationPage> {
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                           decoration: BoxDecoration(
                             color: AppColors.primary.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(8),
                             border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
                           ),
                           child: Row(
@@ -177,7 +177,7 @@ class _NotifCard extends StatelessWidget {
                   ? AppColors.primary.withValues(alpha: 0.05)
                   : AppColors.primary.withValues(alpha: 0.03))
               : (isDark ? AppColors.cardDark : AppColors.cardLight),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isUnread
                 ? AppColors.primary.withValues(alpha: 0.2)
@@ -192,7 +192,7 @@ class _NotifCard extends StatelessWidget {
               width: 40, height: 40,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, size: 20, color: color),
             ),
@@ -275,7 +275,8 @@ class _EmptyState extends StatelessWidget {
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(alpha: 0.08),
-              shape: BoxShape.circle,
+              shape: BoxShape.rectangle,
+              borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(Icons.notifications_off_outlined,
                 size: 44, color: AppColors.primary),

@@ -39,28 +39,23 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-dark-bg flex flex-col justify-center items-center font-sans">
-      <div className="w-full max-w-md p-8 card relative overflow-hidden">
-        {/* Glow decoration */}
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-brand-primary opacity-20 rounded-full blur-[60px] pointer-events-none"></div>
-        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-brand-secondary opacity-10 rounded-full blur-[60px] pointer-events-none"></div>
+    <div className="min-h-screen bg-dark-bg flex flex-col justify-center items-center font-sans relative">
+      <div className="w-full max-w-md p-8 card relative">
 
         <div className="flex items-center gap-2 mb-8 relative z-10">
-          <div className="w-8 h-8 rounded bg-gradient-to-br from-brand-primary to-brand-secondary flex items-center justify-center shadow-[0_0_16px_rgba(220,38,38,0.3)]">
-             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-white">
-               <path d="M12 3L1 9l4 2.18V17h2v-4.82L12 15l11-6-11-6zm6.18 6L12 12.72 5.82 9 12 5.28 18.18 9zM17 16l-5 3-5-3v2l5 3 5-3v-2z" />
-            </svg>
+          <div className="w-9 h-9 rounded-md flex items-center justify-center overflow-hidden bg-transparent">
+            <img src="/logo.png" alt="CampusFix" className="w-full h-full object-contain" />
           </div>
           <div>
-            <div className="font-bold text-lg text-ui-text leading-tight">
+            <div className="font-display font-bold text-lg text-ui-text leading-tight tracking-tight">
               Campus<span className="text-brand-primary">Fix</span>
             </div>
-            <div className="text-[10px] text-ui-muted tracking-widest mt-0.5">ADMIN PANEL</div>
+            <div className="text-[10px] text-ui-muted tracking-[0.2em] mt-0.5 font-medium">ADMIN PANEL</div>
           </div>
         </div>
 
         <div className="mb-6 relative z-10">
-          <h1 className="text-2xl font-bold text-ui-text mb-1.5">Sign In</h1>
+          <h1 className="text-2xl font-bold text-ui-text mb-1.5 tracking-tight">Sign In</h1>
           <p className="text-xs text-ui-muted">Gunakan akun administrator Anda untuk melanjutkan.</p>
         </div>
 
@@ -85,7 +80,7 @@ export default function Login() {
           <div>
             <div className="flex justify-between items-center mb-1.5">
               <label className="block text-[11px] font-semibold tracking-wider text-ui-muted">PASSWORD</label>
-              <Link to="/forgot-password" className="text-[11px] text-brand-primary hover:text-brand-secondary">Lupa Password?</Link>
+              <Link to="/forgot-password" className="text-[11px] text-brand-primary hover:text-brand-secondary transition-colors duration-300">Lupa Password?</Link>
             </div>
             <input 
               type="password" 

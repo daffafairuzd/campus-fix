@@ -40,20 +40,18 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="fixed left-0 top-0 w-[240px] h-screen bg-gray-900 shadow-[4px_0_24px_rgba(0,0,0,0.5)] flex flex-col z-[100]">
+    <aside className="fixed left-0 top-0 w-[240px] h-screen bg-dark-card border-r border-dark-border flex flex-col z-[100]">
       {/* Logo */}
       <div className="px-[18px] py-[20px] pb-[16px] border-b border-dark-border">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center shadow-lg border border-white/20 flex-shrink-0">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="text-white">
-              <path d="M12 3L1 9l4 2.18V17h2v-4.82L12 15l11-6-11-6zm6.18 6L12 12.72 5.82 9 12 5.28 18.18 9zM17 16l-5 3-5-3v2l5 3 5-3v-2z" />
-            </svg>
+          <div className="w-9 h-9 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden bg-white p-0.5 shadow-sm">
+            <img src="/logo.png" alt="CampusFix" className="w-full h-full object-contain" />
           </div>
           <div>
-            <div className="font-bold text-[15px] text-white leading-tight">
-              Campus<span className="text-white/80">Fix</span>
+            <div className="font-display font-bold text-[15px] text-brand-secondary leading-tight">
+              Campus<span className="text-brand-primary">Fix</span>
             </div>
-            <div className="text-[10px] text-white/50 tracking-widest mt-0.5">ADMIN PANEL</div>
+            <div className="text-[10px] text-ui-muted tracking-[0.2em] mt-0.5 font-medium">ADMIN PANEL</div>
           </div>
         </div>
       </div>
@@ -69,7 +67,7 @@ export default function Sidebar() {
             <n.icon className="w-4 h-4" />
             {n.label}
             {n.badge > 0 && (
-              <span className="ml-auto bg-white/20 text-white rounded-full text-[10px] font-bold px-[7px] py-[1px]">
+              <span className="ml-auto bg-brand-primary/25 text-brand-secondary rounded-full text-[10px] font-bold px-[7px] py-[1px] border border-brand-primary/30">
                 {n.badge}
               </span>
             )}
@@ -82,11 +80,11 @@ export default function Sidebar() {
         <div className="flex items-center gap-2.5">
           <Avatar initials={initials} size={34} />
           <div className="flex-1 min-w-0">
-            <div className="text-xs font-semibold text-white whitespace-nowrap overflow-hidden text-ellipsis">{user.name}</div>
-            <div className="text-[10px] text-white/50 capitalize">{user.role || 'Administrator'}</div>
+            <div className="text-xs font-semibold text-ui-text whitespace-nowrap overflow-hidden text-ellipsis">{user.name}</div>
+            <div className="text-[10px] text-ui-muted capitalize">{user.role || 'Administrator'}</div>
           </div>
           <button
-            className="p-1.5 text-white/50 hover:text-white transition-colors bg-transparent border-none outline-none cursor-pointer"
+            className="p-1.5 text-ui-muted hover:text-brand-primary transition-colors bg-transparent border-none outline-none cursor-pointer"
             title="Logout"
             onClick={handleLogout}
           >

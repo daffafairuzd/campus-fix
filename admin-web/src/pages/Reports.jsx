@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../api';
 import ReportList from './reports/ReportList';
@@ -14,7 +14,40 @@ export default function Reports() {
   const [isLoading, setIsLoading]     = useState(true);
   const [selected, setSelected]       = useState(null);
 
-  useEffect(() => { fetchReports(); }, []);
+  const [filters, setFilters] = useState({
+    search: '',
+    status: 'Semua',
+    priority: 'Semua',
+    category: 'Semua',
+    page: 1,
+    per_page: 10,
+  });
+
+  const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
+
+  const fetchReports = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.append('page', filters.page);
+      params.append('per_page', filters.per_page || 10);
+      if (filters.search) params.append('search', filters.search);
+      if (filters.status && filters.status !== 'Semua') params.append('status', filters.status.toLowerCase().replace(' ', '_'));
+      if (filters.priority && filters.priority !== 'Semua') params.append('priority', filters.priority.toLowerCase());
+      if (filters.category && filters.category !== 'Semua') params.append('category', filters.category);
+
+      const res = await api.get(`/reports?${params.toString()}`);
+      setReportsData(res.data.data || []);
+      setPagination({
+        current_page: res.data.current_page || 1,
+        last_page: res.data.last_page || 1,
+        total: res.data.total || 0
+      });
+    } catch (err) { console.error(err); }
+    finally { setIsLoading(false); }
+  }, [filters]);
+
+  useEffect(() => { fetchReports(); }, [fetchReports]);
 
   useEffect(() => {
     const handleUrlState = async () => {
@@ -28,7 +61,6 @@ export default function Reports() {
             const res = await api.get(`/reports/${id}`);
             setSelected(res.data);
           } catch {
-            // Report not found or error, revert to list
             setSearchParams({});
           }
         }
@@ -40,15 +72,6 @@ export default function Reports() {
   }, [reportIdParam, reportsData, isLoading, setSearchParams]);
 
   const viewMode = actionParam === 'add' ? 'add' : (actionParam === 'edit' ? 'edit' : (reportIdParam ? 'detail' : 'list'));
-
-  const fetchReports = async () => {
-    setIsLoading(true);
-    try {
-      const res = await api.get('/reports');
-      setReportsData(res.data.data || []);
-    } catch (err) { console.error(err); }
-    finally { setIsLoading(false); }
-  };
 
   const openDetail = (report) => { setSearchParams({ report_id: report.id }); };
   const openAdd    = ()       => { setSearchParams({ action: 'add' }); };
@@ -79,6 +102,9 @@ export default function Reports() {
           isLoading={isLoading}
           onAdd={openAdd}
           onDetail={openDetail}
+          filters={filters}
+          setFilters={setFilters}
+          pagination={pagination}
         />
       )}
       {viewMode === 'detail' && (

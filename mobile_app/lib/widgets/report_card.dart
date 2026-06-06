@@ -29,13 +29,13 @@ class ReportCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           color: cardColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: borderColor),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: borderColor.withValues(alpha: 0.5)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
-              blurRadius: 12,
-              offset: const Offset(0, 2),
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -51,12 +51,8 @@ class ReportCard extends StatelessWidget {
                     width: 46,
                     height: 46,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: _priorityColors(report.priority),
-                      ),
+                      borderRadius: BorderRadius.circular(8),
+                      color: _priorityColorSingle(report.priority),
                     ),
                     child: Icon(
                       _priorityIcon(report.priority),
@@ -72,7 +68,7 @@ class ReportCard extends StatelessWidget {
                       children: [
                         Text(
                           report.title,
-                          style: GoogleFonts.spaceGrotesk(
+                          style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
                             color: textMain,
@@ -89,7 +85,7 @@ class ReportCard extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 report.location,
-                                style: GoogleFonts.spaceGrotesk(
+                                style: GoogleFonts.inter(
                                   fontSize: 11,
                                   color: AppColors.textMuted,
                                 ),
@@ -125,10 +121,13 @@ class ReportCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.hoverDark : AppColors.bgLight,
+                color: isDark ? AppColors.hoverDark.withValues(alpha: 0.3) : AppColors.bgLight.withValues(alpha: 0.5),
                 borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(16),
-                  bottomRight: Radius.circular(16),
+                  bottomLeft: Radius.circular(12),
+                  bottomRight: Radius.circular(12),
+                ),
+                border: Border(
+                  top: BorderSide(color: borderColor.withValues(alpha: 0.3)),
                 ),
               ),
               child: Row(
@@ -136,7 +135,7 @@ class ReportCard extends StatelessWidget {
                 children: [
                   Text(
                     report.reportNumber,
-                    style: GoogleFonts.spaceGrotesk(
+                    style: GoogleFonts.inter(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                       color: AppColors.primary,
@@ -150,7 +149,7 @@ class ReportCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(
                         report.createdAt,
-                        style: GoogleFonts.spaceGrotesk(
+                        style: GoogleFonts.inter(
                           fontSize: 10,
                           color: AppColors.textDim,
                         ),
@@ -166,16 +165,20 @@ class ReportCard extends StatelessWidget {
     );
   }
 
-  List<Color> _priorityColors(String priority) {
+  Color _priorityColorSingle(String priority) {
     switch (priority.toLowerCase()) {
       case 'kritis':
-        return [const Color(0xFFDC2626), const Color(0xFFB91C1C)];
+        return const Color(0xFFE11D48);
       case 'tinggi':
-        return [const Color(0xFFEF4444), const Color(0xFFDC2626)];
+        return AppColors.primary;
       case 'sedang':
-        return [const Color(0xFFF59E0B), const Color(0xFFD97706)];
+        return const Color(0xFFF59E0B);
+      case 'rendah':
+        return const Color(0xFF10B981);
+      case 'belum_ditentukan':
+        return AppColors.textDim;
       default:
-        return [const Color(0xFF10B981), const Color(0xFF059669)];
+        return const Color(0xFF10B981);
     }
   }
 
@@ -187,8 +190,10 @@ class ReportCard extends StatelessWidget {
         return Icons.keyboard_double_arrow_up_rounded;
       case 'sedang':
         return Icons.remove_rounded;
-      default:
+      case 'rendah':
         return Icons.keyboard_double_arrow_down_rounded;
+      default:
+        return Icons.help_outline_rounded;
     }
   }
 }
@@ -211,7 +216,7 @@ class _CategoryChip extends StatelessWidget {
       ),
       child: Text(
         category,
-        style: GoogleFonts.spaceGrotesk(
+        style: GoogleFonts.inter(
           fontSize: 10,
           fontWeight: FontWeight.w600,
           color: AppColors.textMuted,

@@ -34,7 +34,7 @@ class StatusBadge extends StatelessWidget {
           const SizedBox(width: 5),
           Text(
             label,
-            style: GoogleFonts.spaceGrotesk(
+            style: GoogleFonts.inter(
               fontSize: compact ? 10 : 11,
               fontWeight: FontWeight.w700,
               color: color,
@@ -50,6 +50,8 @@ class StatusBadge extends StatelessWidget {
     switch (s) {
       case ReportStatus.menunggu:
         return ('Menunggu', AppColors.statusSubmitted, Icons.hourglass_top_rounded);
+      case ReportStatus.assessment:
+        return ('Assessment', AppColors.statusInProgress, Icons.assignment_outlined);
       case ReportStatus.dalamProses:
         return ('Dalam Proses', AppColors.statusInProgress, Icons.build_outlined);
       case ReportStatus.selesai:
@@ -87,7 +89,7 @@ class PriorityBadge extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             _label(priority),
-            style: GoogleFonts.spaceGrotesk(
+            style: GoogleFonts.inter(
               fontSize: compact ? 10 : 11,
               fontWeight: FontWeight.w700,
               color: color,
@@ -120,8 +122,10 @@ class PriorityBadge extends StatelessWidget {
         return (AppColors.priorityHigh, Icons.keyboard_double_arrow_up_rounded);
       case 'sedang':
         return (AppColors.priorityMedium, Icons.remove_rounded);
-      default:
+      case 'rendah':
         return (AppColors.priorityLow, Icons.keyboard_double_arrow_down_rounded);
+      default:
+        return (AppColors.textMuted, Icons.help_outline_rounded);
     }
   }
 }

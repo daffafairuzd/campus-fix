@@ -12,7 +12,7 @@ import '../models/report_model.dart';
 /// - Device fisik (iOS/Android) → ganti dengan IP lokal PC kamu
 String get _baseUrl {
   // Alamat IP lokal laptop agar bisa diakses dari HP fisik (satu jaringan Wi-Fi)
-  const String localIp = '10.57.189.92';
+  const String localIp = '10.33.187.26';
 
   if (kIsWeb) return 'http://localhost:8000/api';
   if (Platform.isAndroid || Platform.isIOS) return 'http://$localIp:8000/api';
@@ -278,7 +278,7 @@ class ApiService {
         'description': description,
         'category': category,
         'location': location,
-        'priority': 'rendah', // default, admin yang akan mengubah
+
         'latitude': latitude,
         'longitude': longitude,
       }),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/user_model.dart';
 import '../../theme/app_theme.dart';
@@ -23,13 +22,9 @@ class _PelaporHomePageState extends State<PelaporHomePage>
   // 0=Beranda, 1=Riwayat, [2=Lapor action], 3=Notifikasi, 4=Profil
   int _selectedIndex = 0;
 
-  // Hide-on-scroll state
-  bool _navVisible = true;
   final ScrollController _scrollController = ScrollController();
   late final AnimationController _navAnim;
   late final Animation<double> _navSlide;
-
-  late final List<Widget> _pages;
 
   @override
   void initState() {
@@ -41,13 +36,6 @@ class _PelaporHomePageState extends State<PelaporHomePage>
       value: 1.0, // mulai visible
     );
     _navSlide = CurvedAnimation(parent: _navAnim, curve: Curves.easeInOut);
-
-    _pages = [
-      DashboardPage(session: widget.session),
-      ReportHistoryPage(session: widget.session),
-      NotificationPage(session: widget.session),
-      ProfilePage(session: widget.session),
-    ];
   }
 
   @override
@@ -124,22 +112,12 @@ class _BottomNav extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: isDark ? AppColors.cardDark : Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.08),
-            blurRadius: 24,
-            offset: const Offset(0, -4),
-          ),
-        ],
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
-        ),
+        border: const Border(top: BorderSide(color: Color(0xFFE5E7EB))),
       ),
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 88,
+          height: 80,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -239,26 +217,8 @@ class _LaporFabState extends State<_LaporFab>
                 width: 58,
                 height: 58,
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFFEF4444), Color(0xFF991B1B)],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.5),
-                      blurRadius: 16,
-                      spreadRadius: 0,
-                      offset: const Offset(0, 4),
-                    ),
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.2),
-                      blurRadius: 32,
-                      spreadRadius: 4,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
+                  borderRadius: BorderRadius.circular(8),
+                  color: AppColors.primary,
                 ),
                 child: const Icon(
                   Icons.campaign_rounded,
@@ -269,7 +229,7 @@ class _LaporFabState extends State<_LaporFab>
               const SizedBox(height: 4),
               Text(
                 'Lapor',
-                style: GoogleFonts.spaceGrotesk(
+                style: GoogleFonts.inter(
                   fontSize: 10,
                   fontWeight: FontWeight.w800,
                   color: AppColors.primary,
@@ -319,7 +279,7 @@ class _NavItem extends StatelessWidget {
                 color: selected
                     ? AppColors.primary.withValues(alpha: 0.12)
                     : Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 icon,
@@ -330,7 +290,7 @@ class _NavItem extends StatelessWidget {
             const SizedBox(height: 2),
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 200),
-              style: GoogleFonts.spaceGrotesk(
+              style: GoogleFonts.inter(
                 fontSize: 10,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 color: selected ? AppColors.primary : AppColors.textMuted,

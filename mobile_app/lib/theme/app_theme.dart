@@ -2,23 +2,33 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppColors {
-  // Primary Red — sesuai web admin (#dc2626)
+  // Primary Red & Black
   static const primary = Color(0xFFDC2626);
   static const primaryDark = Color(0xFFB91C1C);
   static const primaryGlow = Color(0x1ADC2626);
+  static const secondary = Color(0xFF09090B);
+
+  // Gradient
+  static const LinearGradient brandGradient = LinearGradient(
+    colors: [Color(0xFF050505), primary],
+    stops: [0.4, 1.0],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 
   // Light Mode
-  static const bgLight = Color(0xFFF5F6FA);
+  static const bgLight = Color(0xFFF9FAFB);
   static const cardLight = Color(0xFFFFFFFF);
+  static const hoverLight = Color(0xFFF1F5F9);
   static const borderLight = Color(0xFFE2E8F0);
-  static const textMainLight = Color(0xFF1E293B);
+  static const textMainLight = Color(0xFF0F172A);
 
   // Dark Mode
-  static const bgDark = Color(0xFF0A0F14);
-  static const cardDark = Color(0xFF111827);
-  static const hoverDark = Color(0xFF1A2535);
-  static const borderDark = Color(0xFF1E2D3D);
-  static const textMainDark = Color(0xFFE2E8F0);
+  static const bgDark = Color(0xFF0F172A);
+  static const cardDark = Color(0xFF1E293B);
+  static const hoverDark = Color(0xFF334155);
+  static const borderDark = Color(0xFF334155);
+  static const textMainDark = Color(0xFFF8FAFC);
 
   // Shared
   static const textMuted = Color(0xFF64748B);
@@ -45,7 +55,18 @@ class AppColors {
 
 class AppTheme {
   static TextTheme _buildTextTheme(TextTheme base) {
-    return GoogleFonts.spaceGroteskTextTheme(base);
+    final interTextTheme = GoogleFonts.interTextTheme(base);
+    return interTextTheme.copyWith(
+      displayLarge: GoogleFonts.plusJakartaSans(textStyle: interTextTheme.displayLarge),
+      displayMedium: GoogleFonts.plusJakartaSans(textStyle: interTextTheme.displayMedium),
+      displaySmall: GoogleFonts.plusJakartaSans(textStyle: interTextTheme.displaySmall),
+      headlineLarge: GoogleFonts.plusJakartaSans(textStyle: interTextTheme.headlineLarge),
+      headlineMedium: GoogleFonts.plusJakartaSans(textStyle: interTextTheme.headlineMedium),
+      headlineSmall: GoogleFonts.plusJakartaSans(textStyle: interTextTheme.headlineSmall),
+      titleLarge: GoogleFonts.plusJakartaSans(textStyle: interTextTheme.titleLarge),
+      titleMedium: GoogleFonts.plusJakartaSans(textStyle: interTextTheme.titleMedium),
+      titleSmall: GoogleFonts.plusJakartaSans(textStyle: interTextTheme.titleSmall),
+    );
   }
 
   static ThemeData light() {
@@ -54,7 +75,7 @@ class AppTheme {
       colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
         onPrimary: Colors.white,
-        secondary: AppColors.primaryDark,
+        secondary: AppColors.secondary,
         surface: AppColors.cardLight,
         onSurface: AppColors.textMainLight,
         outline: AppColors.borderLight,
@@ -69,7 +90,7 @@ class AppTheme {
         scrolledUnderElevation: 1,
         shadowColor: AppColors.borderLight,
         centerTitle: false,
-        titleTextStyle: GoogleFonts.spaceGrotesk(
+        titleTextStyle: GoogleFonts.plusJakartaSans(
           fontSize: 18,
           fontWeight: FontWeight.w700,
           color: AppColors.textMainLight,
@@ -81,7 +102,7 @@ class AppTheme {
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(8),
           side: const BorderSide(color: AppColors.borderLight),
         ),
       ),
@@ -100,13 +121,13 @@ class AppTheme {
         }),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return GoogleFonts.spaceGrotesk(
+            return GoogleFonts.inter(
               fontSize: 11,
               fontWeight: FontWeight.w700,
               color: AppColors.primary,
             );
           }
-          return GoogleFonts.spaceGrotesk(
+          return GoogleFonts.inter(
             fontSize: 11,
             color: AppColors.textMuted,
           );
@@ -116,11 +137,11 @@ class AppTheme {
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          minimumSize: const Size(double.infinity, 52),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          textStyle: GoogleFonts.spaceGrotesk(
+          minimumSize: const Size(double.infinity, 48),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          textStyle: GoogleFonts.inter(
             fontSize: 15,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
@@ -128,9 +149,9 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primary,
           side: const BorderSide(color: AppColors.primary),
-          minimumSize: const Size(double.infinity, 52),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          textStyle: GoogleFonts.spaceGrotesk(
+          minimumSize: const Size(double.infinity, 48),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          textStyle: GoogleFonts.inter(
             fontSize: 15,
             fontWeight: FontWeight.w600,
           ),
@@ -140,24 +161,24 @@ class AppTheme {
         filled: true,
         fillColor: AppColors.bgLight,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: AppColors.borderLight),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: AppColors.borderLight),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: AppColors.danger),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        labelStyle: GoogleFonts.spaceGrotesk(color: AppColors.textMuted, fontSize: 14),
-        hintStyle: GoogleFonts.spaceGrotesk(color: AppColors.textDim, fontSize: 14),
+        labelStyle: GoogleFonts.inter(color: AppColors.textMuted, fontSize: 14),
+        hintStyle: GoogleFonts.inter(color: AppColors.textDim, fontSize: 14),
         prefixIconColor: AppColors.textMuted,
         suffixIconColor: AppColors.textMuted,
       ),
@@ -165,7 +186,7 @@ class AppTheme {
         backgroundColor: AppColors.bgLight,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         side: const BorderSide(color: AppColors.borderLight),
-        labelStyle: GoogleFonts.spaceGrotesk(fontSize: 12, fontWeight: FontWeight.w600),
+        labelStyle: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
       ),
       dividerTheme: const DividerThemeData(
         color: AppColors.borderLight,
@@ -174,8 +195,8 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.cardLight,
-        contentTextStyle: GoogleFonts.spaceGrotesk(color: AppColors.textMainLight),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        contentTextStyle: GoogleFonts.inter(color: AppColors.textMainLight),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -187,7 +208,7 @@ class AppTheme {
       colorScheme: const ColorScheme.dark(
         primary: AppColors.primary,
         onPrimary: Colors.white,
-        secondary: AppColors.primaryDark,
+        secondary: AppColors.secondary,
         surface: AppColors.cardDark,
         onSurface: AppColors.textMainDark,
         outline: AppColors.borderDark,
@@ -205,7 +226,7 @@ class AppTheme {
         scrolledUnderElevation: 1,
         shadowColor: AppColors.borderDark,
         centerTitle: false,
-        titleTextStyle: GoogleFonts.spaceGrotesk(
+        titleTextStyle: GoogleFonts.plusJakartaSans(
           fontSize: 18,
           fontWeight: FontWeight.w700,
           color: AppColors.textMainDark,
@@ -217,13 +238,13 @@ class AppTheme {
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(8),
           side: const BorderSide(color: AppColors.borderDark),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.cardDark,
-        indicatorColor: AppColors.primary.withValues(alpha: 0.15),
+        indicatorColor: AppColors.primary.withValues(alpha: 0.1),
         surfaceTintColor: Colors.transparent,
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
@@ -233,13 +254,13 @@ class AppTheme {
         }),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return GoogleFonts.spaceGrotesk(
+            return GoogleFonts.inter(
               fontSize: 11,
               fontWeight: FontWeight.w700,
               color: AppColors.primary,
             );
           }
-          return GoogleFonts.spaceGrotesk(
+          return GoogleFonts.inter(
             fontSize: 11,
             color: AppColors.textMuted,
           );
@@ -249,11 +270,11 @@ class AppTheme {
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          minimumSize: const Size(double.infinity, 52),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          textStyle: GoogleFonts.spaceGrotesk(
+          minimumSize: const Size(double.infinity, 48),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          textStyle: GoogleFonts.inter(
             fontSize: 15,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
@@ -261,9 +282,9 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primary,
           side: const BorderSide(color: AppColors.primary),
-          minimumSize: const Size(double.infinity, 52),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          textStyle: GoogleFonts.spaceGrotesk(
+          minimumSize: const Size(double.infinity, 48),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          textStyle: GoogleFonts.inter(
             fontSize: 15,
             fontWeight: FontWeight.w600,
           ),
@@ -273,24 +294,24 @@ class AppTheme {
         filled: true,
         fillColor: AppColors.hoverDark,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: AppColors.borderDark),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: AppColors.borderDark),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: AppColors.danger),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        labelStyle: GoogleFonts.spaceGrotesk(color: AppColors.textMuted, fontSize: 14),
-        hintStyle: GoogleFonts.spaceGrotesk(color: AppColors.textMuted, fontSize: 14),
+        labelStyle: GoogleFonts.inter(color: AppColors.textMuted, fontSize: 14),
+        hintStyle: GoogleFonts.inter(color: AppColors.textMuted, fontSize: 14),
         prefixIconColor: AppColors.textMuted,
         suffixIconColor: AppColors.textMuted,
       ),
@@ -298,7 +319,7 @@ class AppTheme {
         backgroundColor: AppColors.hoverDark,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         side: const BorderSide(color: AppColors.borderDark),
-        labelStyle: GoogleFonts.spaceGrotesk(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textMainDark),
+        labelStyle: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textMainDark),
       ),
       dividerTheme: const DividerThemeData(
         color: AppColors.borderDark,
@@ -307,8 +328,8 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.cardDark,
-        contentTextStyle: GoogleFonts.spaceGrotesk(color: AppColors.textMainDark),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        contentTextStyle: GoogleFonts.inter(color: AppColors.textMainDark),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         behavior: SnackBarBehavior.floating,
       ),
     );

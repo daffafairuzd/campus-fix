@@ -18,7 +18,7 @@ const BarGraph = ({ data, xAxisValue }) => {
 
           <div className="w-full flex justify-center gap-1 items-end flex-1 max-h-[80%]">
             <div 
-              className="w-1/2 bg-gradient-to-t from-brand-primary to-brand-secondary rounded-t-sm relative shadow-[0_0_8px_rgba(220,38,38,0.3)] transition-all duration-300 min-h-[4px]"
+              className="w-1/2 bg-brand-primary rounded-t-sm relative transition-all duration-300 min-h-[4px]"
               style={{ height: `${(d.laporan / max) * 100}%` }}
             ></div>
             <div 
@@ -92,7 +92,7 @@ export default function Analytics() {
             <button 
               key={p}
               onClick={() => setPeriod(p)}
-              className={`px-4 py-1.5 rounded-md text-[11px] font-semibold transition-colors ${period === p ? 'bg-dark-hover text-brand-primary border border-brand-primary/20 shadow-[0_0_8px_rgba(220,38,38,0.1)]' : 'text-ui-muted hover:text-ui-text'}`}
+              className={`px-4 py-1.5 rounded-md text-[11px] font-semibold transition-colors ${period === p ? 'bg-dark-hover text-brand-primary border border-brand-primary/20' : 'text-ui-muted hover:text-ui-text'}`}
             >
               {p}
             </button>
@@ -107,7 +107,7 @@ export default function Analytics() {
               <div className="text-[11px] text-ui-muted mt-1">Total {chartData.reduce((acc,curr) => acc + curr.laporan, 0)} laporan masuk ({period})</div>
            </div>
            <div className="flex gap-4 text-[11px] text-ui-muted">
-              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-brand-primary shadow-[0_0_4px_rgba(220,38,38,0.5)]"></span> Laporan Masuk</span>
+              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-brand-primary"></span> Laporan Masuk</span>
               <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-ui-muted/50"></span> Diselesaikan</span>
            </div>
          </div>
@@ -238,7 +238,7 @@ export default function Analytics() {
            <h3 className="text-[13px] font-bold text-ui-text mb-4">Status Laporan</h3>
            <div className="flex flex-col gap-3.5">
              {[
-               {label:"Selesai", val:overview?.selesai || 0, color:"bg-ui-success", shadow:"shadow-[0_0_8px_rgba(16,185,129,0.3)]", text:"text-ui-success"},
+               {label:"Selesai", val:overview?.selesai || 0, color:"bg-ui-success", text:"text-ui-success"},
                {label:"Dalam Proses", val:overview?.dalam_proses || 0, color:"bg-ui-info", text:"text-ui-info"},
                {label:"Menunggu", val:overview?.menunggu || 0, color:"bg-ui-warning", text:"text-ui-warning"},
                {label:"Eskalasi", val:overview?.eskalasi || 0, color:"bg-ui-danger", text:"text-ui-danger"},

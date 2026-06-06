@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,14 +6,14 @@
 
 @layer base {
   :root {
-    --theme-bg: 10 15 20;
-    --theme-card: 17 24 39;
-    --theme-hover: 26 37 53;
-    --theme-border: 30 45 61;
+    --theme-bg: 249 250 251;      /* gray-50 */
+    --theme-card: 255 255 255;    /* white */
+    --theme-hover: 243 244 246;   /* gray-100 */
+    --theme-border: 229 231 235;  /* gray-200 */
 
-    --text-main: 226 232 240;
-    --text-muted: 100 116 139;
-    --text-dim: 148 163 184;
+    --text-main: 17 24 39;        /* gray-900 */
+    --text-muted: 107 114 128;    /* gray-500 */
+    --text-dim: 156 163 175;      /* gray-400 */
   }
 
   body {
@@ -21,35 +21,38 @@
     color: rgb(var(--text-main));
     @apply antialiased font-sans transition-colors duration-300;
   }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-tight;
+  }
 }
 
 @layer components {
   .card {
-    @apply bg-dark-card border border-dark-border rounded-xl transition-all duration-200;
+    @apply bg-dark-card border border-dark-border/60 rounded-xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] transition-colors duration-200;
   }
 
   .card:hover {
-    @apply border-brand-glow;
-    box-shadow: 0 0 20px rgba(220, 38, 38, 0.06);
+    @apply border-brand-primary/20 shadow-[0_8px_30px_rgb(0,0,0,0.08)];
   }
 
   .badge {
-    @apply inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wider;
+    @apply inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-semibold tracking-wider;
   }
 
   .btn {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-sans text-[13px] font-semibold transition-all duration-200 cursor-pointer border-none outline-none;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-sans text-[13px] font-semibold transition-all duration-300 cursor-pointer border-none outline-none;
   }
 
   .btn-primary {
-    @apply bg-brand-primary text-white hover:bg-brand-dim;
+    @apply bg-brand-primary text-white;
   }
   .btn-primary:hover {
-    box-shadow: 0 0 16px rgba(220, 38, 38, 0.15);
+    @apply bg-brand-dim;
   }
 
   .btn-ghost {
-    @apply bg-transparent text-ui-dim border border-dark-border hover:border-brand-primary hover:text-brand-primary;
+    @apply bg-transparent text-ui-dim border border-dark-border hover:border-brand-primary/50 hover:text-brand-primary transition-all duration-300;
   }
 
   .btn-danger {
@@ -57,10 +60,10 @@
   }
 
   .input {
-    @apply w-full bg-dark-bg border border-dark-border rounded-lg text-ui-text font-sans text-[13px] px-3 py-2 outline-none transition-colors duration-200 focus:border-brand-primary;
+    @apply w-full bg-dark-bg border border-dark-border rounded-lg text-ui-text font-sans text-[13px] px-3 py-2.5 outline-none transition-all duration-300 focus:border-brand-primary;
   }
   .input:focus {
-    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+    @apply border-brand-primary ring-1 ring-brand-primary;
   }
 
   .input::placeholder {
@@ -68,7 +71,11 @@
   }
 
   .table-row {
-    @apply transition-colors duration-150 hover:bg-dark-hover;
+    @apply transition-colors duration-200 hover:bg-dark-hover;
+  }
+
+  .table-row:nth-child(even) {
+    @apply bg-dark-bg/30;
   }
 
   .dot {
@@ -76,11 +83,15 @@
   }
 
   .sidebar-item {
-    @apply flex items-center gap-3 px-3.5 py-2.5 rounded-lg cursor-pointer text-ui-dim text-[13px] font-medium transition-all duration-200 border border-transparent hover:bg-dark-hover hover:text-ui-text;
+    @apply flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer text-ui-muted text-[13px] font-medium transition-colors duration-200 border border-transparent hover:bg-dark-hover hover:text-ui-text;
   }
 
   .sidebar-item.active {
-    @apply bg-brand-primary text-white border-transparent shadow-md shadow-brand-primary/20;
+    @apply bg-brand-primary text-white border-transparent;
+  }
+
+  .glass {
+    @apply bg-dark-card border-dark-border;
   }
 }
 
@@ -91,14 +102,14 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: rgb(var(--theme-bg));
+  background: rgba(243, 244, 246, 1);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgb(var(--theme-border));
+  background: rgba(209, 213, 219, 1);
   border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: theme('colors.brand.primary');
+  background: #DC2626;
 }

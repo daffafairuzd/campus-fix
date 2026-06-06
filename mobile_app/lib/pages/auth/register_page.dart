@@ -97,11 +97,7 @@ class _RegisterPageState extends State<RegisterPage> {
           Container(
             height: 220,
             decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF7F1D1D), AppColors.primary, Color(0xFFB91C1C)],
-              ),
+              gradient: AppColors.brandGradient,
             ),
           ),
           Column(
@@ -140,8 +136,8 @@ class _RegisterPageState extends State<RegisterPage> {
                   decoration: BoxDecoration(
                     color: Theme.of(context).scaffoldBackgroundColor,
                     borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(28),
-                      topRight: Radius.circular(28),
+                      topLeft: Radius.circular(0),
+                      topRight: Radius.circular(0),
                     ),
                   ),
                   child: SingleChildScrollView(
@@ -170,7 +166,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: AppColors.danger.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(8),
                               border: Border.all(
                                   color: AppColors.danger.withValues(alpha: 0.3)),
                             ),
@@ -303,7 +299,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 height: 52,
                                 decoration: BoxDecoration(
                                   color: AppColors.primary,
-                                  borderRadius: BorderRadius.circular(14),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: const Center(
                                   child: SizedBox(

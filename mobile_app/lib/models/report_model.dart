@@ -135,7 +135,7 @@ class FacilityReport {
       photoUrl: photoUrl,
       completionPhotoUrl: completionPhotoUrl,
       status: status,
-      priority: json['priority'] as String? ?? 'rendah',
+      priority: json['priority'] as String? ?? 'belum_ditentukan',
       createdAt: createdAt,
       reporterSsoId: reporterEmail,
       assignedTechnician: assignedTechnician,

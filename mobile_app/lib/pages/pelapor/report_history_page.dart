@@ -158,7 +158,7 @@ class _FilterChip extends StatelessWidget {
           color: selected
               ? AppColors.primary.withValues(alpha: 0.12)
               : (isDark ? AppColors.hoverDark : AppColors.bgLight),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: selected
                 ? AppColors.primary
@@ -195,7 +195,8 @@ class _EmptyState extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
+                shape: BoxShape.rectangle,
+                borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(Icons.inbox_rounded, size: 40, color: AppColors.primary),
             ),

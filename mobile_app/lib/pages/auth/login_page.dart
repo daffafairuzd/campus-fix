@@ -93,46 +93,17 @@ class _LoginPageState extends State<LoginPage>
         body: SingleChildScrollView(
           child: Stack(
             children: [
-              // Hero gradient background (covers top portion)
+              // Hero solid background (covers top portion)
               LayoutBuilder(
                 builder: (context, constraints) {
                   return Container(
                     height: 300,
                     width: double.infinity,
                     decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Color(0xFF7F1D1D), AppColors.primary, Color(0xFFB91C1C)],
-                      ),
+                      gradient: AppColors.brandGradient,
                     ),
                   );
                 },
-              ),
-              // Decorative circles
-              Positioned(
-                top: -40,
-                right: -40,
-                child: Container(
-                  width: 200,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: 0.05),
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 60,
-                left: -30,
-                child: Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: 0.04),
-                  ),
-                ),
               ),
               // Content
               FadeTransition(
@@ -151,7 +122,7 @@ class _LoginPageState extends State<LoginPage>
                             const SizedBox(height: 12),
                             Text(
                               'Platform Pelaporan Fasilitas Kampus',
-                              style: GoogleFonts.spaceGrotesk(
+                              style: GoogleFonts.inter(
                                 color: Colors.white.withValues(alpha: 0.75),
                                 fontSize: 13,
                                 letterSpacing: 0.2,
@@ -167,10 +138,6 @@ class _LoginPageState extends State<LoginPage>
                       constraints: const BoxConstraints(minHeight: 500),
                       decoration: BoxDecoration(
                         color: Theme.of(context).scaffoldBackgroundColor,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(28),
-                          topRight: Radius.circular(28),
-                        ),
                       ),
                       padding: const EdgeInsets.fromLTRB(24, 30, 24, 40),
                       child: Column(
@@ -178,7 +145,7 @@ class _LoginPageState extends State<LoginPage>
                         children: [
                           Text(
                             'Masuk ke Akun',
-                            style: GoogleFonts.spaceGrotesk(
+                            style: GoogleFonts.inter(
                               fontSize: 22,
                               fontWeight: FontWeight.w800,
                             ),
@@ -186,7 +153,7 @@ class _LoginPageState extends State<LoginPage>
                           const SizedBox(height: 4),
                           Text(
                             'Gunakan SSO Telkom University kamu',
-                            style: GoogleFonts.spaceGrotesk(
+                            style: GoogleFonts.inter(
                               fontSize: 13,
                               color: AppColors.textMuted,
                             ),
@@ -199,7 +166,7 @@ class _LoginPageState extends State<LoginPage>
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
                                 color: AppColors.danger.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
                                     color: AppColors.danger.withValues(alpha: 0.3)),
                               ),
@@ -211,7 +178,7 @@ class _LoginPageState extends State<LoginPage>
                                   Expanded(
                                     child: Text(
                                       _errorMessage,
-                                      style: GoogleFonts.spaceGrotesk(
+                                      style: GoogleFonts.inter(
                                         fontSize: 12,
                                         color: AppColors.danger,
                                       ),
@@ -226,7 +193,7 @@ class _LoginPageState extends State<LoginPage>
                           // SSO ID Field
                           Text(
                             'SSO ID',
-                            style: GoogleFonts.spaceGrotesk(
+                            style: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
                               color: AppColors.textMuted,
@@ -268,7 +235,7 @@ class _LoginPageState extends State<LoginPage>
                                     const SizedBox(width: 5),
                                     Text(
                                       '$sso@student.telkomuniversity.ac.id',
-                                      style: GoogleFonts.spaceGrotesk(
+                                      style: GoogleFonts.inter(
                                         fontSize: 11,
                                         color: AppColors.primary,
                                         fontWeight: FontWeight.w600,
@@ -284,7 +251,7 @@ class _LoginPageState extends State<LoginPage>
                           // Password Field
                           Text(
                             'PASSWORD',
-                            style: GoogleFonts.spaceGrotesk(
+                            style: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
                               color: AppColors.textMuted,
@@ -322,7 +289,7 @@ class _LoginPageState extends State<LoginPage>
                                     height: 52,
                                     decoration: BoxDecoration(
                                       color: AppColors.primary,
-                                      borderRadius: BorderRadius.circular(14),
+                                      borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: const Center(
                                       child: SizedBox(
@@ -341,9 +308,7 @@ class _LoginPageState extends State<LoginPage>
                                     label: const Text('Masuk'),
                                     style: FilledButton.styleFrom(
                                       backgroundColor: AppColors.primary,
-                                      shadowColor:
-                                          AppColors.primary.withValues(alpha: 0.4),
-                                      elevation: 4,
+                                      elevation: 0,
                                     ),
                                   ),
                           ),
@@ -355,7 +320,7 @@ class _LoginPageState extends State<LoginPage>
                             children: [
                               Text(
                                 'Belum punya akun? ',
-                                style: GoogleFonts.spaceGrotesk(
+                                style: GoogleFonts.inter(
                                   fontSize: 13,
                                   color: AppColors.textMuted,
                                 ),
@@ -369,7 +334,7 @@ class _LoginPageState extends State<LoginPage>
                                 ),
                                 child: Text(
                                   'Daftar Sekarang',
-                                  style: GoogleFonts.spaceGrotesk(
+                                  style: GoogleFonts.inter(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,
                                     color: AppColors.primary,
@@ -385,7 +350,7 @@ class _LoginPageState extends State<LoginPage>
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: AppColors.info.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(8),
                               border: Border.all(
                                   color: AppColors.info.withValues(alpha: 0.2)),
                             ),
@@ -399,7 +364,7 @@ class _LoginPageState extends State<LoginPage>
                                     const SizedBox(width: 5),
                                     Text(
                                       'Info Login',
-                                      style: GoogleFonts.spaceGrotesk(
+                                      style: GoogleFonts.inter(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w700,
                                         color: AppColors.info,
@@ -410,7 +375,7 @@ class _LoginPageState extends State<LoginPage>
                                 const SizedBox(height: 6),
                                 Text(
                                   'Gunakan SSO ID Telkom University dan password yang telah terdaftar di sistem.',
-                                  style: GoogleFonts.spaceGrotesk(
+                                  style: GoogleFonts.inter(
                                     fontSize: 11,
                                     color: AppColors.textMuted,
                                     height: 1.6,

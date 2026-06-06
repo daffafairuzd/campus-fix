@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('building')->nullable();
             $table->string('floor')->nullable();
             $table->enum('status', ['menunggu', 'dalam_proses', 'selesai', 'eskalasi'])->default('menunggu');
-            $table->enum('priority', ['kritis', 'tinggi', 'sedang', 'rendah'])->default('sedang');
+            $table->enum('priority', ['belum_ditentukan', 'kritis', 'tinggi', 'sedang', 'rendah'])->default('belum_ditentukan');
             $table->json('photo_urls')->nullable(); // array URL Firebase Storage
             $table->json('proof_photo_urls')->nullable(); // foto bukti penyelesaian
             $table->decimal('latitude', 10, 7)->nullable();

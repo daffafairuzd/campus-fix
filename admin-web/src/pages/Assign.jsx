@@ -39,7 +39,7 @@ export default function Assign() {
     }
   };
 
-  const unassigned = reportsData.filter(r => (!r.active_technicians || r.active_technicians.length === 0) && r.status !== 'selesai' && r.status !== 'eskalasi');
+  const unassigned = reportsData.filter(r => (!r.active_technicians || r.active_technicians.length === 0) && r.status !== 'selesai' && r.status !== 'eskalasi' && r.is_analyzed === true);
   const assigned   = reportsData.filter(r => r.active_technicians && r.active_technicians.length > 0 && r.status !== "selesai");
 
   const filteredUnassigned = unassigned.filter(r =>
@@ -116,16 +116,16 @@ export default function Assign() {
       {allBusy && (
         <div className="bg-ui-warning/10 border border-ui-warning/30 rounded-xl px-4 py-3 flex items-center gap-3">
           <AlertTriangle className="w-4 h-4 text-ui-warning flex-shrink-0" />
-          <span className="text-[13px] text-yellow-300">
-            <strong className="text-ui-warning font-bold">Semua teknisi aktif sedang sibuk.</strong> Anda masih dapat force-assign dengan mengklik teknisi yang sibuk dan mengkonfirmasi override.
+          <span className="text-[13px] text-ui-warning">
+            <strong className="font-bold">Semua teknisi aktif sedang sibuk.</strong> Anda masih dapat force-assign dengan mengklik teknisi yang sibuk dan mengkonfirmasi override.
           </span>
         </div>
       )}
 
       {/* Override Konfirmasi Dialog */}
       {overrideConfirm && createPortal(
-        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-dark-bg/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-dark-card border border-ui-warning/40 rounded-xl w-full max-w-sm shadow-2xl p-6">
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-dark-bg/80 animate-fade-in">
+          <div className="bg-dark-card border border-ui-warning/40 rounded-lg w-full max-w-sm p-6">
             <div className="flex items-center gap-3 mb-4">
               <AlertTriangle className="w-5 h-5 text-ui-warning flex-shrink-0" />
               <div className="font-bold text-ui-text text-[15px]">Override Kapasitas Teknisi</div>
@@ -152,8 +152,8 @@ export default function Assign() {
 
       {/* Cancel Assignment Konfirmasi Dialog */}
       {cancelConfirm && createPortal(
-        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-dark-bg/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-dark-card border border-ui-danger/40 rounded-xl w-full max-w-sm shadow-2xl p-6">
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-dark-bg/80 animate-fade-in">
+          <div className="bg-dark-card border border-ui-danger/40 rounded-lg w-full max-w-sm p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl bg-ui-danger/15 flex items-center justify-center border border-ui-danger/30">
                 <X className="w-5 h-5 text-ui-danger" />
@@ -179,8 +179,8 @@ export default function Assign() {
 
       {/* Assign Konfirmasi Dialog */}
       {assignConfirm && createPortal(
-        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-dark-bg/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-dark-card border border-brand-primary/40 rounded-xl w-full max-w-sm shadow-2xl p-6">
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-dark-bg/80 animate-fade-in">
+          <div className="bg-dark-card border border-brand-primary/40 rounded-lg w-full max-w-sm p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl bg-brand-primary/15 flex items-center justify-center border border-brand-primary/30">
                 <Plus className="w-5 h-5 text-brand-primary" />
@@ -193,7 +193,7 @@ export default function Assign() {
             <div className="flex gap-3">
               <button className="btn btn-ghost flex-1" onClick={() => setAssignConfirm(null)}>Batal</button>
               <button
-                className="btn btn-primary flex-1 shadow-[0_0_8px_rgba(220,38,38,0.3)]"
+                className="btn btn-primary flex-1"
                 onClick={() => {
                   submitAssign(assignConfirm.reportId);
                   setAssignConfirm(null);
@@ -234,7 +234,7 @@ export default function Assign() {
                 <div className="text-[12px] text-ui-dim">Semua laporan telah ditugaskan!</div>
               </div>
             ) : filteredUnassigned.map(r => (
-              <div key={r.id} className="p-4 bg-dark-card border border-dark-border rounded-xl shadow-lg hover:border-brand-primary/50 transition-colors">
+              <div key={r.id} className="p-4 bg-dark-card border border-dark-border rounded-lg hover:border-brand-primary/50 transition-colors">
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-[10px] font-mono font-bold text-brand-primary">{r.report_number}</span>
                   <Badge label={r.priority} priority={r.priority} />
@@ -285,7 +285,7 @@ export default function Assign() {
 
                   <div className="flex justify-end">
                     <button 
-                      className={`btn py-1 px-3 text-[10px] ${(selectedTechs[r.id] || []).length > 0 ? 'btn-primary shadow-[0_0_8px_rgba(220,38,38,0.3)]' : 'bg-dark-hover text-ui-muted border-dark-border cursor-not-allowed'}`}
+                      className={`btn py-1 px-3 text-[10px] ${(selectedTechs[r.id] || []).length > 0 ? 'btn-primary' : 'bg-dark-hover text-ui-muted border-dark-border cursor-not-allowed'}`}
                       onClick={(e) => { 
                         e.stopPropagation(); 
                         setAssignConfirm({ 
@@ -325,7 +325,7 @@ export default function Assign() {
                       <div className="flex items-center gap-2">
                         <div className="h-1.5 flex-1 bg-dark-border rounded-full overflow-hidden">
                           <div 
-                            className={`h-full rounded-full ${loadPct >= 100 ? 'bg-ui-warning' : 'bg-gradient-to-r from-ui-success to-brand-primary'}`}
+                            className={`h-full rounded-full ${loadPct >= 100 ? 'bg-ui-warning' : 'bg-brand-primary'}`}
                             style={{ width: `${loadPct}%` }} 
                           />
                         </div>

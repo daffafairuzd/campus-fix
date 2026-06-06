@@ -31,6 +31,7 @@ class ReportController extends Controller
             ->when($request->status,   fn($q) => $q->where('status', $request->status))
             ->when($request->priority, fn($q) => $q->where('priority', $request->priority))
             ->when($request->category, fn($q) => $q->where('category', $request->category))
+            ->when($request->has('is_analyzed'), fn($q) => $q->where('is_analyzed', filter_var($request->is_analyzed, FILTER_VALIDATE_BOOLEAN)))
             ->when($request->search,   fn($q) => $q->where(function($q2) use ($request) {
                 $q2->where('title', 'ilike', "%{$request->search}%")
                    ->orWhere('report_number', 'ilike', "%{$request->search}%")
@@ -48,7 +49,8 @@ class ReportController extends Controller
             $query->orderBy('created_at', $sortDir);
         }
 
-        return response()->json($query->paginate(20));
+        $perPage = $request->get('per_page', 10);
+        return response()->json($query->paginate($perPage));
     }
 
     public function show(Report $report)
@@ -67,23 +69,17 @@ class ReportController extends Controller
             'location'    => 'required|string',
             'building'    => 'nullable|string',
             'floor'       => 'nullable|string',
-            'priority'    => 'required|in:kritis,tinggi,sedang,rendah',
             'photo_urls'  => 'nullable|array',
             'latitude'    => 'nullable|numeric',
             'longitude'   => 'nullable|numeric',
         ]);
 
-        // Hitung SLA deadline berdasarkan priority config
-        $slaConfig   = SlaConfig::forPriority($validated['priority']);
-        $slaDeadline = $slaConfig
-            ? Carbon::now()->addHours($slaConfig->resolution_hours)
-            : Carbon::now()->addDays(7);
-
         $report = Report::create([
             ...$validated,
             'reporter_id'  => $request->user()->id,
             'status'       => 'menunggu',
-            'sla_deadline' => $slaDeadline,
+            'priority'     => 'belum_ditentukan',
+            'sla_deadline' => null, // SLA determined later by Admin
         ]);
 
         // Tambah history entry pertama
@@ -118,7 +114,7 @@ class ReportController extends Controller
             'description' => 'nullable|string',
             'category'    => 'sometimes|string',
             'location'    => 'sometimes|string',
-            'priority'    => 'sometimes|in:kritis,tinggi,sedang,rendah',
+            'priority'    => 'sometimes|in:belum_ditentukan,kritis,tinggi,sedang,rendah',
             'latitude'    => 'nullable|numeric',
             'longitude'   => 'nullable|numeric',
             'photo_urls'  => 'nullable|array',
@@ -279,6 +275,37 @@ class ReportController extends Controller
         ]);
 
         return response()->json(['message' => 'Rating berhasil disimpan.']);
+    }
+
+    /**
+     * Verifikasi prioritas laporan oleh admin
+     */
+    public function verifyPriority(Request $request, Report $report)
+    {
+        $request->validate([
+            'priority' => 'required|in:kritis,tinggi,sedang,rendah',
+        ]);
+
+        // Hitung SLA deadline berdasarkan priority config yang baru diset admin
+        $slaConfig   = SlaConfig::forPriority($request->priority);
+        $slaDeadline = $slaConfig
+            ? Carbon::now()->addHours($slaConfig->resolution_hours)
+            : Carbon::now()->addDays(7);
+
+        $report->update([
+            'priority'    => $request->priority,
+            'is_analyzed' => true,
+            'sla_deadline' => $slaDeadline,
+        ]);
+
+        ReportHistory::create([
+            'report_id'   => $report->id,
+            'user_id'     => $request->user()->id,
+            'title'       => 'Prioritas diverifikasi',
+            'description' => "Admin menentukan tingkat prioritas: " . ucfirst($request->priority),
+        ]);
+
+        return response()->json(['message' => 'Prioritas berhasil diverifikasi.', 'report' => $report->fresh()->load(['reporter', 'activeTechnicians', 'histories.user'])]);
     }
 
     /**

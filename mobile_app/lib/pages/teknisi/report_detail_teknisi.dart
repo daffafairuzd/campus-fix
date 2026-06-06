@@ -113,7 +113,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
                   hintStyle: GoogleFonts.spaceGrotesk(color: AppColors.textDim),
                   filled: true,
                   fillColor: AppColors.hoverDark,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
                 ),
               ),
             ],
@@ -215,7 +215,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
                 hintStyle: GoogleFonts.spaceGrotesk(color: AppColors.textDim),
                 filled: true,
                 fillColor: AppColors.hoverDark,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
               ),
             ),
           ],
@@ -255,43 +255,6 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
       if (mounted) setState(() => _isSaving = false);
     }
   }
-
-    // Transition: dalamProses -> selesai (require foto)
-    if (_nextStatus == ReportStatus.selesai) {
-      if (_buktiFoto == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.warning_amber_rounded, color: Colors.amber, size: 16),
-                const SizedBox(width: 8),
-                Text('Foto bukti perbaikan wajib dilampirkan!',
-                    style: GoogleFonts.spaceGrotesk(fontSize: 13)),
-              ],
-            ),
-            backgroundColor: const Color(0xFF1C1917),
-          ),
-        );
-        return;
-      }
-
-      setState(() => _isSaving = true);
-      try {
-        await api.uploadPhoto(widget.report.id, _buktiFoto!, type: 'bukti_penyelesaian');
-        await api.updateStatus(widget.report.id, _nextStatus!);
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Laporan diselesaikan!')));
-          Navigator.pop(context);
-        }
-      } catch (e) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: AppColors.danger));
-      } finally {
-        if (mounted) setState(() => _isSaving = false);
-      }
-    }
-  }
-
 
   @override
   Widget build(BuildContext context) {
@@ -374,7 +337,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: isDark ? AppColors.hoverDark : AppColors.bgLight,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                           color: isDark ? AppColors.borderDark : AppColors.borderLight),
                     ),
@@ -404,7 +367,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
                       ),
                       child: Row(
@@ -436,7 +399,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
                       const SizedBox(height: 8),
                       if (_buktiFoto != null) ...[
                         ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
                           child: Stack(
                             children: [
                               Image.file(_buktiFoto!,
@@ -447,8 +410,8 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
                                   onTap: () => setState(() => _buktiFoto = null),
                                   child: Container(
                                     padding: const EdgeInsets.all(4),
-                                    decoration: const BoxDecoration(
-                                        color: Colors.black54, shape: BoxShape.circle),
+                                    decoration: BoxDecoration(
+                                        color: Colors.black54, borderRadius: BorderRadius.circular(8)),
                                     child: const Icon(Icons.close, color: Colors.white, size: 16),
                                   ),
                                 ),
@@ -489,7 +452,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
                         ? Container(
                             height: 52,
                             decoration: BoxDecoration(
-                              color: AppColors.primary, borderRadius: BorderRadius.circular(14),
+                              color: AppColors.primary, borderRadius: BorderRadius.circular(8),
                             ),
                             child: const Center(
                               child: SizedBox(
@@ -515,7 +478,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
                         decoration: BoxDecoration(
                           color: AppColors.warning.withValues(alpha: 0.1),
                           border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
                           children: [
@@ -550,7 +513,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: AppColors.success.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
                       ),
                       child: Row(
@@ -576,14 +539,14 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
                       const _SLabel('Foto Hasil Perbaikan'),
                       const SizedBox(height: 8),
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(8),
                         child: Container(
                           height: 200,
                           width: double.infinity,
                           decoration: BoxDecoration(
                             color: const Color(0xFF0A0F14),
                             border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(8),
                           ),
                           child: widget.report.completionPhotoUrl.startsWith('http')
                               ? Image.network(widget.report.completionPhotoUrl, fit: BoxFit.cover)
@@ -619,7 +582,7 @@ class _InfoGrid extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: isDark ? AppColors.hoverDark : AppColors.bgLight,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
             color: isDark ? AppColors.borderDark : AppColors.borderLight),
       ),

@@ -40,6 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/reports/{report}',           [ReportController::class, 'update']);
     Route::delete('/reports/{report}',        [ReportController::class, 'destroy']);
     Route::post('/reports/{report}/status',   [ReportController::class, 'updateStatus']);
+    Route::post('/reports/{report}/verify-priority', [ReportController::class, 'verifyPriority']);
     Route::post('/reports/{report}/request-escalation', [ReportController::class, 'requestEscalation']);
     Route::post('/reports/{report}/reject-escalation', [ReportController::class, 'rejectEscalation']);
     Route::post('/reports/{report}/rate',     [ReportController::class, 'rate']);

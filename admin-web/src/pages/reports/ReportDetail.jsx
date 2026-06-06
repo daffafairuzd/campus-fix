@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Edit2, Trash2, MapPin, Upload, Search, Loader2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Edit2, Trash2, MapPin, Upload, Search, Loader2, AlertTriangle, CheckCircle, ShieldCheck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Badge } from '../../components/ui';
 import api from '../../api';
 
@@ -18,6 +19,10 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
   const [isLoadingPhotos, setIsLoadingPhotos] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [currentReport, setCurrentReport] = useState(report);
+  const [selectedPriority, setSelectedPriority] = useState(report.priority || 'sedang');
+  const [isVerifying, setIsVerifying] = useState(false);
+
+  const navigate = useNavigate();
 
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
@@ -125,6 +130,19 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
 
   const NEXT_LABEL = { menunggu: 'Assessment', assessment: 'Dalam Proses', dalam_proses: 'Selesai', selesai: 'Menunggu', eskalasi: 'Dalam Proses' };
 
+  const handleVerifyPriority = async () => {
+    setIsVerifying(true);
+    try {
+      const res = await api.post(`/reports/${currentReport.id}/verify-priority`, { priority: selectedPriority });
+      setCurrentReport(res.data.report);
+      if (onStatusUpdated) onStatusUpdated(res.data.report);
+    } catch (err) {
+      alert('Gagal verifikasi prioritas: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6 animate-fade-in">
       {/* Page Header */}
@@ -140,10 +158,47 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0 mt-1">
+          {currentReport.is_analyzed && currentReport.status !== 'selesai' && (
+            <button className="btn btn-primary px-3 shadow-md" onClick={() => navigate('/assign')} title="Assign Teknisi">Assign Teknisi</button>
+          )}
           <button className="btn btn-ghost px-3" onClick={() => onEdit(currentReport)} title="Edit"><Edit2 className="w-4 h-4" /></button>
           <button className="btn btn-danger px-3" onClick={handleDelete} title="Hapus"><Trash2 className="w-4 h-4" /></button>
         </div>
       </div>
+
+      {/* Verification Banner */}
+      {!currentReport.is_analyzed && (
+        <div className="bg-brand-primary/5 border border-brand-primary/30 rounded-xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-fade-in shadow-sm">
+          <div>
+            <div className="text-brand-primary font-bold text-[14px] flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5" /> Analisis & Tentukan Prioritas
+            </div>
+            <div className="text-[12px] text-ui-text mt-1.5 leading-relaxed max-w-xl">
+              Laporan baru ini <strong className="text-brand-primary">belum dianalisis</strong>. Anda wajib melakukan verifikasi lapangan (opsional) dan menentukan tingkat prioritas sebelum laporan dapat ditugaskan ke teknisi.
+            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2 flex-shrink-0 mt-2 md:mt-0 items-center">
+            <select 
+              className="input w-[140px] font-semibold text-[13px] border-brand-primary/40 focus:border-brand-primary" 
+              value={selectedPriority} 
+              onChange={e => setSelectedPriority(e.target.value)}
+              disabled={isVerifying}
+            >
+              <option value="kritis">Kritis</option>
+              <option value="tinggi">Tinggi</option>
+              <option value="sedang">Sedang</option>
+              <option value="rendah">Rendah</option>
+            </select>
+            <button 
+              className="btn btn-primary shadow-sm" 
+              onClick={handleVerifyPriority}
+              disabled={isVerifying}
+            >
+              {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />} Verifikasi
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Escalation Banner */}
       {currentReport.is_escalation_requested && (

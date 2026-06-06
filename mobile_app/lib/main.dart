@@ -10,11 +10,11 @@ import 'pages/pelapor/pelapor_home_page.dart';
 import 'pages/teknisi/teknisi_home_page.dart';
 
 /// Global theme notifier — accessible from any widget
-final themeNotifier = ValueNotifier<ThemeMode>(ThemeMode.dark);
+final themeNotifier = ValueNotifier<ThemeMode>(ThemeMode.light);
 
 Future<void> _loadThemePreference() async {
   final prefs = await SharedPreferences.getInstance();
-  final isDark = prefs.getBool('isDark') ?? true;
+  final isDark = prefs.getBool('isDark') ?? false;
   themeNotifier.value = isDark ? ThemeMode.dark : ThemeMode.light;
 }
 
@@ -101,7 +101,7 @@ class _SplashRouterState extends State<_SplashRouter> {
     // Splash screen sementara
     final isDark = themeNotifier.value == ThemeMode.dark;
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0F0F0F) : const Color(0xFFF8F8F8),
+      backgroundColor: isDark ? AppColors.bgDark : AppColors.bgLight,
       body: const Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,

@@ -11,7 +11,7 @@ class Report extends Model
         'building', 'floor', 'status', 'priority',
         'latitude', 'longitude', 'reporter_id', 'sla_deadline',
         'escalated_at', 'closed_at', 'rating', 'feedback_text',
-        'is_escalation_requested', 'escalation_reason',
+        'is_escalation_requested', 'escalation_reason', 'is_analyzed',
     ];
 
     protected function casts(): array
@@ -20,6 +20,8 @@ class Report extends Model
             'sla_deadline'  => 'datetime',
             'escalated_at'  => 'datetime',
             'closed_at'     => 'datetime',
+            'is_analyzed'   => 'boolean',
+            'is_escalation_requested' => 'boolean',
         ];
     }
 

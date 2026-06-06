@@ -11,7 +11,6 @@ class DatabaseSeeder extends Seeder
         $this->call([
             SlaConfigSeeder::class, // harus pertama (reports butuh SlaConfig)
             UserSeeder::class,
-            ReportSeeder::class,
         ]);
     }
 }

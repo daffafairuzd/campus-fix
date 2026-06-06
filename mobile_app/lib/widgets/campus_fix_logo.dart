@@ -27,24 +27,17 @@ class CampusFixLogo extends StatelessWidget {
           width: iconSize,
           height: iconSize,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [AppColors.primary, AppColors.primaryDark],
-            ),
+            color: Colors.transparent,
             borderRadius: BorderRadius.circular(iconSize * 0.28),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.35),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
           ),
-          child: Icon(
-            Icons.school_rounded,
-            color: iconColor ?? Colors.white,
-            size: iconSize * 0.6,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(iconSize * 0.28),
+            child: Image.asset(
+              'assets/logo.png',
+              width: iconSize * 0.6,
+              height: iconSize * 0.6,
+              fit: BoxFit.cover,
+            ),
           ),
         ),
         const SizedBox(width: 10),
@@ -95,17 +88,24 @@ class CampusFixLogoLight extends StatelessWidget {
           width: iconSize,
           height: iconSize,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.18),
-            borderRadius: BorderRadius.circular(iconSize * 0.28),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.35),
-              width: 1.5,
-            ),
-          ),
-          child: Icon(
-            Icons.school_rounded,
             color: Colors.white,
-            size: iconSize * 0.58,
+            borderRadius: BorderRadius.circular(iconSize * 0.28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(iconSize * 0.28),
+            child: Image.asset(
+              'assets/logo.png',
+              width: iconSize * 0.58,
+              height: iconSize * 0.58,
+              fit: BoxFit.cover,
+            ),
           ),
         ),
         const SizedBox(width: 10),

@@ -49,33 +49,35 @@ class _TaskListPageState extends State<TaskListPage> {
               flexibleSpace: FlexibleSpaceBar(
                 background: Container(
                   decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFF1C1917), Color(0xFF292524), AppColors.primaryDark],
-                    ),
+                    gradient: AppColors.brandGradient,
                   ),
                   child: SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 20),
-                          const SizedBox(height: 32),
-                          Text(
-                            'Halo, ${widget.session.name.split(' ').first}! 👋',
-                            style: GoogleFonts.spaceGrotesk(
-                              color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800,
+                    child: Align(
+                      alignment: Alignment.bottomLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Halo, ${widget.session.name.split(' ').first}! 👋',
+                              style: GoogleFonts.spaceGrotesk(
+                                color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                          Text(
-                            widget.session.email,
-                            style: GoogleFonts.spaceGrotesk(
-                              color: Colors.white.withValues(alpha: 0.7), fontSize: 12,
+                            Text(
+                              widget.session.email,
+                              style: GoogleFonts.spaceGrotesk(
+                                color: Colors.white.withValues(alpha: 0.7), fontSize: 12,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -142,7 +144,7 @@ class _PriorityLegend extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: isDark ? AppColors.hoverDark : AppColors.bgLight,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
             color: isDark ? AppColors.borderDark : AppColors.borderLight),
       ),

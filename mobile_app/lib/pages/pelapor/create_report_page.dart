@@ -265,7 +265,7 @@ class _CreateReportPageState extends State<CreateReportPage> {
                 height: 200,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(8),
                   color: isDark ? AppColors.hoverDark : AppColors.bgLight,
                   border: Border.all(
                     color: _selectedImage != null
@@ -277,7 +277,7 @@ class _CreateReportPageState extends State<CreateReportPage> {
                 ),
                 child: _selectedImage != null
                     ? ClipRRect(
-                        borderRadius: BorderRadius.circular(15),
+                        borderRadius: BorderRadius.circular(8),
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
@@ -288,9 +288,9 @@ class _CreateReportPageState extends State<CreateReportPage> {
                                 onTap: () => setState(() => _selectedImage = null),
                                 child: Container(
                                   padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.black54, shape: BoxShape.circle,
-                                  ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black54, borderRadius: BorderRadius.circular(8),
+                                    ),
                                   child: const Icon(Icons.close, color: Colors.white, size: 16),
                                 ),
                               ),
@@ -305,7 +305,8 @@ class _CreateReportPageState extends State<CreateReportPage> {
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: AppColors.primary.withValues(alpha: 0.1),
-                              shape: BoxShape.circle,
+                              shape: BoxShape.rectangle,
+                              borderRadius: BorderRadius.circular(8),
                             ),
                             child: const Icon(Icons.add_a_photo_rounded,
                                 size: 32, color: AppColors.primary),
@@ -357,7 +358,7 @@ class _CreateReportPageState extends State<CreateReportPage> {
                         color: selected
                             ? color.withValues(alpha: 0.15)
                             : (isDark ? AppColors.hoverDark : AppColors.bgLight),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: selected ? color : (isDark ? AppColors.borderDark : AppColors.borderLight),
                           width: selected ? 2 : 1,
@@ -434,7 +435,7 @@ class _CreateReportPageState extends State<CreateReportPage> {
                     height: 52,
                     decoration: BoxDecoration(
                       color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Center(
                       child: SizedBox(
@@ -496,7 +497,7 @@ class _ImageSourceButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 18),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(

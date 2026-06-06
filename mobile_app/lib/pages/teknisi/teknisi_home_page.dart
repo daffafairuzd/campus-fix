@@ -117,7 +117,7 @@ class _NavItem extends StatelessWidget {
                 color: selected
                     ? AppColors.primary.withValues(alpha: 0.12)
                     : Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Stack(
                 clipBehavior: Clip.none,

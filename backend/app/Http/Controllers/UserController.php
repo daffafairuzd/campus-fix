@@ -20,7 +20,22 @@ class UserController extends Controller
                    ->orWhere('nim', 'ilike', "%{$request->search}%");
             }));
 
-        return response()->json($query->orderBy('name')->get());
+        $perPage = $request->get('per_page', 10);
+        $paginated = $query->orderBy('name')->paginate($perPage);
+        
+        $summary = [
+            'admin' => User::where('role', 'admin')->count(),
+            'teknisi' => User::where('role', 'teknisi')->count(),
+            'pelapor' => User::where('role', 'pelapor')->count(),
+        ];
+
+        return response()->json([
+            'data' => $paginated->items(),
+            'current_page' => $paginated->currentPage(),
+            'last_page' => $paginated->lastPage(),
+            'total' => $paginated->total(),
+            'summary' => $summary
+        ]);
     }
 
     public function store(Request $request)

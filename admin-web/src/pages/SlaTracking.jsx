@@ -107,7 +107,7 @@ export default function SlaTracking() {
                       className={`h-full rounded-full transition-all duration-1000 relative ${sla.warning_level === 'expired' ? 'bg-ui-danger' : sla.warning_level === 'danger' ? 'bg-ui-danger' : sla.warning_level === 'warning' ? 'bg-ui-warning' : 'bg-ui-success'}`}
                       style={{ width: `${sla.percentage}%` }}
                     >
-                      {sla.warning_level === 'expired' && <div className="absolute inset-0 bg-white/20 animate-pulse"></div>}
+
                     </div>
                   </div>
                   <div className="flex justify-between mt-1.5 text-[10px] font-mono text-ui-muted">
