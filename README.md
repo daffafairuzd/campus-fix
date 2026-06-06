@@ -64,16 +64,3 @@ flutter clean
 flutter pub get
 flutter run
 ```
-
----
-
-## 🔑 Demo Akses
-
-Akses _default_ setelah menjalankan seeder:
-- **Admin**: `admin@telkomuniversity.ac.id` (Password: `password`)
-- **Teknisi**: (Cek di panel web *Users* untuk melihat *email*)
-- **Pelapor**: (Dapat membuat akun baru atau menggunakan yang ada)
-
-<div align="center">
-  <sub>Dibangun dengan dedikasi tinggi untuk memecahkan masalah manajemen fasilitas kampus.</sub>
-</div>
