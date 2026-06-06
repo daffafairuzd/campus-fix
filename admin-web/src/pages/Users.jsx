@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Search, Plus, X, Edit, Trash2, AlertTriangle, UserCheck } from 'lucide-react';
 import { Avatar, Badge } from '../components/ui';
 import api from '../api';
@@ -110,7 +111,7 @@ export default function Users() {
     <div className="p-6 md:p-7 flex flex-col gap-6 relative">
       
       {/* Confirm Delete Dialog */}
-      {deleteConfirm && (
+      {deleteConfirm && createPortal(
         <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-dark-bg/80 backdrop-blur-sm animate-fade-in">
           <div className="bg-dark-card border border-ui-danger/40 rounded-xl w-full max-w-sm shadow-2xl p-6">
             <div className="flex items-center gap-3 mb-4">
@@ -125,7 +126,8 @@ export default function Users() {
               <button className="btn btn-danger flex-1" onClick={confirmDelete}>Ya, Hapus</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Summary Cards */}
@@ -214,7 +216,7 @@ export default function Users() {
       </div>
 
       {/* Add/Edit User Modal */}
-      {showModal && (
+      {showModal && createPortal(
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-dark-bg/80 backdrop-blur-sm animate-fade-in" onClick={closeModal}>
           <div className="bg-dark-card border border-dark-border rounded-xl w-full max-w-md shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="px-6 py-4 border-b border-dark-border flex justify-between items-center bg-dark-hover">
@@ -300,7 +302,8 @@ export default function Users() {
               </form>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

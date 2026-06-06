@@ -1,8 +1,8 @@
 import 'package:intl/intl.dart';
 
 /// Status laporan — sesuai dengan backend Laravel
-/// Backend values: 'menunggu', 'dalam_proses', 'selesai', 'eskalasi'
-enum ReportStatus { menunggu, dalamProses, selesai, eskalasi }
+/// Backend values: 'menunggu', 'assessment', 'dalam_proses', 'selesai', 'eskalasi'
+enum ReportStatus { menunggu, assessment, dalamProses, selesai, eskalasi }
 
 class FacilityReport {
   final int id;
@@ -22,6 +22,8 @@ class FacilityReport {
   final int? rating;
   final String? feedback;
   final String? slaDeadline;
+  final bool isEscalationRequested;
+  final String? escalationReason;
 
   FacilityReport({
     required this.id,
@@ -41,6 +43,8 @@ class FacilityReport {
     this.rating,
     this.feedback,
     this.slaDeadline,
+    this.isEscalationRequested = false,
+    this.escalationReason,
   });
 
   /// Membuat FacilityReport dari JSON response backend Laravel
@@ -139,11 +143,15 @@ class FacilityReport {
       rating: json['rating'] as int?,
       feedback: json['feedback'] as String?,
       slaDeadline: json['sla_deadline'] as String?,
+      isEscalationRequested: json['is_escalation_requested'] == true || json['is_escalation_requested'] == 1,
+      escalationReason: json['escalation_reason'] as String?,
     );
   }
 
   static ReportStatus _parseStatus(String s) {
     switch (s) {
+      case 'assessment':
+        return ReportStatus.assessment;
       case 'dalam_proses':
         return ReportStatus.dalamProses;
       case 'selesai':
@@ -160,6 +168,8 @@ class FacilityReport {
     switch (status) {
       case ReportStatus.menunggu:
         return 'menunggu';
+      case ReportStatus.assessment:
+        return 'assessment';
       case ReportStatus.dalamProses:
         return 'dalam_proses';
       case ReportStatus.selesai:
@@ -272,6 +282,8 @@ String statusLabel(ReportStatus status) {
   switch (status) {
     case ReportStatus.menunggu:
       return 'Menunggu';
+    case ReportStatus.assessment:
+      return 'Assessment';
     case ReportStatus.dalamProses:
       return 'Dalam Proses';
     case ReportStatus.selesai:

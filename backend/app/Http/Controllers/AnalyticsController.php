@@ -170,12 +170,49 @@ class AnalyticsController extends Controller
             ->groupBy('building_name', 'building', 'category')
             ->get();
 
-        // 2. SLA Ratio: Hit vs Miss
+        // 2. SLA Ratio: Hit vs Miss (Overall)
         $totalSelesai = (clone $scopedQuery)->where('status', 'selesai')->count();
         $slaHit = (clone $scopedQuery)->where('status', 'selesai')
             ->whereColumn('closed_at', '<=', 'sla_deadline')
             ->count();
         $slaMiss = $totalSelesai - $slaHit;
+
+        $allCategories = ['Listrik', 'HVAC', 'Jaringan', 'Lab', 'Plumbing', 'Lift', 'Lainnya'];
+
+        // 2b. SLA Ratio Per Category
+        $slaCategoriesRaw = (clone $scopedQuery)->where('status', 'selesai')
+            ->select('category', 
+                DB::raw('count(*) as total_selesai'),
+                DB::raw('SUM(CASE WHEN closed_at <= sla_deadline THEN 1 ELSE 0 END) as hit')
+            )
+            ->groupBy('category')
+            ->get()
+            ->keyBy('category');
+            
+        $slaCategories = collect($allCategories)->map(function ($cat) use ($slaCategoriesRaw) {
+            $item = $slaCategoriesRaw->get($cat);
+            if ($item) {
+                $miss = $item->total_selesai - $item->hit;
+                $percentage = $item->total_selesai > 0 ? round(($item->hit / $item->total_selesai) * 100) : 0;
+                return [
+                    'category' => $cat,
+                    'chart' => [
+                        ['name' => 'Tepat Waktu', 'value' => (int) $item->hit],
+                        ['name' => 'Terlambat', 'value' => (int) $miss],
+                    ],
+                    'percentage' => $percentage
+                ];
+            } else {
+                return [
+                    'category' => $cat,
+                    'chart' => [
+                        ['name' => 'Tepat Waktu', 'value' => 0],
+                        ['name' => 'Terlambat', 'value' => 0],
+                    ],
+                    'percentage' => 0
+                ];
+            }
+        });
 
         // 3. Customer Satisfaction (CSAT)
         $csatQuery = (clone $scopedQuery)->whereNotNull('rating');
@@ -186,15 +223,39 @@ class AnalyticsController extends Controller
             ->get();
         $avgRating = (clone $csatQuery)->avg('rating');
 
+        // 3b. CSAT Per Category
+        $csatCategoriesRaw = (clone $csatQuery)
+            ->select('category', DB::raw('AVG(rating) as avg_rating'))
+            ->groupBy('category')
+            ->get()
+            ->keyBy('category');
+            
+        $csatCategories = collect($allCategories)->map(function ($cat) use ($csatCategoriesRaw) {
+            $item = $csatCategoriesRaw->get($cat);
+            return [
+                'category' => $cat,
+                'average' => $item ? round($item->avg_rating, 1) : 0
+            ];
+        });
+
         // 4. Bottlenecks
-        $bottlenecks = (clone $scopedQuery)->where('status', 'selesai')
+        $bottlenecksRaw = (clone $scopedQuery)->where('status', 'selesai')
             ->select('category', 
                 DB::raw('AVG(EXTRACT(EPOCH FROM (closed_at - created_at))) / 7200 as waiting'),
                 DB::raw('AVG(EXTRACT(EPOCH FROM (closed_at - created_at))) / 3600 as process')
             )
             ->groupBy('category')
-            ->limit(4)
-            ->get();
+            ->get()
+            ->keyBy('category');
+
+        $bottlenecks = collect($allCategories)->map(function ($cat) use ($bottlenecksRaw) {
+            $item = $bottlenecksRaw->get($cat);
+            return [
+                'category' => $cat,
+                'waiting'  => $item ? round($item->waiting, 1) : 0,
+                'process'  => $item ? round($item->process, 1) : 0
+            ];
+        });
 
         // 5. Distribusi Prioritas
         $priorities = (clone $scopedQuery)->select('priority', DB::raw('count(*) as total'))
@@ -205,25 +266,34 @@ class AnalyticsController extends Controller
                 'value' => $p->total,
             ]);
 
+        // 6. Categories Stats
+        $categoriesStats = (clone $scopedQuery)->select('category', DB::raw('count(*) as total'))
+            ->groupBy('category')
+            ->orderByDesc('total')
+            ->get();
+
         return response()->json([
             'heatmap'     => $heatmap,
             'sla'         => [
-                'chart' => [
-                    ['name' => 'Tepat Waktu', 'value' => $slaHit],
-                    ['name' => 'Terlambat', 'value' => $slaMiss],
+                'overall' => [
+                    'chart' => [
+                        ['name' => 'Tepat Waktu', 'value' => $slaHit],
+                        ['name' => 'Terlambat', 'value' => $slaMiss],
+                    ],
+                    'percentage' => $totalSelesai > 0 ? round(($slaHit / $totalSelesai) * 100) : 0
                 ],
-                'percentage' => $totalSelesai > 0 ? round(($slaHit / $totalSelesai) * 100) : 0
+                'per_category' => $slaCategories
             ],
             'csat'        => [
-                'distribution' => $csatRaw,
-                'average'      => round($avgRating ?? 0, 1)
+                'overall' => [
+                    'distribution' => $csatRaw,
+                    'average'      => round($avgRating ?? 0, 1)
+                ],
+                'per_category' => $csatCategories
             ],
-            'bottlenecks' => $bottlenecks->map(fn($b) => [
-                'category' => $b->category,
-                'waiting'  => round($b->waiting, 1),
-                'process'  => round($b->process, 1)
-            ]),
+            'bottlenecks' => $bottlenecks,
             'priorities'  => $priorities,
+            'categories_stats' => $categoriesStats,
         ]);
     }
 }

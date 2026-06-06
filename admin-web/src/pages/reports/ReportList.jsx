@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Plus, Loader2 } from 'lucide-react';
+import { Search, Plus, Loader2, AlertTriangle } from 'lucide-react';
 import { Badge } from '../../components/ui';
 
 const PRIORITY_WEIGHT = { kritis:4, tinggi:3, sedang:2, rendah:1, Kritis:4, Tinggi:3, Sedang:2, Rendah:1 };
@@ -36,7 +36,7 @@ export default function ReportList({ reportsData, isLoading, onAdd, onDetail }) 
           <input className="input pl-9" placeholder="Cari laporan, ID, atau lokasi..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <select className="input w-[160px]" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-          {['Semua','Menunggu','Dalam Proses','Selesai','Eskalasi'].map(s => <option key={s} className="bg-dark-bg">{s}</option>)}
+          {['Semua','Menunggu','Assessment','Dalam Proses','Selesai','Eskalasi'].map(s => <option key={s} className="bg-dark-bg">{s}</option>)}
         </select>
         <select className="input w-[140px]" value={filterPriority} onChange={e => setFilterPriority(e.target.value)}>
           {['Semua','Kritis','Tinggi','Sedang','Rendah'].map(p => <option key={p} className="bg-dark-bg">{p}</option>)}
@@ -79,7 +79,16 @@ export default function ReportList({ reportsData, isLoading, onAdd, onDetail }) 
                     <span className="inline-flex px-2 py-0.5 rounded-md text-[11px] font-semibold bg-dark-border border border-dark-border/50 text-ui-dim">{r.category}</span>
                   </td>
                   <td className="py-3.5 px-3.5"><Badge label={r.priority} priority={r.priority} /></td>
-                  <td className="py-3.5 px-3.5"><Badge label={r.status} status={r.status} /></td>
+                  <td className="py-3.5 px-3.5">
+                    <div className="flex items-center gap-2">
+                      <Badge label={r.status} status={r.status} />
+                      {r.is_escalation_requested && (
+                        <div className="text-ui-warning animate-pulse" title="Menunggu persetujuan eskalasi">
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                        </div>
+                      )}
+                    </div>
+                  </td>
                   <td className="py-3.5 px-3.5 text-[12px] text-ui-dim">{r.reporter?.name || 'Pelapor'}</td>
                   <td className="py-3.5 px-3.5">
                     <div className={`text-[11px] font-mono ${slaExpired ? 'text-ui-danger font-semibold' : slaNear ? 'text-ui-warning' : 'text-ui-muted'}`}>

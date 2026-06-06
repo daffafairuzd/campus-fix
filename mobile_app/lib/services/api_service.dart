@@ -12,7 +12,7 @@ import '../models/report_model.dart';
 /// - Device fisik (iOS/Android) → ganti dengan IP lokal PC kamu
 String get _baseUrl {
   // Alamat IP lokal laptop agar bisa diakses dari HP fisik (satu jaringan Wi-Fi)
-  const String localIp = '192.168.18.18';
+  const String localIp = '10.57.189.92';
 
   if (kIsWeb) return 'http://localhost:8000/api';
   if (Platform.isAndroid || Platform.isIOS) return 'http://$localIp:8000/api';
@@ -318,9 +318,12 @@ class ApiService {
   }
 
   /// Update status laporan (oleh teknisi)
-  Future<void> updateStatus(int reportId, ReportStatus newStatus) async {
+  Future<void> updateStatus(int reportId, ReportStatus newStatus, {String? description}) async {
     String statusStr;
     switch (newStatus) {
+      case ReportStatus.assessment:
+        statusStr = 'assessment';
+        break;
       case ReportStatus.dalamProses:
         statusStr = 'dalam_proses';
         break;
@@ -334,10 +337,27 @@ class ApiService {
         statusStr = 'menunggu';
     }
 
+    final body = {'status': statusStr};
+    if (description != null && description.isNotEmpty) {
+      body['description'] = description;
+    }
+
     final res = await http.post(
       _uri('/reports/$reportId/status'),
       headers: _headers,
-      body: jsonEncode({'status': statusStr}),
+      body: jsonEncode(body),
+    );
+
+    if (res.statusCode == 200) return;
+    _handleError(res);
+  }
+
+  /// Request escalation
+  Future<void> requestEscalation(int reportId, String reason) async {
+    final res = await http.post(
+      _uri('/reports/$reportId/request-escalation'),
+      headers: _headers,
+      body: jsonEncode({'reason': reason}),
     );
 
     if (res.statusCode == 200) return;

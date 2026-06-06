@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Edit2, Trash2, MapPin, Upload, Search, Loader2 } from 'lucide-react';
+import { ArrowLeft, Edit2, Trash2, MapPin, Upload, Search, Loader2, AlertTriangle } from 'lucide-react';
 import { Badge } from '../../components/ui';
 import api from '../../api';
 
@@ -82,13 +82,39 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
   };
 
   const handleUpdateStatus = async () => {
-    const FLOW = { menunggu:'dalam_proses', dalam_proses:'selesai', selesai:'menunggu', eskalasi:'dalam_proses' };
+    const FLOW = { menunggu:'assessment', assessment:'dalam_proses', dalam_proses:'selesai', selesai:'menunggu', eskalasi:'dalam_proses' };
     const next = FLOW[currentReport.status] || 'menunggu';
+    
+    let desc = `Status diupdate ke ${next}`;
+    if (currentReport.status === 'assessment' && next === 'dalam_proses') {
+      const note = window.prompt("Masukkan catatan asesmen / pengerjaan (Wajib):", "");
+      if (!note) return; // User cancelled or left empty
+      desc = note;
+    }
+
     try {
-      const res = await api.post(`/reports/${currentReport.id}/status`, { status: next, description: `Status diupdate ke ${next}` });
+      const res = await api.post(`/reports/${currentReport.id}/status`, { status: next, description: desc });
       setCurrentReport(res.data);
       if (onStatusUpdated) onStatusUpdated(res.data);
     } catch (err) { alert('Gagal update status: ' + (err.response?.data?.message || err.message)); }
+  };
+
+  const handleApproveEscalation = async () => {
+    if (!window.confirm('Setujui pengajuan eskalasi ini?')) return;
+    try {
+      const res = await api.post(`/reports/${currentReport.id}/status`, { status: 'eskalasi', description: 'Admin menyetujui pengajuan eskalasi.' });
+      setCurrentReport(res.data);
+      if (onStatusUpdated) onStatusUpdated(res.data);
+    } catch (err) { alert('Gagal update status: ' + (err.response?.data?.message || err.message)); }
+  };
+
+  const handleRejectEscalation = async () => {
+    if (!window.confirm('Tolak pengajuan eskalasi ini? Teknisi akan diminta melanjutkan pekerjaan.')) return;
+    try {
+      const res = await api.post(`/reports/${currentReport.id}/reject-escalation`);
+      setCurrentReport(res.data.report);
+      if (onStatusUpdated) onStatusUpdated(res.data.report);
+    } catch (err) { alert('Gagal tolak eskalasi: ' + (err.response?.data?.message || err.message)); }
   };
 
   const handleDelete = async () => {
@@ -97,7 +123,7 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
     catch (err) { alert('Gagal hapus: ' + (err.response?.data?.message || err.message)); }
   };
 
-  const NEXT_LABEL = { menunggu:'Dalam Proses', dalam_proses:'Selesai', selesai:'Menunggu', eskalasi:'Dalam Proses' };
+  const NEXT_LABEL = { menunggu:'Assessment', assessment:'Dalam Proses', dalam_proses:'Selesai', selesai:'Menunggu', eskalasi:'Dalam Proses' };
 
   return (
     <div className="flex flex-col gap-6 animate-fade-in">
@@ -121,6 +147,24 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
           <button className="btn btn-danger px-3" onClick={handleDelete} title="Hapus"><Trash2 className="w-4 h-4" /></button>
         </div>
       </div>
+
+      {/* Escalation Banner */}
+      {currentReport.is_escalation_requested && (
+        <div className="bg-ui-warning/10 border border-ui-warning/30 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div>
+            <div className="text-ui-warning font-bold text-[14px] flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" /> Pengajuan Eskalasi dari Teknisi
+            </div>
+            <div className="text-[13px] text-ui-text mt-1">
+              Alasan: <span className="font-semibold">"{currentReport.escalation_reason}"</span>
+            </div>
+          </div>
+          <div className="flex gap-2 flex-shrink-0">
+            <button className="btn bg-ui-success text-white hover:bg-ui-success/90 px-3 py-1.5 text-[12px]" onClick={handleApproveEscalation}>Setujui</button>
+            <button className="btn bg-ui-danger text-white hover:bg-ui-danger/90 px-3 py-1.5 text-[12px]" onClick={handleRejectEscalation}>Tolak</button>
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-6 border-b border-dark-border">
