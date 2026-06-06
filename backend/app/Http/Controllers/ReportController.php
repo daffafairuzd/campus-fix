@@ -200,17 +200,39 @@ class ReportController extends Controller
     public function updateStatus(Request $request, Report $report)
     {
         $request->validate([
-            'status'      => 'required|in:menunggu,dalam_proses,selesai,eskalasi',
+            'status'      => 'required|in:menunggu,assessment,dalam_proses,selesai,eskalasi',
             'description' => 'nullable|string',
         ]);
 
         $oldStatus = $report->status;
         $newStatus = $request->status;
 
+        if ($oldStatus === 'assessment' && $newStatus === 'dalam_proses') {
+            if (empty($request->description)) {
+                return response()->json([
+                    'message' => 'Catatan asesmen (description) wajib diisi sebelum mulai pengerjaan.'
+                ], 422);
+            }
+        }
+
         $updateData = ['status' => $newStatus];
 
         if ($newStatus === 'selesai')   $updateData['closed_at']    = now();
-        if ($newStatus === 'eskalasi')  $updateData['escalated_at'] = now();
+        
+        if ($newStatus === 'eskalasi') {
+            $updateData['escalated_at'] = now();
+            $updateData['is_escalation_requested'] = false;
+            $updateData['escalation_reason'] = null;
+        }
+
+        // Resume SLA logic
+        if ($oldStatus === 'eskalasi' && $newStatus === 'dalam_proses' && $report->escalated_at) {
+            $diffSeconds = now()->diffInSeconds($report->escalated_at);
+            if ($report->sla_deadline) {
+                $updateData['sla_deadline'] = $report->sla_deadline->addSeconds($diffSeconds);
+            }
+            $updateData['escalated_at'] = null;
+        }
 
         $report->update($updateData);
 
@@ -257,5 +279,61 @@ class ReportController extends Controller
         ]);
 
         return response()->json(['message' => 'Rating berhasil disimpan.']);
+    }
+
+    /**
+     * Pengajuan eskalasi oleh teknisi
+     */
+    public function requestEscalation(Request $request, Report $report)
+    {
+        $request->validate([
+            'reason' => 'required|string',
+        ]);
+
+        $report->update([
+            'is_escalation_requested' => true,
+            'escalation_reason'       => $request->reason,
+        ]);
+
+        ReportHistory::create([
+            'report_id'   => $report->id,
+            'user_id'     => $request->user()->id,
+            'title'       => 'Mengajukan Eskalasi',
+            'description' => $request->reason,
+        ]);
+
+        // Beri notifikasi ke Admin
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            Notification::create([
+                'user_id'   => $admin->id,
+                'report_id' => $report->id,
+                'type'      => 'status_update',
+                'title'     => 'Pengajuan Eskalasi',
+                'message'   => "Teknisi mengajukan eskalasi untuk laporan #{$report->report_number}. Menunggu persetujuan Anda.",
+            ]);
+        }
+
+        return response()->json(['message' => 'Pengajuan eskalasi berhasil dikirim.', 'report' => $report->fresh()->load(['reporter', 'activeTechnicians', 'histories.user'])]);
+    }
+
+    /**
+     * Penolakan eskalasi oleh admin
+     */
+    public function rejectEscalation(Request $request, Report $report)
+    {
+        $report->update([
+            'is_escalation_requested' => false,
+            'escalation_reason'       => null,
+        ]);
+
+        ReportHistory::create([
+            'report_id'   => $report->id,
+            'user_id'     => $request->user()->id,
+            'title'       => 'Pengajuan Eskalasi Ditolak',
+            'description' => 'Admin menolak pengajuan eskalasi. Silakan lanjutkan pengerjaan.',
+        ]);
+
+        return response()->json(['message' => 'Pengajuan eskalasi ditolak.', 'report' => $report->fresh()->load(['reporter', 'activeTechnicians', 'histories.user'])]);
     }
 }

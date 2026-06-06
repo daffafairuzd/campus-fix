@@ -32,13 +32,8 @@ const TempPage = ({ title }) => (
 
 export default function App() {
   useEffect(() => {
-    // Check local storage for theme preference
-    const isDarkGlobal = localStorage.getItem('theme') !== 'light';
-    if (isDarkGlobal) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    // Native dark theme is set in index.css
+    document.documentElement.classList.remove('dark');
   }, []);
 
   return (

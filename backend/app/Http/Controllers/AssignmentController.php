@@ -88,9 +88,9 @@ class AssignmentController extends Controller
             broadcast(new TechnicianAssigned($report, $techId))->toOthers();
         }
 
-        // Update status laporan ke dalam_proses jika masih menunggu
+        // Update status laporan ke assessment jika masih menunggu
         if ($report->status === 'menunggu') {
-            $report->update(['status' => 'dalam_proses']);
+            $report->update(['status' => 'assessment']);
         }
 
         // Tambah history

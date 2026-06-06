@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Search, AlertTriangle, Plus, Loader2, X } from 'lucide-react';
 import { Avatar, Badge } from '../components/ui';
 import api from '../api';
@@ -14,6 +15,7 @@ export default function Assign() {
   const [overrideConfirm, setOverrideConfirm] = useState(null); // { reportId, tech }
   const [assignments, setAssignments] = useState([]);
   const [cancelConfirm, setCancelConfirm] = useState(null); // { assignmentId, techName, reportNumber }
+  const [assignConfirm, setAssignConfirm] = useState(null); // { reportId, reportNumber, techs }
 
   useEffect(() => {
     fetchData();
@@ -121,7 +123,7 @@ export default function Assign() {
       )}
 
       {/* Override Konfirmasi Dialog */}
-      {overrideConfirm && (
+      {overrideConfirm && createPortal(
         <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-dark-bg/80 backdrop-blur-sm animate-fade-in">
           <div className="bg-dark-card border border-ui-warning/40 rounded-xl w-full max-w-sm shadow-2xl p-6">
             <div className="flex items-center gap-3 mb-4">
@@ -144,11 +146,12 @@ export default function Assign() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Cancel Assignment Konfirmasi Dialog */}
-      {cancelConfirm && (
+      {cancelConfirm && createPortal(
         <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-dark-bg/80 backdrop-blur-sm animate-fade-in">
           <div className="bg-dark-card border border-ui-danger/40 rounded-xl w-full max-w-sm shadow-2xl p-6">
             <div className="flex items-center gap-3 mb-4">
@@ -170,7 +173,38 @@ export default function Assign() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Assign Konfirmasi Dialog */}
+      {assignConfirm && createPortal(
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-dark-bg/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-dark-card border border-brand-primary/40 rounded-xl w-full max-w-sm shadow-2xl p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-brand-primary/15 flex items-center justify-center border border-brand-primary/30">
+                <Plus className="w-5 h-5 text-brand-primary" />
+              </div>
+              <div className="font-bold text-ui-text text-[15px]">Konfirmasi Penugasan</div>
+            </div>
+            <p className="text-[13px] text-ui-dim mb-5 leading-relaxed">
+              Yakin ingin menugaskan <strong className="text-ui-text">{assignConfirm.techs.map(t => t.name.split(' ')[0]).join(', ')}</strong> untuk laporan <strong className="text-brand-primary">{assignConfirm.reportNumber}</strong>?
+            </p>
+            <div className="flex gap-3">
+              <button className="btn btn-ghost flex-1" onClick={() => setAssignConfirm(null)}>Batal</button>
+              <button
+                className="btn btn-primary flex-1 shadow-[0_0_8px_rgba(220,38,38,0.3)]"
+                onClick={() => {
+                  submitAssign(assignConfirm.reportId);
+                  setAssignConfirm(null);
+                }}
+              >
+                Ya, Tugaskan
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -252,7 +286,14 @@ export default function Assign() {
                   <div className="flex justify-end">
                     <button 
                       className={`btn py-1 px-3 text-[10px] ${(selectedTechs[r.id] || []).length > 0 ? 'btn-primary shadow-[0_0_8px_rgba(220,38,38,0.3)]' : 'bg-dark-hover text-ui-muted border-dark-border cursor-not-allowed'}`}
-                      onClick={(e) => { e.stopPropagation(); submitAssign(r.id); }}
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        setAssignConfirm({ 
+                          reportId: r.id, 
+                          reportNumber: r.report_number, 
+                          techs: selectedTechs[r.id] || [] 
+                        }); 
+                      }}
                       disabled={(selectedTechs[r.id] || []).length === 0}
                     >
                       Beri Penugasan ({(selectedTechs[r.id] || []).length})

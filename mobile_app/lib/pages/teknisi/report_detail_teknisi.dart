@@ -33,6 +33,8 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
   ReportStatus? get _nextStatus {
     switch (widget.report.status) {
       case ReportStatus.menunggu:
+        return ReportStatus.assessment;
+      case ReportStatus.assessment:
         return ReportStatus.dalamProses;
       case ReportStatus.dalamProses:
         return ReportStatus.selesai;
@@ -44,6 +46,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
   String get _actionLabel {
     switch (widget.report.status) {
       case ReportStatus.menunggu:
+      case ReportStatus.assessment:
         return 'Mulai Kerjakan';
       case ReportStatus.dalamProses:
         return 'Selesaikan Perbaikan';
@@ -55,6 +58,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
   IconData get _actionIcon {
     switch (widget.report.status) {
       case ReportStatus.menunggu:
+      case ReportStatus.assessment:
         return Icons.play_circle_outline_rounded;
       case ReportStatus.dalamProses:
         return Icons.check_circle_outline_rounded;
@@ -84,59 +88,207 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
   Future<void> _saveUpdate() async {
     if (_nextStatus == null) return;
 
-    if (_buktiFoto == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
+    // Transition: assessment -> dalamProses (require description, NO foto)
+    if (_nextStatus == ReportStatus.dalamProses) {
+      final noteController = TextEditingController();
+      bool? confirm = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          backgroundColor: AppColors.bgDark,
+          title: Text('Catatan Asesmen', style: GoogleFonts.spaceGrotesk(color: Colors.white, fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.warning_amber_rounded, color: Colors.amber, size: 16),
-              const SizedBox(width: 8),
-              Text('Foto bukti wajib dilampirkan!',
-                  style: GoogleFonts.spaceGrotesk(fontSize: 13)),
+              Text('Silakan berikan catatan asesmen awal (alat, kendala, dll). Wajib diisi.', 
+                style: GoogleFonts.spaceGrotesk(fontSize: 13, color: AppColors.textMuted)),
+              const SizedBox(height: 12),
+              TextField(
+                controller: noteController,
+                maxLines: 3,
+                style: GoogleFonts.spaceGrotesk(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Ketik catatan di sini...',
+                  hintStyle: GoogleFonts.spaceGrotesk(color: AppColors.textDim),
+                  filled: true,
+                  fillColor: AppColors.hoverDark,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                ),
+              ),
             ],
           ),
-          backgroundColor: const Color(0xFF1C1917),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text('Batal', style: GoogleFonts.spaceGrotesk(color: AppColors.textMuted)),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
+              onPressed: () {
+                if (noteController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Catatan wajib diisi!')));
+                  return;
+                }
+                Navigator.pop(context, true);
+              },
+              child: Text('Simpan & Mulai'),
+            ),
+          ],
         ),
       );
+
+      if (confirm != true) return;
+
+      setState(() => _isSaving = true);
+      try {
+        await api.updateStatus(widget.report.id, _nextStatus!, description: noteController.text.trim());
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Berhasil memulai pekerjaan!')));
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: AppColors.danger));
+      } finally {
+        if (mounted) setState(() => _isSaving = false);
+      }
       return;
     }
 
-    setState(() => _isSaving = true);
-    try {
-      // Upload foto bukti dulu (base64)
-      await api.uploadPhoto(widget.report.id, _buktiFoto!, type: 'bukti_penyelesaian');
-      // Update status laporan
-      await api.updateStatus(widget.report.id, _nextStatus!);
-
-      if (mounted) {
+    // Transition: dalamProses -> selesai (require foto)
+    if (_nextStatus == ReportStatus.selesai) {
+      if (_buktiFoto == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
               children: [
-                const Icon(Icons.check_circle, color: AppColors.success, size: 16),
+                const Icon(Icons.warning_amber_rounded, color: Colors.amber, size: 16),
                 const SizedBox(width: 8),
-                Text('Update berhasil disimpan!',
+                Text('Foto bukti perbaikan wajib dilampirkan!',
                     style: GoogleFonts.spaceGrotesk(fontSize: 13)),
               ],
             ),
+            backgroundColor: const Color(0xFF1C1917),
           ),
         );
+        return;
+      }
+
+      setState(() => _isSaving = true);
+      try {
+        await api.uploadPhoto(widget.report.id, _buktiFoto!, type: 'bukti_penyelesaian');
+        await api.updateStatus(widget.report.id, _nextStatus!);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Laporan diselesaikan!')));
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: AppColors.danger));
+      } finally {
+        if (mounted) setState(() => _isSaving = false);
+      }
+    }
+  }
+
+  Future<void> _requestEscalation() async {
+    final noteController = TextEditingController();
+    bool? confirm = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.bgDark,
+        title: Text('Ajukan Eskalasi', style: GoogleFonts.spaceGrotesk(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Silakan berikan alasan mengapa laporan ini perlu dieskalasi. Wajib diisi.', 
+              style: GoogleFonts.spaceGrotesk(fontSize: 13, color: AppColors.textMuted)),
+            const SizedBox(height: 12),
+            TextField(
+              controller: noteController,
+              maxLines: 3,
+              style: GoogleFonts.spaceGrotesk(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: 'Ketik alasan kendala...',
+                hintStyle: GoogleFonts.spaceGrotesk(color: AppColors.textDim),
+                filled: true,
+                fillColor: AppColors.hoverDark,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Batal', style: GoogleFonts.spaceGrotesk(color: AppColors.textMuted)),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+            onPressed: () {
+              if (noteController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Alasan wajib diisi!')));
+                return;
+              }
+              Navigator.pop(context, true);
+            },
+            child: Text('Kirim Pengajuan'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() => _isSaving = true);
+    try {
+      await api.requestEscalation(widget.report.id, noteController.text.trim());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pengajuan eskalasi berhasil dikirim!')));
         Navigator.pop(context);
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              e.toString().replaceAll('Exception: ', ''),
-              style: GoogleFonts.spaceGrotesk(fontSize: 13),
-            ),
-            backgroundColor: AppColors.danger,
-          ),
-        );
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: AppColors.danger));
     } finally {
       if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+    // Transition: dalamProses -> selesai (require foto)
+    if (_nextStatus == ReportStatus.selesai) {
+      if (_buktiFoto == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.warning_amber_rounded, color: Colors.amber, size: 16),
+                const SizedBox(width: 8),
+                Text('Foto bukti perbaikan wajib dilampirkan!',
+                    style: GoogleFonts.spaceGrotesk(fontSize: 13)),
+              ],
+            ),
+            backgroundColor: const Color(0xFF1C1917),
+          ),
+        );
+        return;
+      }
+
+      setState(() => _isSaving = true);
+      try {
+        await api.uploadPhoto(widget.report.id, _buktiFoto!, type: 'bukti_penyelesaian');
+        await api.updateStatus(widget.report.id, _nextStatus!);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Laporan diselesaikan!')));
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: AppColors.danger));
+      } finally {
+        if (mounted) setState(() => _isSaving = false);
+      }
     }
   }
 
@@ -278,57 +430,59 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Upload bukti foto – kamera saja
-                    _SLabel('FOTO BUKTI (WAJIB)'),
-                    const SizedBox(height: 8),
-                    if (_buktiFoto != null) ...[
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Stack(
-                          children: [
-                            Image.file(_buktiFoto!,
-                                height: 160, width: double.infinity, fit: BoxFit.cover),
-                            Positioned(
-                              top: 8, right: 8,
-                              child: GestureDetector(
-                                onTap: () => setState(() => _buktiFoto = null),
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                      color: Colors.black54, shape: BoxShape.circle),
-                                  child: const Icon(Icons.close, color: Colors.white, size: 16),
+                    if (_nextStatus == ReportStatus.selesai) ...[
+                      // Upload bukti foto – kamera saja
+                      _SLabel('FOTO BUKTI (WAJIB)'),
+                      const SizedBox(height: 8),
+                      if (_buktiFoto != null) ...[
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Stack(
+                            children: [
+                              Image.file(_buktiFoto!,
+                                  height: 160, width: double.infinity, fit: BoxFit.cover),
+                              Positioned(
+                                top: 8, right: 8,
+                                child: GestureDetector(
+                                  onTap: () => setState(() => _buktiFoto = null),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                        color: Colors.black54, shape: BoxShape.circle),
+                                    child: const Icon(Icons.close, color: Colors.white, size: 16),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      OutlinedButton.icon(
+                        onPressed: _takeBuktiFoto,
+                        icon: const Icon(Icons.camera_alt_rounded, size: 18),
+                        label: Text(
+                          _buktiFoto != null ? 'Ambil Ulang Foto' : 'Ambil Foto Bukti (Kamera)',
+                          style: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w600),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 48),
+                          side: BorderSide(
+                            color: _buktiFoto == null ? AppColors.danger : AppColors.primary,
+                          ),
+                          foregroundColor: _buktiFoto == null ? AppColors.danger : AppColors.primary,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                    ],
-                    OutlinedButton.icon(
-                      onPressed: _takeBuktiFoto,
-                      icon: const Icon(Icons.camera_alt_rounded, size: 18),
-                      label: Text(
-                        _buktiFoto != null ? 'Ambil Ulang Foto' : 'Ambil Foto Bukti (Kamera)',
-                        style: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w600),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 48),
-                        side: BorderSide(
-                          color: _buktiFoto == null ? AppColors.danger : AppColors.primary,
+                      if (_buktiFoto == null) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          '* Foto bukti wajib diambil dari kamera sebelum update status',
+                          style: GoogleFonts.spaceGrotesk(
+                              fontSize: 11, color: AppColors.danger),
                         ),
-                        foregroundColor: _buktiFoto == null ? AppColors.danger : AppColors.primary,
-                      ),
-                    ),
-                    if (_buktiFoto == null) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        '* Foto bukti wajib diambil dari kamera sebelum update status',
-                        style: GoogleFonts.spaceGrotesk(
-                            fontSize: 11, color: AppColors.danger),
-                      ),
+                      ],
+                      const SizedBox(height: 20),
                     ],
-                    const SizedBox(height: 20),
 
                     // Aksi tombol utama
                     _isSaving
@@ -345,7 +499,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
                             ),
                           )
                         : FilledButton.icon(
-                            onPressed: _buktiFoto != null ? _saveUpdate : null,
+                            onPressed: (_nextStatus != ReportStatus.selesai || _buktiFoto != null) && !widget.report.isEscalationRequested ? _saveUpdate : null,
                             icon: Icon(_actionIcon, size: 18),
                             label: Text(_actionLabel),
                             style: FilledButton.styleFrom(
@@ -353,6 +507,41 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
                               disabledBackgroundColor: AppColors.textDim.withValues(alpha: 0.3),
                             ),
                           ),
+                    const SizedBox(height: 16),
+                    
+                    if (widget.report.isEscalationRequested) ...[
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.warning.withValues(alpha: 0.1),
+                          border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.hourglass_empty_rounded, color: AppColors.warning, size: 18),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Menunggu verifikasi admin atas pengajuan eskalasi.',
+                                style: GoogleFonts.spaceGrotesk(fontSize: 12, color: AppColors.warning),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ] else if (_nextStatus != null && widget.report.status != ReportStatus.menunggu && widget.report.status != ReportStatus.eskalasi) ...[
+                      OutlinedButton.icon(
+                        onPressed: _requestEscalation,
+                        icon: const Icon(Icons.report_problem_outlined, size: 18),
+                        label: Text('Ajukan Eskalasi (Kendala)'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.danger,
+                          side: BorderSide(color: AppColors.danger.withValues(alpha: 0.5)),
+                        ),
+                      ),
+                    ],
+                    
                     const SizedBox(height: 32),
                   ] else ...[
                     // Laporan sudah selesai

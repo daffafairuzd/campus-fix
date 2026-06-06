@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,17 +6,6 @@
 
 @layer base {
   :root {
-    --theme-bg: 245 246 250;
-    --theme-card: 255 255 255;
-    --theme-hover: 238 240 245;
-    --theme-border: 226 232 240;
-    
-    --text-main: 30 41 59;
-    --text-muted: 100 116 139;
-    --text-dim: 148 163 184;
-  }
-
-  .dark {
     --theme-bg: 10 15 20;
     --theme-card: 17 24 39;
     --theme-hover: 26 37 53;
@@ -38,30 +27,42 @@
   .card {
     @apply bg-dark-card border border-dark-border rounded-xl transition-all duration-200;
   }
+
   .card:hover {
-    @apply border-brand-glow shadow-[0_0_20px_rgba(220,38,38,0.06)];
+    @apply border-brand-glow;
+    box-shadow: 0 0 20px rgba(220, 38, 38, 0.06);
   }
-  
+
   .badge {
     @apply inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wider;
   }
-  
+
   .btn {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-sans text-[13px] font-semibold transition-all duration-200 cursor-pointer border-none outline-none;
   }
+
   .btn-primary {
-    @apply bg-brand-primary text-white hover:bg-brand-dim hover:shadow-[0_0_16px_rgba(220,38,38,0.15)];
+    @apply bg-brand-primary text-white hover:bg-brand-dim;
   }
+  .btn-primary:hover {
+    box-shadow: 0 0 16px rgba(220, 38, 38, 0.15);
+  }
+
   .btn-ghost {
     @apply bg-transparent text-ui-dim border border-dark-border hover:border-brand-primary hover:text-brand-primary;
   }
+
   .btn-danger {
     @apply bg-ui-danger/15 text-ui-danger border border-ui-danger/30 hover:bg-ui-danger/25;
   }
-  
+
   .input {
-    @apply w-full bg-dark-bg border border-dark-border rounded-lg text-ui-text font-sans text-[13px] px-3 py-2 outline-none transition-colors duration-200 focus:border-brand-primary focus:shadow-[0_0_0_3px_rgba(220,38,38,0.15)];
+    @apply w-full bg-dark-bg border border-dark-border rounded-lg text-ui-text font-sans text-[13px] px-3 py-2 outline-none transition-colors duration-200 focus:border-brand-primary;
   }
+  .input:focus {
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+  }
+
   .input::placeholder {
     @apply text-ui-muted;
   }
@@ -77,8 +78,9 @@
   .sidebar-item {
     @apply flex items-center gap-3 px-3.5 py-2.5 rounded-lg cursor-pointer text-ui-dim text-[13px] font-medium transition-all duration-200 border border-transparent hover:bg-dark-hover hover:text-ui-text;
   }
+
   .sidebar-item.active {
-    @apply bg-brand-glow text-brand-primary border-brand-primary/20;
+    @apply bg-brand-primary text-white border-transparent shadow-md shadow-brand-primary/20;
   }
 }
 
@@ -87,13 +89,16 @@
   width: 4px;
   height: 4px;
 }
+
 ::-webkit-scrollbar-track {
   background: rgb(var(--theme-bg));
 }
+
 ::-webkit-scrollbar-thumb {
   background: rgb(var(--theme-border));
   border-radius: 2px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: theme('colors.brand.primary');
 }

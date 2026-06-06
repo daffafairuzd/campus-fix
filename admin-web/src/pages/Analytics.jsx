@@ -147,63 +147,12 @@ export default function Analytics() {
         </div>
       </div>
 
-      {/* KPI Tambahan: SLA, CSAT, Bottleneck */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-2">
-        {/* SLA Donut Chart - DINAMIS */}
-        <div className="card p-5 border-ui-success/20 bg-dark-card/50">
-          <h3 className="text-[13px] font-bold text-ui-text mb-1">Rasio Ketepatan Waktu (SLA)</h3>
-          <p className="text-[10px] text-ui-muted mb-4">Persentase laporan yang selesai sebelum deadline</p>
-          <div className="h-40 w-full relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={advancedStats?.sla?.chart || []} cx="50%" cy="50%" innerRadius={45} outerRadius={65} paddingAngle={2} dataKey="value" stroke="none">
-                  <Cell fill="#10b981" />
-                  <Cell fill="#dc2626" />
-                </Pie>
-                <RechartsTooltip contentStyle={{ backgroundColor: '#1f242d', border: '1px solid #2e3643', borderRadius: '8px', fontSize: '11px' }} itemStyle={{ color: '#fff' }} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none flex-col">
-               <span className="text-xl font-bold text-ui-success">{advancedStats?.sla?.percentage}%</span>
-               <span className="text-[9px] text-ui-muted uppercase tracking-widest mt-0.5">Tepat Waktu</span>
-            </div>
-          </div>
-          <div className="flex gap-4 mt-2 text-[10px] justify-center items-center">
-            <span className="flex items-center gap-1.5 text-ui-dim"><span className="w-2 h-2 rounded-full bg-ui-success"></span> Tepat Waktu</span>
-            <span className="flex items-center gap-1.5 text-ui-dim"><span className="w-2 h-2 rounded-full bg-ui-danger"></span> Terlambat</span>
-          </div>
-        </div>
-
-        {/* CSAT Bar Chart - DINAMIS */}
-        <div className="card p-5 border-brand-primary/20 bg-dark-card/50">
-          <h3 className="text-[13px] font-bold text-ui-text mb-1">Kepuasan Pelapor (CSAT)</h3>
-          <p className="text-[10px] text-ui-muted mb-2">Distribusi rating dari database pelapor</p>
-          <div className="flex flex-col gap-2 mt-3">
-             {[5, 4, 3, 2, 1].map((rating) => {
-                const item = advancedStats?.csat?.distribution?.find(d => parseInt(d.rating) === rating);
-                const count = item ? parseInt(item.count) : 0;
-                const total = advancedStats?.csat?.distribution?.reduce((acc, curr) => acc + parseInt(curr.count), 0) || 1;
-                const pct = (count / total) * 100;
-                const color = rating >= 4 ? "bg-brand-primary" : rating === 3 ? "bg-ui-warning" : "bg-ui-danger";
-                
-                return (
-                  <div key={rating} className="flex items-center gap-3">
-                    <span className="text-[10px] text-ui-dim w-14">{rating} Bintang</span>
-                    <div className="flex-1 h-3.5 bg-dark-bg rounded-md overflow-hidden border border-dark-border/50">
-                      <div className={`h-full ${color} rounded-r-sm`} style={{ width: `${pct}%` }}></div>
-                    </div>
-                    <span className="text-[10px] text-ui-muted font-bold font-mono w-6 text-right">{count}</span>
-                  </div>
-                );
-             })}
-          </div>
-          <div className="text-[10px] text-center text-ui-muted mt-4">Rata-rata rating: <strong className="text-brand-primary text-[13px]">{advancedStats?.csat?.average || 0} / 5.0</strong></div>
-        </div>
-
-        {/* Bottleneck Bar Chart - DINAMIS */}
+      {/* KPI Grid: Durasi Penyelesaian, Prioritas, Kategori, Status */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-4">
+        {/* Durasi Penyelesaian */}
         <div className="card p-5 border-ui-info/20 bg-dark-card/50">
-          <h3 className="text-[13px] font-bold text-ui-text mb-1">Analisis Durasi Penyelesaian</h3>
-          <p className="text-[10px] text-ui-muted mb-2">Rata-rata waktu pengerjaan per kategori (Jam)</p>
+          <h3 className="text-[13px] font-bold text-ui-text mb-1">Durasi Penyelesaian</h3>
+          <p className="text-[10px] text-ui-muted mb-2">Rata-rata waktu pengerjaan (Jam)</p>
           <div className="h-40 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={advancedStats?.bottlenecks || []} margin={{ top: 10, right: 0, left: -25, bottom: 0 }} layout="horizontal">
@@ -215,23 +164,21 @@ export default function Analytics() {
             </ResponsiveContainer>
           </div>
           <div className="flex gap-4 mt-1 text-[10px] justify-center items-center">
-            <span className="flex items-center gap-1.5 text-ui-dim"><span className="w-2 h-2 rounded-[2px] bg-[#f59e0b]"></span> Durasi Pengerjaan (Rata-rata Jam)</span>
+            <span className="flex items-center gap-1.5 text-ui-dim"><span className="w-2 h-2 rounded-[2px] bg-[#f59e0b]"></span> Rata-rata Jam</span>
           </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Distribusi Prioritas Laporan */}
         <div className="card p-5 border-ui-warning/20 bg-dark-card/50">
-          <h3 className="text-[13px] font-bold text-ui-text mb-1">Distribusi Prioritas Laporan</h3>
-          <p className="text-[10px] text-ui-muted mb-4">Sebaran tingkat prioritas dari seluruh laporan</p>
-          <div className="h-44 w-full relative">
+          <h3 className="text-[13px] font-bold text-ui-text mb-1">Distribusi Prioritas</h3>
+          <p className="text-[10px] text-ui-muted mb-4">Sebaran prioritas laporan</p>
+          <div className="h-40 w-full relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie 
                   data={advancedStats?.priorities || []} 
                   cx="50%" cy="50%" 
-                  innerRadius={45} outerRadius={68} 
+                  innerRadius={45} outerRadius={65} 
                   paddingAngle={3} 
                   dataKey="value" 
                   stroke="none"
@@ -253,23 +200,42 @@ export default function Analytics() {
               <span className="text-[9px] text-ui-muted uppercase tracking-widest mt-0.5">Total</span>
             </div>
           </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-[10px] justify-center items-center">
+          <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3 text-[9px] justify-center items-center">
             {[
               { label: 'Kritis', color: 'bg-ui-danger' },
               { label: 'Tinggi', color: 'bg-ui-warning' },
               { label: 'Sedang', color: 'bg-blue-500' },
               { label: 'Rendah', color: 'bg-ui-muted' },
             ].map(l => (
-              <span key={l.label} className="flex items-center gap-1.5 text-ui-dim">
-                <span className={`w-2 h-2 rounded-full ${l.color}`}></span> {l.label}
+              <span key={l.label} className="flex items-center gap-1 text-ui-dim">
+                <span className={`w-1.5 h-1.5 rounded-full ${l.color}`}></span> {l.label}
               </span>
             ))}
           </div>
         </div>
 
+        {/* Kategori Laporan Bar Chart */}
+        <div className="card p-5 border-brand-primary/20 bg-dark-card/50">
+          <h3 className="text-[13px] font-bold text-ui-text mb-1">Laporan per Kategori</h3>
+          <p className="text-[10px] text-ui-muted mb-2">Total laporan masuk</p>
+          <div className="h-40 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={advancedStats?.categories_stats || []} margin={{ top: 10, right: 0, left: -25, bottom: 0 }} layout="horizontal">
+                <XAxis dataKey="category" stroke="#6b7280" fontSize={9} axisLine={false} tickLine={false} />
+                <YAxis stroke="#6b7280" fontSize={9} axisLine={false} tickLine={false} domain={[0, 'auto']} />
+                <RechartsTooltip contentStyle={{ backgroundColor: '#1f242d', border: '1px solid #2e3643', borderRadius: '8px', fontSize: '11px' }} itemStyle={{ color: '#fff' }} formatter={(value) => `${value} Laporan`} />
+                <Bar dataKey="total" fill="#3b82f6" name="Total Laporan" radius={[2, 2, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex gap-4 mt-3 text-[10px] justify-center items-center">
+            <span className="flex items-center gap-1.5 text-ui-dim"><span className="w-2 h-2 rounded-[2px] bg-brand-primary"></span> Jumlah Laporan</span>
+          </div>
+        </div>
+
         {/* Status Laporan */}
         <div className="card p-5">
-           <h3 className="text-[13px] font-bold text-ui-text mb-4">Status Laporan (Semua Riwayat)</h3>
+           <h3 className="text-[13px] font-bold text-ui-text mb-4">Status Laporan</h3>
            <div className="flex flex-col gap-3.5">
              {[
                {label:"Selesai", val:overview?.selesai || 0, color:"bg-ui-success", shadow:"shadow-[0_0_8px_rgba(16,185,129,0.3)]", text:"text-ui-success"},
@@ -292,6 +258,115 @@ export default function Analytics() {
                );
              })}
            </div>
+        </div>
+      </div>
+
+      {/* SLA Horizontal */}
+      <div className="card p-6 border-ui-success/20 bg-dark-card/50">
+        <h3 className="text-[14px] font-bold text-ui-text mb-1">Rasio Ketepatan Waktu (SLA)</h3>
+        <p className="text-[11px] text-ui-muted mb-4">Persentase laporan yang selesai sebelum deadline (Keseluruhan & Per Kategori)</p>
+        <div className="flex flex-col md:flex-row gap-6 items-center md:items-stretch">
+          {/* Overall SLA */}
+          <div className="w-full md:w-1/3 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-dark-border pb-4 md:pb-0 md:pr-4">
+            <div className="h-40 w-full relative mb-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={advancedStats?.sla?.overall?.chart || []} cx="50%" cy="50%" innerRadius={45} outerRadius={65} paddingAngle={2} dataKey="value" stroke="none">
+                    <Cell fill="#10b981" />
+                    <Cell fill="#dc2626" />
+                  </Pie>
+                  <RechartsTooltip contentStyle={{ backgroundColor: '#1f242d', border: '1px solid #2e3643', borderRadius: '8px', fontSize: '11px' }} itemStyle={{ color: '#fff' }} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none flex-col">
+                 <span className="text-2xl font-bold text-ui-success">{advancedStats?.sla?.overall?.percentage || 0}%</span>
+                 <span className="text-[10px] text-ui-muted uppercase tracking-widest mt-0.5">Keseluruhan</span>
+              </div>
+            </div>
+            <div className="flex gap-4 text-[10px] justify-center items-center">
+              <span className="flex items-center gap-1.5 text-ui-dim"><span className="w-2 h-2 rounded-full bg-ui-success"></span> Tepat Waktu</span>
+              <span className="flex items-center gap-1.5 text-ui-dim"><span className="w-2 h-2 rounded-full bg-ui-danger"></span> Terlambat</span>
+            </div>
+          </div>
+
+          {/* Per Category SLA */}
+          <div className="w-full md:w-2/3 flex flex-wrap justify-center gap-4">
+            {(advancedStats?.sla?.per_category || []).map((item, idx) => (
+              <div key={idx} className="bg-dark-bg p-3 rounded-xl border border-dark-border flex flex-col items-center justify-center w-[calc(50%-0.5rem)] md:w-[calc(25%-0.75rem)]">
+                <h5 className="text-[10px] font-semibold text-ui-dim mb-1 text-center truncate w-full">{item.category}</h5>
+                <div className="h-20 w-full relative">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={item.chart} cx="50%" cy="50%" innerRadius={20} outerRadius={32} paddingAngle={2} dataKey="value" stroke="none">
+                        <Cell fill="#10b981" />
+                        <Cell fill="#dc2626" />
+                      </Pie>
+                      <RechartsTooltip contentStyle={{ backgroundColor: '#1f242d', border: '1px solid #2e3643', borderRadius: '8px', fontSize: '11px' }} itemStyle={{ color: '#fff' }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none flex-col">
+                     <span className="text-[11px] font-bold text-ui-success">{item.percentage}%</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* CSAT Horizontal */}
+      <div className="card p-6 border-brand-primary/20 bg-dark-card/50">
+        <h3 className="text-[14px] font-bold text-ui-text mb-1">Kepuasan Pelapor (CSAT)</h3>
+        <p className="text-[11px] text-ui-muted mb-4">Distribusi rating dan rata-rata kepuasan pelapor (Keseluruhan & Per Kategori)</p>
+        <div className="flex flex-col md:flex-row gap-6 items-center md:items-stretch">
+          {/* Overall CSAT */}
+          <div className="w-full md:w-1/3 flex flex-col justify-center border-b md:border-b-0 md:border-r border-dark-border pb-4 md:pb-0 md:pr-4">
+            <div className="flex flex-col gap-2 mt-3">
+               {[5, 4, 3, 2, 1].map((rating) => {
+                  const item = advancedStats?.csat?.overall?.distribution?.find(d => parseInt(d.rating) === rating);
+                  const count = item ? parseInt(item.count) : 0;
+                  const total = advancedStats?.csat?.overall?.distribution?.reduce((acc, curr) => acc + parseInt(curr.count), 0) || 1;
+                  const pct = (count / total) * 100;
+                  const color = rating >= 4 ? "bg-brand-primary" : rating === 3 ? "bg-ui-warning" : "bg-ui-danger";
+                  
+                  return (
+                    <div key={rating} className="flex items-center gap-3">
+                      <span className="text-[10px] text-ui-dim w-14">{rating} Bintang</span>
+                      <div className="flex-1 h-3.5 bg-dark-bg rounded-md overflow-hidden border border-dark-border/50">
+                        <div className={`h-full ${color} rounded-r-sm`} style={{ width: `${pct}%` }}></div>
+                      </div>
+                      <span className="text-[10px] text-ui-muted font-bold font-mono w-6 text-right">{count}</span>
+                    </div>
+                  );
+               })}
+            </div>
+            <div className="text-[11px] text-center text-ui-muted mt-5">
+              Rata-rata rating keseluruhan: <strong className="text-brand-primary text-[15px] block mt-1">{advancedStats?.csat?.overall?.average || 0} / 5.0</strong>
+            </div>
+          </div>
+
+          {/* Per Category CSAT */}
+          <div className="w-full md:w-2/3 flex flex-wrap justify-center gap-4">
+            {(advancedStats?.csat?.per_category || []).map((item, idx) => {
+              const color = item.average >= 4 ? "text-brand-primary" : item.average >= 3 ? "text-ui-warning" : "text-ui-danger";
+              return (
+                <div key={idx} className="bg-dark-bg p-4 rounded-xl border border-dark-border flex flex-col items-center justify-center w-[calc(50%-0.5rem)] md:w-[calc(25%-0.75rem)]">
+                  <h5 className="text-[11px] font-semibold text-ui-dim mb-3 text-center truncate w-full">{item.category}</h5>
+                  <div className="flex items-end gap-1">
+                    <span className={`text-2xl font-bold ${color}`}>{item.average}</span>
+                    <span className="text-[10px] text-ui-muted mb-1">/ 5.0</span>
+                  </div>
+                  <div className="flex mt-2 gap-0.5">
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <svg key={star} className={`w-3 h-3 ${star <= Math.round(item.average) ? 'text-brand-primary' : 'text-dark-border'}`} fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                      </svg>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

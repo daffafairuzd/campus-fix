@@ -76,7 +76,7 @@ export default function Dashboard() {
         setWeekly(resWeekly.data.reverse()); // Ensure chronological order if necessary
         setCategories(resCats.data);
         setRecentReports(resReports.data.data.slice(0, 5)); // top 5
-        setTechnicians(resTechs.data.slice(0, 5)); // top 5 techs
+        setTechnicians(resTechs.data); // show all techs dynamically
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
       } finally {
