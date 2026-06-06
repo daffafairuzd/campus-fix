@@ -102,9 +102,17 @@ class TechnicianController extends Controller
             ];
         }
 
+        $completedCount = Report::whereIn('id', $assignedReportIds)
+            ->where('status', 'selesai')
+            ->count();
+
+        $ratingAvg = Report::whereIn('id', $assignedReportIds)
+            ->whereNotNull('rating')
+            ->avg('rating') ?? 0;
+
         return response()->json([
-            'completed_count' => $technician->completed_count,
-            'rating_avg'      => $technician->rating_avg,
+            'completed_count' => $completedCount,
+            'rating_avg'      => round($ratingAvg, 1),
             'on_time_count'   => $onTimeCount,
             'late_count'      => $lateCount,
             'avg_resolution'  => $avgResFormatted,

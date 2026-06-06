@@ -19,7 +19,9 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
   const [isLoadingPhotos, setIsLoadingPhotos] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [currentReport, setCurrentReport] = useState(report);
-  const [selectedPriority, setSelectedPriority] = useState(report.priority || 'sedang');
+  const [selectedPriority, setSelectedPriority] = useState(
+    (report.priority && report.priority !== 'belum_ditentukan') ? report.priority : 'sedang'
+  );
   const [isVerifying, setIsVerifying] = useState(false);
 
   const navigate = useNavigate();
