@@ -6,22 +6,22 @@ import { Loader2 } from 'lucide-react';
 
 const BarGraph = ({ data, xAxisValue }) => {
   const max = Math.max(1, ...data.map(d => Math.max(d.laporan, d.selesai)));
-  
+
   return (
     <div className="flex h-64 items-end gap-3 mt-8">
       {data.map((d, i) => (
         <div key={i} className="flex-1 flex flex-col items-center group relative h-full justify-end">
           {/* Tooltip */}
           <div className="absolute top-0 -mt-8 bg-dark-hover border border-dark-border text-ui-text text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 shadow-lg pointer-events-none">
-             Masuk: <span className="font-bold text-brand-primary">{d.laporan}</span> | Selesai: <span className="font-bold text-ui-muted">{d.selesai}</span>
+            Masuk: <span className="font-bold text-brand-primary">{d.laporan}</span> | Selesai: <span className="font-bold text-ui-muted">{d.selesai}</span>
           </div>
 
           <div className="w-full flex justify-center gap-1 items-end flex-1 max-h-[80%]">
-            <div 
+            <div
               className="w-1/2 bg-brand-primary rounded-t-sm relative transition-all duration-300 min-h-[4px]"
               style={{ height: `${(d.laporan / max) * 100}%` }}
             ></div>
-            <div 
+            <div
               className="w-1/2 bg-ui-muted/30 rounded-t-sm transition-all duration-300 min-h-[4px]"
               style={{ height: `${(d.selesai / max) * 100}%` }}
             ></div>
@@ -35,7 +35,7 @@ const BarGraph = ({ data, xAxisValue }) => {
 
 export default function Analytics() {
   const [period, setPeriod] = useState('Bulan Ini');
-  
+
   const [weeklyData, setWeeklyData] = useState([]);
   const [monthlyData, setMonthlyData] = useState([]);
   const [overview, setOverview] = useState(null);
@@ -89,7 +89,7 @@ export default function Analytics() {
         </div>
         <div className="flex gap-2 p-1 bg-dark-bg rounded-lg border border-dark-border">
           {['Bulan Ini', 'Tahun Ini'].map(p => (
-            <button 
+            <button
               key={p}
               onClick={() => setPeriod(p)}
               className={`px-4 py-1.5 rounded-md text-[11px] font-semibold transition-colors ${period === p ? 'bg-dark-hover text-brand-primary border border-brand-primary/20' : 'text-ui-muted hover:text-ui-text'}`}
@@ -101,25 +101,25 @@ export default function Analytics() {
       </div>
 
       <div className="card p-6">
-         <div className="flex justify-between items-end mb-4">
-           <div>
-              <div className="text-[14px] font-bold text-ui-text">Laporan Masuk vs Terselesaikan</div>
-              <div className="text-[11px] text-ui-muted mt-1">Total {chartData.reduce((acc,curr) => acc + curr.laporan, 0)} laporan masuk ({period})</div>
-           </div>
-           <div className="flex gap-4 text-[11px] text-ui-muted">
-              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-brand-primary"></span> Laporan Masuk</span>
-              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-ui-muted/50"></span> Diselesaikan</span>
-           </div>
-         </div>
-         
-         <BarGraph data={chartData} xAxisValue={xAxis} />
+        <div className="flex justify-between items-end mb-4">
+          <div>
+            <div className="text-[14px] font-bold text-ui-text">Laporan Masuk vs Terselesaikan</div>
+            <div className="text-[11px] text-ui-muted mt-1">Total {chartData.reduce((acc, curr) => acc + curr.laporan, 0)} laporan masuk ({period})</div>
+          </div>
+          <div className="flex gap-4 text-[11px] text-ui-muted">
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-brand-primary"></span> Laporan Masuk</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-ui-muted/50"></span> Diselesaikan</span>
+          </div>
+        </div>
+
+        <BarGraph data={chartData} xAxisValue={xAxis} />
       </div>
 
       {/* Tren Laporan (Faktual) */}
       <div className="card p-6 border-brand-primary/20 bg-dark-card/50 relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-3 opacity-10">
+        {/* <div className="absolute top-0 right-0 p-3 opacity-10">
           <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
-        </div>
+        </div> */}
         <div className="flex justify-between items-end mb-6">
           <div>
             <h3 className="text-[14px] font-bold text-ui-text mb-1">{period === 'Bulan Ini' ? 'Tren Laporan Harian' : 'Tren Laporan Bulanan'}</h3>
@@ -130,13 +130,13 @@ export default function Analytics() {
             <span className="flex items-center gap-1.5 text-ui-dim"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Selesai ({totalSelesaiTrend})</span>
           </div>
         </div>
-        
+
         <div className="h-52 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={trendData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
               <XAxis dataKey={trendXKey} stroke="#6b7280" fontSize={10} axisLine={false} tickLine={false} />
               <YAxis stroke="#6b7280" fontSize={10} axisLine={false} tickLine={false} />
-              <RechartsTooltip 
+              <RechartsTooltip
                 contentStyle={{ backgroundColor: '#1f242d', border: '1px solid #2e3643', borderRadius: '8px', fontSize: '11px' }}
                 itemStyle={{ color: '#fff' }}
               />
@@ -175,12 +175,12 @@ export default function Analytics() {
           <div className="h-40 w-full relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie 
-                  data={advancedStats?.priorities || []} 
-                  cx="50%" cy="50%" 
-                  innerRadius={45} outerRadius={65} 
-                  paddingAngle={3} 
-                  dataKey="value" 
+                <Pie
+                  data={advancedStats?.priorities || []}
+                  cx="50%" cy="50%"
+                  innerRadius={45} outerRadius={65}
+                  paddingAngle={3}
+                  dataKey="value"
                   stroke="none"
                 >
                   {(advancedStats?.priorities || []).map((entry, idx) => {
@@ -188,8 +188,8 @@ export default function Analytics() {
                     return <Cell key={idx} fill={colorMap[entry.name] || '#6b7280'} />;
                   })}
                 </Pie>
-                <RechartsTooltip 
-                  contentStyle={{ backgroundColor: '#1f242d', border: '1px solid #2e3643', borderRadius: '8px', fontSize: '11px' }} 
+                <RechartsTooltip
+                  contentStyle={{ backgroundColor: '#1f242d', border: '1px solid #2e3643', borderRadius: '8px', fontSize: '11px' }}
                   itemStyle={{ color: '#fff' }}
                   formatter={(value, name) => [`${value} laporan`, name]}
                 />
@@ -235,29 +235,29 @@ export default function Analytics() {
 
         {/* Status Laporan */}
         <div className="card p-5">
-           <h3 className="text-[13px] font-bold text-ui-text mb-4">Status Laporan</h3>
-           <div className="flex flex-col gap-3.5">
-             {[
-               {label:"Selesai", val:overview?.selesai || 0, color:"bg-ui-success", text:"text-ui-success"},
-               {label:"Dalam Proses", val:overview?.dalam_proses || 0, color:"bg-ui-info", text:"text-ui-info"},
-               {label:"Menunggu", val:overview?.menunggu || 0, color:"bg-ui-warning", text:"text-ui-warning"},
-               {label:"Eskalasi", val:overview?.eskalasi || 0, color:"bg-ui-danger", text:"text-ui-danger"},
-             ].map(s => {
-               const total = overview?.total_laporan || 1; 
-               const pct = (s.val / total) * 100;
-               return (
-                 <div key={s.label}>
-                   <div className="flex justify-between items-center mb-1.5">
-                     <span className="text-[11px] font-medium text-ui-dim">{s.label}</span>
-                     <span className={`text-[12px] font-bold font-mono ${s.text}`}>{s.val}</span>
-                   </div>
-                   <div className="h-1.5 bg-dark-border rounded-full overflow-hidden">
-                     <div className={`h-full rounded-full ${s.color} ${s.shadow || ''}`} style={{ width: `${pct}%` }}></div>
-                   </div>
-                 </div>
-               );
-             })}
-           </div>
+          <h3 className="text-[13px] font-bold text-ui-text mb-4">Status Laporan</h3>
+          <div className="flex flex-col gap-3.5">
+            {[
+              { label: "Selesai", val: overview?.selesai || 0, color: "bg-ui-success", text: "text-ui-success" },
+              { label: "Dalam Proses", val: overview?.dalam_proses || 0, color: "bg-ui-info", text: "text-ui-info" },
+              { label: "Menunggu", val: overview?.menunggu || 0, color: "bg-ui-warning", text: "text-ui-warning" },
+              { label: "Eskalasi", val: overview?.eskalasi || 0, color: "bg-ui-danger", text: "text-ui-danger" },
+            ].map(s => {
+              const total = overview?.total_laporan || 1;
+              const pct = (s.val / total) * 100;
+              return (
+                <div key={s.label}>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <span className="text-[11px] font-medium text-ui-dim">{s.label}</span>
+                    <span className={`text-[12px] font-bold font-mono ${s.text}`}>{s.val}</span>
+                  </div>
+                  <div className="h-1.5 bg-dark-border rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full ${s.color} ${s.shadow || ''}`} style={{ width: `${pct}%` }}></div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -279,8 +279,8 @@ export default function Analytics() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none flex-col">
-                 <span className="text-2xl font-bold text-ui-success">{advancedStats?.sla?.overall?.percentage || 0}%</span>
-                 <span className="text-[10px] text-ui-muted uppercase tracking-widest mt-0.5">Keseluruhan</span>
+                <span className="text-2xl font-bold text-ui-success">{advancedStats?.sla?.overall?.percentage || 0}%</span>
+                <span className="text-[10px] text-ui-muted uppercase tracking-widest mt-0.5">Keseluruhan</span>
               </div>
             </div>
             <div className="flex gap-4 text-[10px] justify-center items-center">
@@ -305,7 +305,7 @@ export default function Analytics() {
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none flex-col">
-                     <span className="text-[11px] font-bold text-ui-success">{item.percentage}%</span>
+                    <span className="text-[11px] font-bold text-ui-success">{item.percentage}%</span>
                   </div>
                 </div>
               </div>
@@ -322,23 +322,23 @@ export default function Analytics() {
           {/* Overall CSAT */}
           <div className="w-full md:w-1/3 flex flex-col justify-center border-b md:border-b-0 md:border-r border-dark-border pb-4 md:pb-0 md:pr-4">
             <div className="flex flex-col gap-2 mt-3">
-               {[5, 4, 3, 2, 1].map((rating) => {
-                  const item = advancedStats?.csat?.overall?.distribution?.find(d => parseInt(d.rating) === rating);
-                  const count = item ? parseInt(item.count) : 0;
-                  const total = advancedStats?.csat?.overall?.distribution?.reduce((acc, curr) => acc + parseInt(curr.count), 0) || 1;
-                  const pct = (count / total) * 100;
-                  const color = rating >= 4 ? "bg-brand-primary" : rating === 3 ? "bg-ui-warning" : "bg-ui-danger";
-                  
-                  return (
-                    <div key={rating} className="flex items-center gap-3">
-                      <span className="text-[10px] text-ui-dim w-14">{rating} Bintang</span>
-                      <div className="flex-1 h-3.5 bg-dark-bg rounded-md overflow-hidden border border-dark-border/50">
-                        <div className={`h-full ${color} rounded-r-sm`} style={{ width: `${pct}%` }}></div>
-                      </div>
-                      <span className="text-[10px] text-ui-muted font-bold font-mono w-6 text-right">{count}</span>
+              {[5, 4, 3, 2, 1].map((rating) => {
+                const item = advancedStats?.csat?.overall?.distribution?.find(d => parseInt(d.rating) === rating);
+                const count = item ? parseInt(item.count) : 0;
+                const total = advancedStats?.csat?.overall?.distribution?.reduce((acc, curr) => acc + parseInt(curr.count), 0) || 1;
+                const pct = (count / total) * 100;
+                const color = rating >= 4 ? "bg-brand-primary" : rating === 3 ? "bg-ui-warning" : "bg-ui-danger";
+
+                return (
+                  <div key={rating} className="flex items-center gap-3">
+                    <span className="text-[10px] text-ui-dim w-14">{rating} Bintang</span>
+                    <div className="flex-1 h-3.5 bg-dark-bg rounded-md overflow-hidden border border-dark-border/50">
+                      <div className={`h-full ${color} rounded-r-sm`} style={{ width: `${pct}%` }}></div>
                     </div>
-                  );
-               })}
+                    <span className="text-[10px] text-ui-muted font-bold font-mono w-6 text-right">{count}</span>
+                  </div>
+                );
+              })}
             </div>
             <div className="text-[11px] text-center text-ui-muted mt-5">
               Rata-rata rating keseluruhan: <strong className="text-brand-primary text-[15px] block mt-1">{advancedStats?.csat?.overall?.average || 0} / 5.0</strong>
@@ -359,7 +359,7 @@ export default function Analytics() {
                   <div className="flex mt-2 gap-0.5">
                     {[1, 2, 3, 4, 5].map(star => (
                       <svg key={star} className={`w-3 h-3 ${star <= Math.round(item.average) ? 'text-brand-primary' : 'text-dark-border'}`} fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                       </svg>
                     ))}
                   </div>

@@ -41,14 +41,13 @@ class AssignmentController extends Controller
         $forceOverride = $request->boolean('force_override', false);
         $assignments = [];
 
+        // Pre-check semua teknisi untuk mencegah assignment parsial
         foreach ($request->technician_ids as $techId) {
-            // Cek apakah teknisi ada dan aktif
             $technician = Technician::where('user_id', $techId)->firstOrFail();
 
-            // Cek kapasitas (kecuali force override)
             if (!$forceOverride && $technician->workload_status === 'Sibuk') {
                 return response()->json([
-                    'message'        => "Teknisi {$technician->user->name} sudah mencapai kapasitas ({$technician->max_capacity} tugas). Gunakan force_override=true untuk tetap assign.",
+                    'message'        => "Teknisi {$technician->user->name} sudah mencapai kapasitas maksimal. Lakukan Override untuk tetap menugaskan.",
                     'requires_override' => true,
                     'technician_id'  => $techId,
                 ], 422);
@@ -59,6 +58,11 @@ class AssignmentController extends Controller
                     'message' => "Teknisi {$technician->user->name} sedang cuti dan tidak dapat menerima tugas.",
                 ], 422);
             }
+        }
+
+        // Proses assignment jika semua lolos pre-check
+        foreach ($request->technician_ids as $techId) {
+            $technician = Technician::where('user_id', $techId)->firstOrFail();
 
             // Nonaktifkan assignment lama untuk teknisi ini di laporan yang sama (jika ada)
             ReportAssignment::where('report_id', $report->id)
