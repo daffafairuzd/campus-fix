@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, AlertTriangle, Plus, Loader2, X } from 'lucide-react';
+import { Search, AlertTriangle, Plus, Loader2, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Avatar, Badge } from '../components/ui';
 import api from '../api';
 
@@ -8,6 +8,8 @@ export default function Assign() {
   const [search, setSearch] = useState("");
   const [techSearch, setTechSearch] = useState("");
   const [assignedSearch, setAssignedSearch] = useState("");
+  const [assignedPage, setAssignedPage] = useState(1);
+  const [assignedPerPage, setAssignedPerPage] = useState(10);
   const [reportsData, setReportsData] = useState([]);
   const [technicians, setTechnicians] = useState([]);
   const [selectedTechs, setSelectedTechs] = useState({});
@@ -27,7 +29,7 @@ export default function Assign() {
     setIsLoading(true);
     try {
       const [resReports, resTechs, resAssignments] = await Promise.all([
-        api.get('/reports?sort_by=created_at&sort_dir=desc&per_page=100'),
+        api.get('/reports?sort_by=created_at&sort_dir=desc&per_page=1000'),
         api.get('/technicians'),
         api.get('/assignments')
       ]);
@@ -53,6 +55,9 @@ export default function Assign() {
     r.title.toLowerCase().includes(assignedSearch.toLowerCase()) ||
     r.report_number.toLowerCase().includes(assignedSearch.toLowerCase())
   );
+
+  const assignedTotalPages = Math.max(1, Math.ceil(filteredAssigned.length / assignedPerPage));
+  const paginatedAssigned = filteredAssigned.slice((assignedPage - 1) * assignedPerPage, assignedPage * assignedPerPage);
 
   // Cek apakah semua teknisi (aktif) sedang sibuk
   const allBusy = technicians
@@ -357,14 +362,35 @@ export default function Assign() {
       <div className="card p-5 w-full mt-2">
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-5">
           <h2 className="text-[14px] font-bold text-ui-text">Sedang Dikerjakan ({assigned.length})</h2>
-          <div className="relative w-full md:w-64">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-ui-muted" />
-            <input 
-              className="input pl-9 h-8 text-[11px] w-full" 
-              placeholder="Cari ID atau judul..." 
-              value={assignedSearch}
-              onChange={e => setAssignedSearch(e.target.value)}
-            />
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-[12px] text-ui-muted font-semibold">Tampilkan:</span>
+              <select 
+                className="input w-[75px] h-8 text-[12px] px-2 py-0" 
+                style={{ paddingTop: '2px', paddingBottom: '2px' }}
+                value={assignedPerPage} 
+                onChange={e => {
+                  setAssignedPerPage(parseInt(e.target.value));
+                  setAssignedPage(1);
+                }}
+              >
+                {[5, 10, 20, 50].map(val => (
+                  <option key={val} value={val} className="bg-dark-bg">{val}</option>
+                ))}
+              </select>
+            </div>
+            <div className="relative w-full md:w-64">
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-ui-muted" />
+              <input 
+                className="input pl-9 h-8 text-[11px] w-full" 
+                placeholder="Cari ID atau judul..." 
+                value={assignedSearch}
+                onChange={e => {
+                  setAssignedSearch(e.target.value);
+                  setAssignedPage(1);
+                }}
+              />
+            </div>
           </div>
         </div>
         <div className="card overflow-x-auto border border-dark-border/60">
@@ -381,7 +407,7 @@ export default function Assign() {
               </tr>
             </thead>
             <tbody>
-              {filteredAssigned.map(r => (
+              {paginatedAssigned.map(r => (
                 <tr key={r.id} className="border-b border-dark-border/40 last:border-0 hover:bg-dark-hover transition-colors">
                   <td className="py-4 px-4 font-mono text-[11px] font-bold text-brand-primary">{r.report_number}</td>
                   <td className="py-4 px-4">
@@ -433,6 +459,64 @@ export default function Assign() {
             </div>
           )}
         </div>
+
+        {/* Pagination Controls */}
+        {assignedTotalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 px-2">
+            <div className="text-[12px] text-ui-muted">
+              Menampilkan halaman <span className="font-bold text-ui-text">{assignedPage}</span> dari <span className="font-bold text-ui-text">{assignedTotalPages}</span> 
+              <span className="ml-2">({filteredAssigned.length} total laporan)</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button 
+                className={`p-1.5 rounded-md border ${assignedPage === 1 ? 'border-transparent text-ui-muted opacity-50 cursor-not-allowed' : 'border-dark-border text-ui-text hover:bg-dark-hover'}`}
+                onClick={() => setAssignedPage(prev => Math.max(1, prev - 1))}
+                disabled={assignedPage === 1}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              
+              <div className="flex gap-1">
+                {[...Array(assignedTotalPages)].map((_, i) => {
+                  const pageNum = i + 1;
+                  if (
+                    pageNum === 1 || 
+                    pageNum === assignedTotalPages || 
+                    (pageNum >= assignedPage - 1 && pageNum <= assignedPage + 1)
+                  ) {
+                    return (
+                      <button
+                        key={pageNum}
+                        className={`w-7 h-7 flex items-center justify-center rounded-md text-[11px] font-bold transition-colors ${
+                          pageNum === assignedPage 
+                            ? 'bg-brand-primary text-white border-none' 
+                            : 'border border-dark-border text-ui-text hover:bg-dark-hover'
+                        }`}
+                        onClick={() => setAssignedPage(pageNum)}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  } else if (
+                    pageNum === assignedPage - 2 ||
+                    pageNum === assignedPage + 2
+                  ) {
+                    return <span key={pageNum} className="text-ui-muted px-1">...</span>;
+                  }
+                  return null;
+                })}
+              </div>
+
+              <button 
+                className={`p-1.5 rounded-md border ${assignedPage === assignedTotalPages ? 'border-transparent text-ui-muted opacity-50 cursor-not-allowed' : 'border-dark-border text-ui-text hover:bg-dark-hover'}`}
+                onClick={() => setAssignedPage(prev => Math.min(assignedTotalPages, prev + 1))}
+                disabled={assignedPage === assignedTotalPages}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
