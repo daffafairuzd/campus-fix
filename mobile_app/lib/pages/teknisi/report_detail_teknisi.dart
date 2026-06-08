@@ -6,10 +6,11 @@ import '../../models/report_model.dart';
 import '../../models/user_model.dart';
 import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../widgets/photo_gallery.dart';
 import '../../widgets/status_badge.dart';
 import '../../widgets/status_stepper.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 class ReportDetailTeknisi extends StatefulWidget {
   final FacilityReport report;
@@ -55,6 +56,8 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
   ReportStatus? get _nextStatus {
     switch (_report.status) {
       case ReportStatus.menunggu:
+        return ReportStatus.ditugaskan;
+      case ReportStatus.ditugaskan:
         return ReportStatus.assessment;
       case ReportStatus.assessment:
         return ReportStatus.dalamProses;
@@ -68,6 +71,9 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
   String get _actionLabel {
     switch (_report.status) {
       case ReportStatus.menunggu:
+        return 'Mulai Kerjakan';
+      case ReportStatus.ditugaskan:
+        return 'Lakukan Assessment';
       case ReportStatus.assessment:
         return 'Mulai Kerjakan';
       case ReportStatus.dalamProses:
@@ -80,6 +86,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
   IconData get _actionIcon {
     switch (_report.status) {
       case ReportStatus.menunggu:
+      case ReportStatus.ditugaskan:
       case ReportStatus.assessment:
         return Icons.play_circle_outline_rounded;
       case ReportStatus.dalamProses:
@@ -121,6 +128,23 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
 
   Future<void> _saveUpdate() async {
     if (_nextStatus == null) return;
+
+    // Transition: ditugaskan -> assessment (simple update status)
+    if (_nextStatus == ReportStatus.assessment) {
+      setState(() => _isSaving = true);
+      try {
+        await api.updateStatus(_report.id, _nextStatus!);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mulai melakukan assessment!')));
+          _refreshReport();
+        }
+      } catch (e) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: AppColors.danger));
+      } finally {
+        if (mounted) setState(() => _isSaving = false);
+      }
+      return;
+    }
 
     // Transition: assessment -> dalamProses (require description, NO foto)
     if (_nextStatus == ReportStatus.dalamProses) {
@@ -179,7 +203,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
         await api.updateStatus(_report.id, _nextStatus!, description: noteController.text.trim());
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Berhasil memulai pekerjaan!')));
-          Navigator.pop(context);
+          _refreshReport();
         }
       } catch (e) {
         if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: AppColors.danger));
@@ -283,7 +307,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
       await api.requestEscalation(_report.id, noteController.text.trim());
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pengajuan eskalasi berhasil dikirim!')));
-        Navigator.pop(context);
+        _refreshReport();
       }
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: AppColors.danger));
@@ -306,9 +330,14 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
+      body: RefreshIndicator(
+        onRefresh: _refreshReport,
+        color: AppColors.primary,
+        backgroundColor: isDark ? AppColors.hoverDark : Colors.white,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
             // Photo
             if (report.reportPhotos.isNotEmpty)
               Padding(
@@ -383,7 +412,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
                   // Status Tracker
                   _SLabel('Status Laporan'),
                   const SizedBox(height: 12),
-                  StatusStepper(currentStatus: report.status),
+                  StatusStepper(currentStatus: report.status, report: report),
                   _Divider(),
                   const SizedBox(height: 16),
 
@@ -532,7 +561,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
                           ],
                         ),
                       ),
-                    ] else if (_nextStatus != null && _report.status != ReportStatus.menunggu && _report.status != ReportStatus.eskalasi) ...[
+                    ] else if (_report.status == ReportStatus.assessment || _report.status == ReportStatus.dalamProses) ...[
                       OutlinedButton.icon(
                         onPressed: _requestEscalation,
                         icon: const Icon(Icons.report_problem_outlined, size: 18),
@@ -587,6 +616,7 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
           ],
         ),
       ),
+      ),
     );
   }
 }
@@ -614,28 +644,47 @@ class _InfoGrid extends StatelessWidget {
           const Divider(height: 14),
           _InfoRow(Icons.location_on_outlined, 'Lokasi', report.location),
           if (report.latitude != null && report.longitude != null) ...[
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const SizedBox(width: 110),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () async {
-                      final url = Uri.parse('https://www.google.com/maps/search/?api=1&query=${report.latitude},${report.longitude}');
-                      if (await canLaunchUrl(url)) {
-                        await launchUrl(url, mode: LaunchMode.externalApplication);
-                      }
-                    },
-                    icon: const Icon(Icons.map_outlined, size: 16),
-                    label: Text('Buka di Maps', style: GoogleFonts.spaceGrotesk(fontSize: 12)),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                  ),
+            const SizedBox(height: 12),
+            Container(
+              height: 180,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: isDark ? AppColors.borderDark : AppColors.borderLight,
                 ),
-              ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: FlutterMap(
+                  options: MapOptions(
+                    initialCenter: LatLng(report.latitude!, report.longitude!),
+                    initialZoom: 16.0,
+                    minZoom: 10.0,
+                    maxZoom: 18.0,
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.example.mobile_app',
+                    ),
+                    MarkerLayer(
+                      markers: [
+                        Marker(
+                          point: LatLng(report.latitude!, report.longitude!),
+                          width: 40,
+                          height: 40,
+                          child: const Icon(
+                            Icons.location_on_rounded,
+                            color: AppColors.primary,
+                            size: 32,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
           const Divider(height: 14),

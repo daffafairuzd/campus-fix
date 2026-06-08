@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bell, Sun, Moon, X } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { getEcho } from '../../echo';
 import api from '../../api';
 
 export default function Header() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [showNotif, setShowNotif] = useState(false);
 
   const [notifications, setNotifications] = useState([]);
@@ -51,7 +52,7 @@ export default function Header() {
         const newNotif = {
           id: "temp_" + Date.now(), // dummy id
           title: "Status Laporan Diperbarui",
-          report: { report_number: e.report_number },
+          report: { id: e.report_id, report_number: e.report_number },
           message: `Laporan ${e.title} sekarang berstatus: ${e.status.replace('_', ' ').toUpperCase()}`,
           created_at: new Date().toISOString(),
           is_read: false
@@ -65,7 +66,7 @@ export default function Header() {
         const newNotif = {
           id: "temp_sla_" + Date.now(),
           title: "SLA Laporan Terlewati",
-          report: { report_number: e.report_number },
+          report: { id: e.report_id, report_number: e.report_number },
           message: `⚠️ Laporan ${e.title} telah melewati batas waktu SLA!`,
           created_at: new Date().toISOString(),
           is_read: false
@@ -79,7 +80,7 @@ export default function Header() {
         const newNotif = {
           id: "temp_new_" + Date.now(),
           title: "Laporan Baru Masuk",
-          report: { report_number: e.report_number },
+          report: { id: e.report_id, report_number: e.report_number },
           message: `Terdapat laporan baru: ${e.title} dari ${e.reporter_name}`,
           created_at: new Date().toISOString(),
           is_read: false
@@ -111,6 +112,7 @@ export default function Header() {
   };
 
   const handleNotificationClick = async (notif) => {
+    // 1. Mark as read
     if (!notif.is_read && !String(notif.id).startsWith('temp_')) {
       try {
         await api.patch(`/notifications/${notif.id}/read`);
@@ -123,6 +125,21 @@ export default function Header() {
       // If it's a temporary socket notification, just clear it locally
       setUnreadCount(prev => Math.max(0, prev - 1));
       setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n));
+    }
+
+    // 2. Redirect to detail page
+    if (notif.report && notif.report.id) {
+      setShowNotif(false); // Close dropdown
+      const targetUrl = `/reports?report_id=${notif.report.id}`;
+      const currentUrl = location.pathname + location.search;
+
+      // Jika URL saat ini sama dengan target, paksa reload dengan navigate ke list dulu
+      if (currentUrl === targetUrl) {
+        navigate('/reports', { replace: true });
+        setTimeout(() => navigate(targetUrl), 0);
+      } else {
+        navigate(targetUrl);
+      }
     }
   };
 

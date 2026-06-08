@@ -13,6 +13,7 @@ export default function Reports() {
   const [reportsData, setReportsData] = useState([]);
   const [isLoading, setIsLoading]     = useState(true);
   const [selected, setSelected]       = useState(null);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
 
   const [filters, setFilters] = useState({
     search: '',
@@ -21,6 +22,8 @@ export default function Reports() {
     category: 'Semua',
     page: 1,
     per_page: 10,
+    sort_by: 'created_at',
+    sort_dir: 'desc',
   });
 
   const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
@@ -35,6 +38,9 @@ export default function Reports() {
       if (filters.status && filters.status !== 'Semua') params.append('status', filters.status.toLowerCase().replace(' ', '_'));
       if (filters.priority && filters.priority !== 'Semua') params.append('priority', filters.priority.toLowerCase());
       if (filters.category && filters.category !== 'Semua') params.append('category', filters.category);
+      // Server-side sorting — berlaku lintas semua halaman
+      if (filters.sort_by) params.append('sort_by', filters.sort_by);
+      if (filters.sort_dir) params.append('sort_dir', filters.sort_dir);
 
       const res = await api.get(`/reports?${params.toString()}`);
       setReportsData(res.data.data || []);
@@ -53,23 +59,23 @@ export default function Reports() {
     const handleUrlState = async () => {
       if (reportIdParam) {
         const id = parseInt(reportIdParam);
-        const found = reportsData.find(r => r.id === id);
-        if (found) {
-          setSelected(found);
-        } else if (!isLoading) {
-          try {
-            const res = await api.get(`/reports/${id}`);
-            setSelected(res.data);
-          } catch {
-            setSearchParams({});
-          }
+        // Selalu fetch detail dari API untuk memastikan data fresh
+        // (tidak hanya mengandalkan cache reportsData)
+        setIsDetailLoading(true);
+        try {
+          const res = await api.get(`/reports/${id}`);
+          setSelected(res.data);
+        } catch {
+          setSearchParams({});
+        } finally {
+          setIsDetailLoading(false);
         }
       } else {
         setSelected(null);
       }
     };
     handleUrlState();
-  }, [reportIdParam, reportsData, isLoading, setSearchParams]);
+  }, [reportIdParam, setSearchParams]);
 
   const viewMode = actionParam === 'add' ? 'add' : (actionParam === 'edit' ? 'edit' : (reportIdParam ? 'detail' : 'list'));
 
@@ -108,7 +114,9 @@ export default function Reports() {
         />
       )}
       {viewMode === 'detail' && (
-        selected ? (
+        (isDetailLoading || !selected) ? (
+          <div className="text-center py-10 text-ui-muted text-sm">Memuat detail laporan...</div>
+        ) : (
           <ReportDetail
             report={selected}
             onBack={goList}
@@ -116,8 +124,6 @@ export default function Reports() {
             onDeleted={handleDeleted}
             onStatusUpdated={handleStatusUpdated}
           />
-        ) : (
-          <div className="text-center py-10 text-ui-muted text-sm">Memuat detail laporan...</div>
         )
       )}
       {(viewMode === 'add' || viewMode === 'edit') && (

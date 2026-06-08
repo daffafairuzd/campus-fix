@@ -123,7 +123,7 @@ class _FilterBar extends StatelessWidget {
           ...ReportStatus.values.map((s) => Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: _FilterChip(
-                  label: statusLabel(s).split(' ').first,
+                  label: statusLabel(s),
                   selected: selected == s,
                   onTap: () => onChanged(s),
                   status: s,

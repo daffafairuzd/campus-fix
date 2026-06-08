@@ -22,6 +22,7 @@ export const Badge = ({ label, status, priority, role }) => {
   if (status) {
     colorClass = {
       "Menunggu":    "bg-ui-warning/15  text-ui-warning  border-ui-warning/30",
+      "Ditugaskan":  "bg-blue-500/15    text-blue-500    border-blue-500/30",
       "Assessment":  "bg-purple-500/15  text-purple-400  border-purple-500/30",
       "Dalam Proses":"bg-ui-info/15     text-ui-info     border-ui-info/30",
       "Selesai":     "bg-ui-success/15  text-ui-success  border-ui-success/30",
@@ -55,9 +56,10 @@ export const Badge = ({ label, status, priority, role }) => {
   }
 
   // dot hanya untuk status laporan (bukan role/priority)
-  const showDot = !!status && ["Menunggu","Assessment","Dalam Proses","Selesai","Eskalasi"].includes(fStatus);
+  const showDot = !!status && ["Menunggu","Ditugaskan","Assessment","Dalam Proses","Selesai","Eskalasi"].includes(fStatus);
   const dotColor = {
     "Menunggu":    "bg-ui-warning",
+    "Ditugaskan":  "bg-blue-500",
     "Assessment":  "bg-purple-500",
     "Dalam Proses":"bg-ui-info",
     "Selesai":     "bg-ui-success",

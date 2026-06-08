@@ -17,7 +17,7 @@ class ReportController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Report::with(['reporter', 'activeTechnicians', 'histories', 'photos'])
+        $query = Report::with(['reporter', 'activeTechnicians', 'assignments.technician', 'histories', 'photos'])
             // Filter berdasarkan role
             ->when($request->user()->isReporter(), function($q) use ($request) {
                 return $q->where('reporter_id', $request->user()->id);
@@ -44,7 +44,8 @@ class ReportController extends Controller
         if ($sortBy === 'priority') {
             $query->orderByRaw("CASE priority WHEN 'kritis' THEN 4 WHEN 'tinggi' THEN 3 WHEN 'sedang' THEN 2 ELSE 1 END DESC");
         } elseif ($sortBy === 'sla_deadline') {
-            $query->orderBy('sla_deadline', 'asc');
+            // NULLS LAST: laporan tanpa SLA (belum ditentukan prioritas) tampil di paling bawah
+            $query->orderByRaw('sla_deadline ASC NULLS LAST');
         } else {
             $query->orderBy('created_at', $sortDir);
         }
@@ -56,7 +57,7 @@ class ReportController extends Controller
     public function show(Report $report)
     {
         return response()->json(
-            $report->load(['reporter', 'activeTechnicians', 'histories.user', 'slaConfig', 'photos'])
+            $report->load(['reporter', 'activeTechnicians', 'assignments.technician', 'histories.user', 'slaConfig', 'photos'])
         );
     }
 
@@ -121,7 +122,7 @@ class ReportController extends Controller
         ]);
 
         $report->update($validated);
-        return response()->json($report->fresh()->load(['reporter', 'activeTechnicians']));
+        return response()->json($report->fresh()->load(['reporter', 'activeTechnicians', 'assignments.technician']));
     }
 
     // ── Photo endpoints ──────────────────────────────────────────────────────
@@ -196,12 +197,28 @@ class ReportController extends Controller
     public function updateStatus(Request $request, Report $report)
     {
         $request->validate([
-            'status'      => 'required|in:menunggu,assessment,dalam_proses,selesai,eskalasi',
+            'status'      => 'required|in:menunggu,ditugaskan,assessment,dalam_proses,selesai,eskalasi',
             'description' => 'nullable|string',
         ]);
 
         $oldStatus = $report->status;
         $newStatus = $request->status;
+
+        // Validasi Alur Transisi Status Baru
+        $allowedTransitions = [
+            'menunggu' => ['ditugaskan'],
+            'ditugaskan' => ['assessment'],
+            'assessment' => ['dalam_proses', 'eskalasi'],
+            'dalam_proses' => ['selesai', 'eskalasi'],
+            'eskalasi' => ['dalam_proses'], // Aturan Ketat 1: Wajib kembali ke dalam_proses
+            'selesai' => [] // Selesai adalah status akhir
+        ];
+
+        if (!isset($allowedTransitions[$oldStatus]) || !in_array($newStatus, $allowedTransitions[$oldStatus])) {
+            return response()->json([
+                'message' => "Transisi status dari " . ucfirst(str_replace('_', ' ', $oldStatus)) . " ke " . ucfirst(str_replace('_', ' ', $newStatus)) . " tidak diperbolehkan."
+            ], 422);
+        }
 
         if ($oldStatus === 'assessment' && $newStatus === 'dalam_proses') {
             if (empty($request->description)) {
@@ -213,8 +230,17 @@ class ReportController extends Controller
 
         $updateData = ['status' => $newStatus];
 
-        if ($newStatus === 'selesai')   $updateData['closed_at']    = now();
-        
+        if ($newStatus === 'selesai') {
+            // Aturan Ketat 2: Transisi dari dalam_proses ke selesai wajib menyertakan validasi pelampiran bukti foto
+            $hasPhotoProof = $report->photos()->where('type', 'bukti_penyelesaian')->exists();
+            if (!$hasPhotoProof) {
+                return response()->json([
+                    'message' => 'Anda wajib mengunggah foto bukti penyelesaian terlebih dahulu sebelum menyelesaikan laporan.'
+                ], 422);
+            }
+            $updateData['closed_at'] = now();
+        }
+
         if ($newStatus === 'eskalasi') {
             $updateData['escalated_at'] = now();
             $updateData['is_escalation_requested'] = false;
@@ -252,7 +278,7 @@ class ReportController extends Controller
             'message'   => "Laporan #{$report->report_number} kini berstatus: {$newStatus}.",
         ]);
 
-        return response()->json($report->fresh()->load(['reporter', 'activeTechnicians', 'histories.user']));
+        return response()->json($report->fresh()->load(['reporter', 'activeTechnicians', 'assignments.technician', 'histories.user']));
     }
 
     /**
@@ -305,7 +331,7 @@ class ReportController extends Controller
             'description' => "Admin menentukan tingkat prioritas: " . ucfirst($request->priority),
         ]);
 
-        return response()->json(['message' => 'Prioritas berhasil diverifikasi.', 'report' => $report->fresh()->load(['reporter', 'activeTechnicians', 'histories.user'])]);
+        return response()->json(['message' => 'Prioritas berhasil diverifikasi.', 'report' => $report->fresh()->load(['reporter', 'activeTechnicians', 'assignments.technician', 'histories.user'])]);
     }
 
     /**
@@ -341,7 +367,7 @@ class ReportController extends Controller
             ]);
         }
 
-        return response()->json(['message' => 'Pengajuan eskalasi berhasil dikirim.', 'report' => $report->fresh()->load(['reporter', 'activeTechnicians', 'histories.user'])]);
+        return response()->json(['message' => 'Pengajuan eskalasi berhasil dikirim.', 'report' => $report->fresh()->load(['reporter', 'activeTechnicians', 'assignments.technician', 'histories.user'])]);
     }
 
     /**
@@ -361,6 +387,6 @@ class ReportController extends Controller
             'description' => 'Admin menolak pengajuan eskalasi. Silakan lanjutkan pengerjaan.',
         ]);
 
-        return response()->json(['message' => 'Pengajuan eskalasi ditolak.', 'report' => $report->fresh()->load(['reporter', 'activeTechnicians', 'histories.user'])]);
+        return response()->json(['message' => 'Pengajuan eskalasi ditolak.', 'report' => $report->fresh()->load(['reporter', 'activeTechnicians', 'assignments.technician', 'histories.user'])]);
     }
 }

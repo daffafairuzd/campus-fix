@@ -2,7 +2,6 @@ import React from 'react';
 import { Search, Plus, Loader2, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Badge } from '../../components/ui';
 
-const PRIORITY_WEIGHT = { kritis: 4, tinggi: 3, sedang: 2, rendah: 1, Kritis: 4, Tinggi: 3, Sedang: 2, Rendah: 1 };
 
 const STATUS_OPTIONS = [
   { value: 'Semua', label: 'Semua Status' },
@@ -32,15 +31,23 @@ const CATEGORY_OPTIONS = [
 ];
 
 const SORT_OPTIONS = [
-  { value: 'Waktu Terbaru', label: 'Waktu Terbaru' },
-  { value: 'Waktu Terlama', label: 'Waktu Terlama' },
-  { value: 'Deadline Mendekat', label: 'Deadline Mendekat' },
-  { value: 'Prioritas Tertinggi', label: 'Prioritas Tertinggi' },
+  { value: 'created_at|desc', label: 'Waktu Terbaru' },
+  { value: 'created_at|asc',  label: 'Waktu Terlama' },
+  { value: 'sla_deadline|asc', label: 'Deadline Mendekat' },
+  { value: 'priority|desc',   label: 'Prioritas Tertinggi' },
 ];
 
 export default function ReportList({ reportsData, isLoading, onAdd, onDetail, filters, setFilters, pagination }) {
-  const [sortBy, setSortBy] = React.useState('Waktu Terbaru');
   const [searchInput, setSearchInput] = React.useState(filters.search || '');
+
+  // Derive current sort value from filters untuk select dropdown
+  const currentSort = `${filters.sort_by || 'created_at'}|${filters.sort_dir || 'desc'}`;
+
+  // Handle sort change — kirim ke server via setFilters
+  const handleSortChange = (value) => {
+    const [sort_by, sort_dir] = value.split('|');
+    setFilters(prev => ({ ...prev, sort_by, sort_dir, page: 1 }));
+  };
 
   // Handle debounce for search manually or just on Enter
   const handleSearchChange = (e) => {
@@ -57,15 +64,8 @@ export default function ReportList({ reportsData, isLoading, onAdd, onDetail, fi
     setFilters(prev => ({ ...prev, search: searchInput, page: 1 }));
   };
 
-  // Client-side sort applied to the current page
-  const sorted = [...reportsData]
-    .sort((a, b) => {
-      if (sortBy === 'Waktu Terbaru') return new Date(b.created_at) - new Date(a.created_at);
-      if (sortBy === 'Waktu Terlama') return new Date(a.created_at) - new Date(b.created_at);
-      if (sortBy === 'Deadline Mendekat') return new Date(a.sla_deadline) - new Date(b.sla_deadline);
-      if (sortBy === 'Prioritas Tertinggi') return (PRIORITY_WEIGHT[b.priority] || 0) - (PRIORITY_WEIGHT[a.priority] || 0);
-      return 0;
-    });
+  // Data sudah diurutkan oleh server — tidak perlu client-side sort
+  const sorted = reportsData;
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= pagination.last_page) {
@@ -123,7 +123,7 @@ export default function ReportList({ reportsData, isLoading, onAdd, onDetail, fi
         </select>
 
         {/* Urutkan */}
-        <select className="input w-[180px]" value={sortBy} onChange={e => setSortBy(e.target.value)}>
+        <select className="input w-[180px]" value={currentSort} onChange={e => handleSortChange(e.target.value)}>
           {SORT_OPTIONS.map(({ value, label }) => (
             <option key={value} value={value} className="bg-dark-bg">{label}</option>
           ))}
@@ -158,10 +158,11 @@ export default function ReportList({ reportsData, isLoading, onAdd, onDetail, fi
             {isLoading ? (
               <tr><td colSpan="9" className="text-center py-10"><Loader2 className="w-6 h-6 animate-spin mx-auto text-brand-primary" /></td></tr>
             ) : sorted.map(r => {
-              const slaDate = new Date(r.sla_deadline);
+              const hasSla = r.sla_deadline != null && r.sla_deadline !== '';
+              const slaDate = hasSla ? new Date(r.sla_deadline) : null;
               const now = new Date();
-              const slaExpired = slaDate < now && r.status !== 'selesai';
-              const slaNear = !slaExpired && (slaDate - now) < 86400000 * 2 && r.status !== 'selesai';
+              const slaExpired = hasSla && slaDate < now && r.status !== 'selesai';
+              const slaNear = hasSla && !slaExpired && (slaDate - now) < 86400000 * 2 && r.status !== 'selesai';
               const activeTechs = (r.active_technicians || []).map(t => t.name).join(', ');
               return (
                 <tr key={r.id} className="border-b border-dark-border/40 last:border-0 hover:bg-dark-hover transition-colors">
@@ -186,9 +187,18 @@ export default function ReportList({ reportsData, isLoading, onAdd, onDetail, fi
                   </td>
                   <td className="py-4 px-4 text-[12px] text-ui-dim font-medium">{r.reporter?.name || 'Pelapor'}</td>
                   <td className="py-4 px-4">
-                    <div className={`text-[11px] font-mono font-medium ${slaExpired ? 'text-ui-danger font-bold' : slaNear ? 'text-ui-warning' : 'text-ui-muted'}`}>
-                      {slaExpired ? '⚠ ' : slaNear ? '⏰ ' : ''}{slaDate.toLocaleDateString('id-ID')}
-                    </div>
+                    {!hasSla ? (
+                      <span
+                        className="inline-flex items-center gap-1 text-[10px] text-ui-muted italic"
+                        title="SLA akan ditentukan setelah prioritas diverifikasi oleh admin"
+                      >
+                        — Belum ada
+                      </span>
+                    ) : (
+                      <div className={`text-[11px] font-mono font-medium ${slaExpired ? 'text-ui-danger font-bold' : slaNear ? 'text-ui-warning' : 'text-ui-muted'}`}>
+                        {slaExpired ? '⚠ ' : slaNear ? '⏰ ' : ''}{slaDate.toLocaleDateString('id-ID')}
+                      </div>
+                    )}
                   </td>
                   <td className="py-4 px-4 text-[12px] text-ui-dim font-medium">
                     {activeTechs || <span className="text-ui-warning italic text-[11px]">Belum assign</span>}

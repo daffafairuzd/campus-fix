@@ -50,6 +50,8 @@ class StatusBadge extends StatelessWidget {
     switch (s) {
       case ReportStatus.menunggu:
         return ('Menunggu', AppColors.statusSubmitted, Icons.hourglass_top_rounded);
+      case ReportStatus.ditugaskan:
+        return ('Ditugaskan', AppColors.statusAssigned, Icons.assignment_ind_rounded);
       case ReportStatus.assessment:
         return ('Assessment', AppColors.statusInProgress, Icons.assignment_outlined);
       case ReportStatus.dalamProses:

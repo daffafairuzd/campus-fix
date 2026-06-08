@@ -34,13 +34,20 @@ export default function Sidebar() {
     { id: '/users', label: 'Manajemen User', icon: Users },
   ];
 
-  const handleLogout = () => {
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const handleConfirmLogout = () => {
     localStorage.removeItem('isAuthenticated');
     navigate('/login');
   };
 
   return (
-    <aside className="fixed left-0 top-0 w-[240px] h-screen bg-dark-card border-r border-dark-border flex flex-col z-[100]">
+    <>
+      <aside className="fixed left-0 top-0 w-[240px] h-screen bg-dark-card border-r border-dark-border flex flex-col z-[100]">
       {/* Logo */}
       <div className="px-[18px] py-[20px] pb-[16px] border-b border-dark-border">
         <div className="flex items-center gap-2.5">
@@ -86,12 +93,53 @@ export default function Sidebar() {
           <button
             className="p-1.5 text-ui-muted hover:text-brand-primary transition-colors bg-transparent border-none outline-none cursor-pointer"
             title="Logout"
-            onClick={handleLogout}
+            onClick={handleLogoutClick}
           >
             <LogOut className="w-4 h-4" />
           </button>
         </div>
       </div>
-    </aside>
+      </aside>
+
+      {/* Modern & Premium Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div 
+          className="fixed inset-0 bg-zinc-950/45 backdrop-blur-sm z-[1000] flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setShowLogoutConfirm(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-2xl border border-zinc-100 max-w-sm w-full p-6 text-center animate-scale-in relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-600 mb-4 mx-auto border border-red-100 shadow-sm">
+              <LogOut className="w-5 h-5 ml-0.5" />
+            </div>
+            
+            <h3 className="font-display font-bold text-lg text-brand-secondary leading-snug mb-2">
+              Konfirmasi Keluar
+            </h3>
+            
+            <p className="text-sm text-ui-muted mb-6">
+              Apakah Anda yakin ingin keluar? Anda harus masuk kembali untuk mengelola sistem.
+            </p>
+            
+            <div className="flex gap-3">
+              <button
+                className="btn btn-ghost flex-1 py-2.5 text-xs font-semibold justify-center hover:bg-zinc-50"
+                onClick={() => setShowLogoutConfirm(false)}
+              >
+                Batal
+              </button>
+              <button
+                className="btn btn-primary flex-1 py-2.5 text-xs font-semibold justify-center bg-brand-primary text-white hover:bg-brand-dim"
+                onClick={handleConfirmLogout}
+              >
+                Ya, Keluar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

@@ -176,7 +176,7 @@ class _ReportDetailPelaporState extends State<ReportDetailPelapor> {
                   // Status Tracker
                   _SectionTitle('Tracking Status'),
                   const SizedBox(height: 16),
-                  StatusStepper(currentStatus: report.status),
+                  StatusStepper(currentStatus: report.status, report: report),
 
                   if (report.completionPhotos.isNotEmpty) ...[
                     const SizedBox(height: 24),

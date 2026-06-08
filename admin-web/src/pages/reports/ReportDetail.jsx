@@ -23,8 +23,13 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
     (report.priority && report.priority !== 'belum_ditentukan') ? report.priority : 'sedang'
   );
   const [isVerifying, setIsVerifying] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState(null);
 
   const navigate = useNavigate();
+
+  const showConfirm = ({ title, message, onConfirm, type = 'warning', icon }) => {
+    setConfirmDialog({ title, message, onConfirm, type, icon });
+  };
 
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
@@ -89,7 +94,7 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
   };
 
   const handleUpdateStatus = async () => {
-    const FLOW = { menunggu: 'assessment', assessment: 'dalam_proses', dalam_proses: 'selesai', selesai: 'menunggu', eskalasi: 'dalam_proses' };
+    const FLOW = { menunggu: 'ditugaskan', ditugaskan: 'assessment', assessment: 'dalam_proses', dalam_proses: 'selesai', selesai: 'menunggu', eskalasi: 'dalam_proses' };
     const next = FLOW[currentReport.status] || 'menunggu';
 
     let desc = `Status diupdate ke ${next}`;
@@ -107,30 +112,72 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
   };
 
   const handleApproveEscalation = async () => {
-    if (!window.confirm('Setujui pengajuan eskalasi ini?')) return;
-    try {
-      const res = await api.post(`/reports/${currentReport.id}/status`, { status: 'eskalasi', description: 'Admin menyetujui pengajuan eskalasi.' });
-      setCurrentReport(res.data);
-      if (onStatusUpdated) onStatusUpdated(res.data);
-    } catch (err) { alert('Gagal update status: ' + (err.response?.data?.message || err.message)); }
+    showConfirm({
+      title: 'Setujui Eskalasi',
+      message: 'Apakah Anda yakin ingin menyetujui pengajuan eskalasi ini?',
+      type: 'success',
+      icon: CheckCircle,
+      onConfirm: async () => {
+        try {
+          const res = await api.post(`/reports/${currentReport.id}/status`, { status: 'eskalasi', description: 'Admin menyetujui pengajuan eskalasi.' });
+          setCurrentReport(res.data);
+          if (onStatusUpdated) onStatusUpdated(res.data);
+        } catch (err) { alert('Gagal update status: ' + (err.response?.data?.message || err.message)); }
+      }
+    });
   };
 
   const handleRejectEscalation = async () => {
-    if (!window.confirm('Tolak pengajuan eskalasi ini? Teknisi akan diminta melanjutkan pekerjaan.')) return;
-    try {
-      const res = await api.post(`/reports/${currentReport.id}/reject-escalation`);
-      setCurrentReport(res.data.report);
-      if (onStatusUpdated) onStatusUpdated(res.data.report);
-    } catch (err) { alert('Gagal tolak eskalasi: ' + (err.response?.data?.message || err.message)); }
+    showConfirm({
+      title: 'Tolak Eskalasi',
+      message: 'Apakah Anda yakin ingin menolak pengajuan eskalasi ini? Teknisi akan diminta melanjutkan pekerjaan.',
+      type: 'danger',
+      icon: AlertTriangle,
+      onConfirm: async () => {
+        try {
+          const res = await api.post(`/reports/${currentReport.id}/reject-escalation`);
+          setCurrentReport(res.data.report);
+          if (onStatusUpdated) onStatusUpdated(res.data.report);
+        } catch (err) { alert('Gagal tolak eskalasi: ' + (err.response?.data?.message || err.message)); }
+      }
+    });
+  };
+
+  const handleResolveEscalation = async () => {
+    showConfirm({
+      title: 'Selesaikan Eskalasi',
+      message: 'Konfirmasi selesai eskalasi dan kembalikan laporan ke status Dalam Proses?',
+      type: 'success',
+      icon: CheckCircle,
+      onConfirm: async () => {
+        try {
+          const res = await api.post(`/reports/${currentReport.id}/status`, {
+            status: 'dalam_proses',
+            description: 'Admin menyelesaikan eskalasi, laporan dikembalikan ke status Dalam Proses.'
+          });
+          setCurrentReport(res.data);
+          if (onStatusUpdated) onStatusUpdated(res.data);
+        } catch (err) {
+          alert('Gagal menyelesaikan eskalasi: ' + (err.response?.data?.message || err.message));
+        }
+      }
+    });
   };
 
   const handleDelete = async () => {
-    if (!window.confirm(`Yakin hapus laporan ${currentReport.report_number}?`)) return;
-    try { await api.delete(`/reports/${currentReport.id}`); onDeleted(); }
-    catch (err) { alert('Gagal hapus: ' + (err.response?.data?.message || err.message)); }
+    showConfirm({
+      title: 'Hapus Laporan',
+      message: `Apakah Anda yakin ingin menghapus laporan ${currentReport.report_number}? Tindakan ini tidak dapat dibatalkan.`,
+      type: 'danger',
+      icon: Trash2,
+      onConfirm: async () => {
+        try { await api.delete(`/reports/${currentReport.id}`); onDeleted(); }
+        catch (err) { alert('Gagal hapus: ' + (err.response?.data?.message || err.message)); }
+      }
+    });
   };
 
-  const NEXT_LABEL = { menunggu: 'Assessment', assessment: 'Dalam Proses', dalam_proses: 'Selesai', selesai: 'Menunggu', eskalasi: 'Dalam Proses' };
+  const NEXT_LABEL = { menunggu: 'Tugaskan Teknisi', ditugaskan: 'Mulai Assessment', assessment: 'Mulai Pengerjaan', dalam_proses: 'Selesaikan Laporan', selesai: 'Menunggu', eskalasi: 'Dalam Proses' };
 
   const handleVerifyPriority = async () => {
     setIsVerifying(true);
@@ -220,6 +267,25 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
         </div>
       )}
 
+      {/* Active Escalation Banner */}
+      {currentReport.status === 'eskalasi' && (
+        <div className="bg-ui-warning/10 border border-ui-warning/30 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div>
+            <div className="text-ui-warning font-bold text-[14px] flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" /> Laporan Sedang dalam Eskalasi Vendor
+            </div>
+            <div className="text-[13px] text-ui-text mt-1">
+              Pekerjaan ini sedang dieskalasikan ke pihak ketiga/vendor. Klik tombol konfirmasi di bawah jika eskalasi telah selesai untuk mengembalikan status laporan menjadi pengerjaan oleh teknisi.
+            </div>
+          </div>
+          <div className="flex-shrink-0">
+            <button className="btn bg-ui-success text-white hover:bg-ui-success/90 px-4 py-2 text-[13px]" onClick={handleResolveEscalation}>
+              Konfirmasi Selesai Eskalasi
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Tabs */}
       <div className="flex gap-6 border-b border-dark-border">
         {['Detail', 'Foto Bukti', 'Riwayat'].map(tab => (
@@ -250,7 +316,10 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
                 ['Prioritas', <Badge key="p" label={currentReport.priority} priority={currentReport.priority} />],
                 ['Status', <Badge key="s" label={currentReport.status} status={currentReport.status} />],
                 ['Teknisi', (currentReport.active_technicians || []).map(t => t.name).join(', ') || 'Belum ditugaskan'],
-                ['Deadline SLA', new Date(currentReport.sla_deadline).toLocaleString('id-ID')],
+                ['Deadline SLA', currentReport.sla_deadline
+                  ? new Date(currentReport.sla_deadline).toLocaleString('id-ID')
+                  : <span key="sla" className="text-ui-muted italic text-[12px]" title="SLA ditentukan setelah prioritas diverifikasi">— Belum ada</span>
+                ],
               ].map(([k, v]) => (
                 <div key={k} className="card p-4">
                   <div className="text-[10px] text-ui-muted font-bold tracking-wider mb-1.5">{k.toUpperCase()}</div>
@@ -387,6 +456,72 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
               </div>
             ))}
             {!(currentReport.histories?.length) && <div className="text-[13px] text-ui-muted py-4">Belum ada riwayat tercatat.</div>}
+          </div>
+        </div>
+      )}
+
+      {/* Premium Confirmation Dialog */}
+      {confirmDialog && (
+        <div 
+          className="fixed inset-0 bg-zinc-950/45 backdrop-blur-sm z-[1000] flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setConfirmDialog(null)}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-2xl border border-zinc-100 max-w-sm w-full p-6 text-center animate-scale-in relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header Icon */}
+            {(() => {
+              const IconComponent = confirmDialog.icon || AlertTriangle;
+              const colorClasses = {
+                danger: 'bg-red-50 text-red-600 border-red-100 shadow-sm',
+                success: 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-sm',
+                warning: 'bg-amber-50 text-amber-600 border-amber-100 shadow-sm',
+              }[confirmDialog.type] || 'bg-zinc-50 text-zinc-600 border-zinc-100 shadow-sm';
+
+              return (
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 mx-auto border ${colorClasses}`}>
+                  <IconComponent className="w-5 h-5" />
+                </div>
+              );
+            })()}
+            
+            <h3 className="font-display font-bold text-lg text-brand-secondary leading-snug mb-2">
+              {confirmDialog.title}
+            </h3>
+            
+            <p className="text-sm text-ui-muted mb-6">
+              {confirmDialog.message}
+            </p>
+            
+            <div className="flex gap-3">
+              <button
+                className="btn btn-ghost flex-1 py-2.5 text-xs font-semibold justify-center hover:bg-zinc-50"
+                onClick={() => setConfirmDialog(null)}
+              >
+                Batal
+              </button>
+              {(() => {
+                const btnClass = {
+                  danger: 'bg-red-600 text-white hover:bg-red-700',
+                  success: 'bg-emerald-600 text-white hover:bg-emerald-700',
+                  warning: 'bg-amber-600 text-white hover:bg-amber-700',
+                }[confirmDialog.type] || 'bg-brand-primary text-white hover:bg-brand-dim';
+
+                return (
+                  <button
+                    className={`btn flex-1 py-2.5 text-xs font-semibold justify-center rounded-xl shadow-sm ${btnClass}`}
+                    onClick={async () => {
+                      const onConfirm = confirmDialog.onConfirm;
+                      setConfirmDialog(null);
+                      await onConfirm();
+                    }}
+                  >
+                    Konfirmasi
+                  </button>
+                );
+              })()}
+            </div>
           </div>
         </div>
       )}

@@ -2,7 +2,7 @@ import 'package:intl/intl.dart';
 
 /// Status laporan — sesuai dengan backend Laravel
 /// Backend values: 'menunggu', 'assessment', 'dalam_proses', 'selesai', 'eskalasi'
-enum ReportStatus { menunggu, assessment, dalamProses, selesai, eskalasi }
+enum ReportStatus { menunggu, ditugaskan, assessment, dalamProses, selesai, eskalasi }
 
 class FacilityReport {
   final int id;
@@ -28,6 +28,7 @@ class FacilityReport {
   final String? escalationReason;
   final double? latitude;
   final double? longitude;
+  final List<ReportHistory> histories;
 
   FacilityReport({
     required this.id,
@@ -53,6 +54,7 @@ class FacilityReport {
     this.escalationReason,
     this.latitude,
     this.longitude,
+    this.histories = const [],
   });
 
   /// Membuat FacilityReport dari JSON response backend Laravel
@@ -162,11 +164,18 @@ class FacilityReport {
       escalationReason: json['escalation_reason'] as String?,
       latitude: json['latitude'] != null ? double.tryParse(json['latitude'].toString()) : null,
       longitude: json['longitude'] != null ? double.tryParse(json['longitude'].toString()) : null,
+      histories: json['histories'] != null
+          ? (json['histories'] as List)
+              .map((h) => ReportHistory.fromJson(h as Map<String, dynamic>))
+              .toList()
+          : [],
     );
   }
 
   static ReportStatus _parseStatus(String s) {
     switch (s) {
+      case 'ditugaskan':
+        return ReportStatus.ditugaskan;
       case 'assessment':
         return ReportStatus.assessment;
       case 'dalam_proses':
@@ -185,6 +194,8 @@ class FacilityReport {
     switch (status) {
       case ReportStatus.menunggu:
         return 'menunggu';
+      case ReportStatus.ditugaskan:
+        return 'ditugaskan';
       case ReportStatus.assessment:
         return 'assessment';
       case ReportStatus.dalamProses:
@@ -206,6 +217,7 @@ class FacilityReport {
     String? completedAt,
     int? rating,
     String? feedback,
+    List<ReportHistory>? histories,
   }) {
     return FacilityReport(
       id: id,
@@ -227,6 +239,11 @@ class FacilityReport {
       rating: rating ?? this.rating,
       feedback: feedback ?? this.feedback,
       slaDeadline: slaDeadline,
+      isEscalationRequested: isEscalationRequested,
+      escalationReason: escalationReason,
+      latitude: latitude,
+      longitude: longitude,
+      histories: histories ?? this.histories,
     );
   }
 }
@@ -303,6 +320,8 @@ String statusLabel(ReportStatus status) {
   switch (status) {
     case ReportStatus.menunggu:
       return 'Menunggu';
+    case ReportStatus.ditugaskan:
+      return 'Ditugaskan';
     case ReportStatus.assessment:
       return 'Assessment';
     case ReportStatus.dalamProses:
@@ -311,5 +330,28 @@ String statusLabel(ReportStatus status) {
       return 'Selesai';
     case ReportStatus.eskalasi:
       return 'Eskalasi';
+  }
+}
+
+class ReportHistory {
+  final int id;
+  final String title;
+  final String? description;
+  final String createdAt;
+
+  ReportHistory({
+    required this.id,
+    required this.title,
+    this.description,
+    required this.createdAt,
+  });
+
+  factory ReportHistory.fromJson(Map<String, dynamic> json) {
+    return ReportHistory(
+      id: json['id'] as int,
+      title: json['title'] as String? ?? '',
+      description: json['description'] as String?,
+      createdAt: json['created_at'] as String? ?? '',
+    );
   }
 }

@@ -88,9 +88,12 @@ class AssignmentController extends Controller
             broadcast(new TechnicianAssigned($report, $techId))->toOthers();
         }
 
-        // Update status laporan ke assessment jika masih menunggu
+        // Update status laporan ke ditugaskan jika masih menunggu
         if ($report->status === 'menunggu') {
-            $report->update(['status' => 'assessment']);
+            $report->update(['status' => 'ditugaskan']);
+            
+            // Broadcast realtime update status ke semua admin
+            broadcast(new \App\Events\ReportStatusUpdated($report));
         }
 
         // Tambah history

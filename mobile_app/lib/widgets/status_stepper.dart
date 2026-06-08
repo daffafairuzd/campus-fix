@@ -5,18 +5,23 @@ import '../models/report_model.dart';
 
 class StatusStepper extends StatelessWidget {
   final ReportStatus currentStatus;
+  final FacilityReport? report;
 
-  const StatusStepper({super.key, required this.currentStatus});
+  const StatusStepper({super.key, required this.currentStatus, this.report});
 
   // Urutan status sesuai alur backend
   static const List<ReportStatus> _steps = [
     ReportStatus.menunggu,
+    ReportStatus.ditugaskan,
+    ReportStatus.assessment,
     ReportStatus.dalamProses,
     ReportStatus.selesai,
   ];
 
   static const List<ReportStatus> _stepsEskalasi = [
     ReportStatus.menunggu,
+    ReportStatus.ditugaskan,
+    ReportStatus.assessment,
     ReportStatus.dalamProses,
     ReportStatus.eskalasi,
   ];
@@ -37,6 +42,30 @@ class StatusStepper extends StatelessWidget {
         final isCurrent = i == currentIndex;
         final isLast = i == steps.length - 1;
         final isEskalasi = steps[i] == ReportStatus.eskalasi;
+        final statusTime = _getStatusTime(steps[i]);
+        String? extraDesc;
+        if (steps[i] == ReportStatus.ditugaskan) {
+          String? techName = report?.assignedTechnician;
+          if ((techName == null || techName.isEmpty) && report != null) {
+            for (final h in report!.histories) {
+              final titleLower = h.title.toLowerCase();
+              if (titleLower.contains('teknisi ditugaskan:')) {
+                final idx = titleLower.indexOf('teknisi ditugaskan:');
+                var extracted = h.title.substring(idx + 'teknisi ditugaskan:'.length).trim();
+                if (extracted.toLowerCase().contains('(override kapasitas)')) {
+                  extracted = extracted.replaceAll(RegExp(r'\s*\(override kapasitas\)', caseSensitive: false), '').trim();
+                }
+                if (extracted.isNotEmpty) {
+                  techName = extracted;
+                  break;
+                }
+              }
+            }
+          }
+          if (techName != null && techName.isNotEmpty) {
+            extraDesc = 'Ditugaskan ke $techName';
+          }
+        }
 
         final activeColor = isEskalasi ? AppColors.danger : AppColors.primary;
         final completedColor =
@@ -133,19 +162,43 @@ class StatusStepper extends StatelessWidget {
                                     : AppColors.textDim),
                       ),
                     ),
-                    if (isCurrent)
+                    if (statusTime != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
                         child: Text(
-                          'Status saat ini',
+                          extraDesc != null ? '$statusTime · $extraDesc' : statusTime,
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 10,
+                            color: (isCurrent ? activeColor : completedColor).withValues(alpha: 0.7),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      )
+                    else if (isCurrent)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          extraDesc ?? 'Status saat ini',
                           style: GoogleFonts.spaceGrotesk(
                             fontSize: 10,
                             color: activeColor.withValues(alpha: 0.7),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                      ),
-                    if (isCompleted)
+                      )
+                    else if (extraDesc != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          extraDesc,
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 10,
+                            color: completedColor.withValues(alpha: 0.7),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      )
+                    else if (isCompleted)
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
                         child: Text(
@@ -165,5 +218,47 @@ class StatusStepper extends StatelessWidget {
         );
       }),
     );
+  }
+
+  String? _getStatusTime(ReportStatus status) {
+    if (report == null) return null;
+    
+    String keyword;
+    switch (status) {
+      case ReportStatus.menunggu:
+        keyword = 'buat';
+        break;
+      case ReportStatus.ditugaskan:
+        keyword = 'ditugaskan';
+        break;
+      case ReportStatus.assessment:
+        keyword = 'assessment';
+        break;
+      case ReportStatus.dalamProses:
+        keyword = 'dalam_proses';
+        break;
+      case ReportStatus.selesai:
+        keyword = 'selesai';
+        break;
+      case ReportStatus.eskalasi:
+        keyword = 'eskalasi';
+        break;
+    }
+
+    for (final h in report!.histories.reversed) {
+      final title = h.title.toLowerCase();
+      if (title.contains(keyword) || (keyword == 'dalam_proses' && title.contains('dalam proses'))) {
+        try {
+          final dt = DateTime.parse(h.createdAt).toLocal();
+          final hour = dt.hour.toString().padLeft(2, '0');
+          final minute = dt.minute.toString().padLeft(2, '0');
+          final second = dt.second.toString().padLeft(2, '0');
+          return '${dt.day}/${dt.month}/${dt.year}, $hour.$minute.$second';
+        } catch (_) {
+          return h.createdAt;
+        }
+      }
+    }
+    return null;
   }
 }
