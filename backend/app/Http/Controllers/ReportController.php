@@ -286,9 +286,9 @@ class ReportController extends Controller
      */
     public function rate(Request $request, Report $report)
     {
-        $request->validate([
-            'rating'        => 'required|integer|min:1|max:5',
-            'feedback_text' => 'nullable|string|max:500',
+        $validated = $request->validate([
+            'rating'   => 'required|integer|min:1|max:5',
+            'feedback' => 'nullable|string|max:500',
         ]);
 
         if ((int) $report->reporter_id !== (int) $request->user()->id) {
@@ -296,16 +296,16 @@ class ReportController extends Controller
         }
 
         $report->update([
-            'rating'        => $request->rating,
-            'feedback_text' => $request->feedback_text,
+            'rating'        => $validated['rating'],
+            'feedback_text' => $validated['feedback'],
         ]);
 
         // Catat ke riwayat laporan
         ReportHistory::create([
             'report_id'   => $report->id,
             'user_id'     => $request->user()->id,
-            'title'       => "Pelapor memberikan rating: {$request->rating}/5",
-            'description' => $request->feedback_text ?: 'Pelapor memberikan penilaian terhadap penanganan laporan.',
+            'title'       => "Pelapor memberikan rating: {$validated['rating']}/5",
+            'description' => $validated['feedback'] ?: 'Pelapor memberikan penilaian terhadap penanganan laporan.',
         ]);
 
         return response()->json(['message' => 'Rating berhasil disimpan.']);

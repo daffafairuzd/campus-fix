@@ -694,6 +694,14 @@ class _InfoGrid extends StatelessWidget {
           _InfoRow(Icons.calendar_today_outlined, 'Tanggal', report.createdAt),
           const Divider(height: 14),
           _InfoRow(Icons.person_outline_rounded, 'Pelapor', report.reporterSsoId),
+          if (report.rating != null) ...[
+            const Divider(height: 14),
+            _InfoRow(Icons.star_rounded, 'Rating', '${'⭐' * report.rating!} (${report.rating}/5)'),
+          ],
+          if (report.feedback != null && report.feedback!.isNotEmpty) ...[
+            const Divider(height: 14),
+            _InfoRow(Icons.chat_bubble_outline_rounded, 'Feedback', report.feedback!),
+          ],
         ],
       ),
     );
