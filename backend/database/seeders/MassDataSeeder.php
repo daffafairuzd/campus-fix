@@ -6,10 +6,10 @@ use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Report;
 use App\Models\ReportAssignment;
+use App\Models\ReportHistory;
 use App\Models\Technician;
 use Faker\Factory as Faker;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class MassDataSeeder extends Seeder
@@ -18,201 +18,350 @@ class MassDataSeeder extends Seeder
     {
         $faker = Faker::create('id_ID');
 
-        // Create 50 Users (Pelapor)
-        $users = [];
-        for ($i = 0; $i < 50; $i++) {
-            $users[] = User::create([
-                'name' => $faker->name,
-                'email' => $faker->unique()->safeEmail,
-                'password' => Hash::make('password'),
-                'role' => 'pelapor',
-                'nim' => $faker->numerify('103012#####'),
-                'phone' => $faker->phoneNumber,
-                'status' => 'aktif',
-                'must_change_password' => false,
-            ]);
-        }
-
-        // Ambil semua teknisi yang sudah ada (dari UserSeeder)
-        $technicians = Technician::with('user')->get();
-        $technicianUserIds = $technicians->pluck('user.id')->toArray();
-
-        // Ambil admin untuk assigned_by
-        $admin = User::where('role', 'admin')->first();
-
-        // Create 150 Reports
-        $categories = ['HVAC', 'Listrik', 'Lab', 'Plumbing', 'Jaringan', 'Lift', 'Lainnya'];
-        $priorities = ['kritis', 'tinggi', 'sedang', 'rendah'];
-        $statuses = ['menunggu', 'assessment', 'dalam_proses', 'selesai', 'eskalasi'];
-
-        // Koordinat sekitar Tel-U Bandung
+        // ─── Lokasi kampus Tel-U ─────────────────────────────────────────────
         $campusLat = -6.9731;
         $campusLng = 107.6312;
 
         $telULocations = [
-            'Gedung SEBATIK' => ['Aula FIK Lantai 5'],
-            'Gedung KAWALUSU' => ['Aula FKS Lantai 5'],
-            'Gedung SELARU' => ['Aula FIT Lantai 4'],
-            'TENNIS HALL' => ['Lapangan Tennis A', 'Lapangan Tennis B'],
-            'Gedung BATEK_BTP' => ['Ruang MULMED Ged. A', 'Ruang MULMED Ged. C'],
-            'TERAS PRIANGAN' => ['Outdoor class', 'PENDOPO PRIANGAN', 'Teras Outdoor', 'Joglo'],
-            'TUCH' => ['Convention Hall'],
-            'SPORT CENTER' => ['Skate Park', 'Lapangan Pickleball', 'Lapangan Basket 3X3 Utara', 'Lapangan Basket 3X3 Selatan', 'Lapangan Panahan', 'Lapangan Basket', 'Lapangan Volley', 'Lapangan Futsal'],
-            'Gedung TULT' => ['Ruang kecil 1605', 'Area Makan TULT Lt.16', 'Ruang Rapat 1601', 'Ruang Rapat TULT 1602', 'Ruang Rapat TULT 1604', 'Auditorium TULT Lantai 16', 'Aula TULT Lt 2'],
-            'Gedung GSG' => ['Sayap Kanan lantai 3', 'Sayap kiri lantai 3', 'Lapang samping timur GSG', 'Lapangan Upacara', 'Aula Besar Lt 1', 'VIP A', 'VIP B', 'VIP C'],
-            'STUDENT CENTER' => ['Lapangan Bulutangkis A', 'Lapangan Bulutangkis B'],
-            'Gedung MANTERAWU' => ['Aula Dekanat'],
-            'Gedung MARATUA' => ['Aula FEB Lantai 5'],
-            'GEDUNG DAMAR' => ['Auditorium Gedung Damar'],
-            'GREEN LOUNGE' => ['Taman Green Lounge', 'Ruangan Green Lounge'],
+            'Gedung TULT'       => ['Ruang kecil 1605', 'Area Makan TULT Lt.16', 'Ruang Rapat 1601', 'Auditorium TULT Lantai 16'],
+            'Gedung GSG'        => ['Sayap Kanan lantai 3', 'Aula Besar Lt 1', 'VIP A', 'Lapangan Upacara'],
+            'Gedung SELARU'     => ['Aula FIT Lantai 4'],
+            'Gedung SEBATIK'    => ['Aula FIK Lantai 5'],
+            'SPORT CENTER'      => ['Lapangan Basket', 'Lapangan Futsal', 'Lapangan Volley'],
+            'Gedung MANTERAWU'  => ['Aula Dekanat'],
+            'GEDUNG DAMAR'      => ['Auditorium Gedung Damar'],
+            'GREEN LOUNGE'      => ['Taman Green Lounge', 'Ruangan Green Lounge'],
+            'STUDENT CENTER'    => ['Lapangan Bulutangkis A', 'Lapangan Bulutangkis B'],
+            'Gedung MARATUA'    => ['Aula FEB Lantai 5'],
         ];
 
+        // ─── Konten laporan realistis ────────────────────────────────────────
         $realisticIssues = [
             'Listrik' => [
-                ['title' => 'Lampu putus', 'desc' => 'Ada beberapa lampu yang mati sehingga ruangan menjadi gelap dan kurang nyaman.'],
-                ['title' => 'Stop kontak rusak', 'desc' => 'Stop kontak tidak ada arusnya.'],
-                ['title' => 'Listrik jeglek', 'desc' => 'MCB turun terus saat menyalakan komputer.'],
+                ['title' => 'Lampu ruangan mati', 'desc' => 'Beberapa lampu di ruangan mati sehingga aktivitas terganggu dan ruangan menjadi gelap.'],
+                ['title' => 'Stop kontak rusak', 'desc' => 'Stop kontak tidak ada arusnya saat digunakan untuk mengisi daya perangkat.'],
+                ['title' => 'MCB turun terus', 'desc' => 'MCB selalu turun saat komputer dinyalakan bersamaan, mengganggu kegiatan belajar.'],
             ],
             'HVAC' => [
-                ['title' => 'AC mati mendadak', 'desc' => 'AC tiba-tiba mati dan tidak bisa dinyalakan.'],
-                ['title' => 'AC bocor', 'desc' => 'Air menetes dari unit AC indoor.'],
-                ['title' => 'AC tidak dingin', 'desc' => 'AC menyala tapi anginnya kurang dingin.'],
+                ['title' => 'AC mati mendadak', 'desc' => 'AC tiba-tiba mati dan tidak bisa dinyalakan kembali. Ruangan terasa sangat panas.'],
+                ['title' => 'AC bocor', 'desc' => 'Air menetes dari unit AC indoor membasahi lantai dan berpotensi menyebabkan kecelakaan.'],
+                ['title' => 'AC tidak dingin', 'desc' => 'AC menyala namun hembusan angin tidak terasa dingin sama sekali.'],
             ],
             'Lab' => [
-                ['title' => 'PC Lab error', 'desc' => 'Komputer di meja 3 tidak bisa masuk Windows.'],
-                ['title' => 'Monitor bergaris', 'desc' => 'Layar monitor bergetar dan ada garis vertikal.'],
-                ['title' => 'Software tidak lisensi', 'desc' => 'Aplikasi SPSS minta aktivasi.'],
+                ['title' => 'PC Lab tidak bisa booting', 'desc' => 'Komputer di meja 3 tidak bisa masuk Windows sama sekali sejak pagi tadi.'],
+                ['title' => 'Monitor bergaris', 'desc' => 'Layar monitor bergetar dan ada garis vertikal yang mengganggu pandangan.'],
+                ['title' => 'Software tidak bisa dibuka', 'desc' => 'Aplikasi SPSS meminta aktivasi ulang dan tidak bisa digunakan oleh mahasiswa.'],
             ],
             'Plumbing' => [
-                ['title' => 'Keran air patah', 'desc' => 'Keran wastafel patah dan air terus mengalir.'],
-                ['title' => 'Saluran mampet', 'desc' => 'Saluran pembuangan air tersumbat dan bau.'],
-                ['title' => 'Air toilet mati', 'desc' => 'Air di toilet tidak menyala sama sekali dari pagi.'],
+                ['title' => 'Keran air patah', 'desc' => 'Keran wastafel toilet patah dan air terus mengalir tidak bisa dihentikan.'],
+                ['title' => 'Saluran mampet', 'desc' => 'Saluran pembuangan air toilet tersumbat dan mengeluarkan bau tidak sedap.'],
+                ['title' => 'Air tidak mengalir', 'desc' => 'Air di toilet tidak mengalir sama sekali sejak pagi. Mahasiswa tidak bisa menggunakan toilet.'],
             ],
             'Jaringan' => [
-                ['title' => 'Koneksi WiFi lambat', 'desc' => 'Sinyal WiFi penuh tapi tidak bisa dipakai browsing.'],
-                ['title' => 'Kabel LAN terputus', 'desc' => 'Koneksi internet via kabel LAN tidak berfungsi.'],
-                ['title' => 'SSID hilang', 'desc' => 'WiFi TUPublic tidak terdeteksi.'],
+                ['title' => 'WiFi sangat lambat', 'desc' => 'Sinyal WiFi terdeteksi penuh namun tidak bisa digunakan untuk browsing maupun download.'],
+                ['title' => 'Kabel LAN terputus', 'desc' => 'Koneksi internet via kabel LAN di seluruh lab tidak berfungsi sejak kemarin.'],
+                ['title' => 'SSID WiFi hilang', 'desc' => 'Jaringan WiFi TUPublic tidak terdeteksi di seluruh gedung, mempengaruhi kegiatan belajar.'],
             ],
             'Lift' => [
-                ['title' => 'Lift anjlok', 'desc' => 'Lift terasa turun mendadak saat di lantai 4.'],
-                ['title' => 'Tombol lift macet', 'desc' => 'Tombol lantai 3 tidak bisa ditekan.'],
-                ['title' => 'Pintu lift lambat', 'desc' => 'Pintu lift butuh waktu lama untuk menutup.'],
+                ['title' => 'Lift anjlok tiba-tiba', 'desc' => 'Lift terasa turun mendadak saat berada di lantai 4, sangat berbahaya bagi penumpang.'],
+                ['title' => 'Tombol lift tidak responsif', 'desc' => 'Tombol lantai 3 tidak bisa ditekan dan tidak ada respons saat ditekan berkali-kali.'],
+                ['title' => 'Pintu lift lambat menutup', 'desc' => 'Pintu lift membutuhkan waktu yang sangat lama untuk menutup, menyebabkan antrian panjang.'],
             ],
             'Lainnya' => [
-                ['title' => 'Kunci ruangan macet', 'desc' => 'Anak kunci tersangkut di lubang kunci.'],
-                ['title' => 'Suara bising atap', 'desc' => 'Terdengar suara bising mesin dari atap.'],
-                ['title' => 'Gagang pintu copot', 'desc' => 'Gagang pintu utama ruangan copot.'],
-            ]
+                ['title' => 'Kunci ruangan macet', 'desc' => 'Anak kunci tersangkut di lubang kunci dan tidak bisa dicabut sehingga ruangan tidak bisa diakses.'],
+                ['title' => 'Suara bising dari atap', 'desc' => 'Terdengar suara bising dari mesin di atas plafon ruangan yang mengganggu konsentrasi.'],
+                ['title' => 'Gagang pintu copot', 'desc' => 'Gagang pintu utama ruangan copot total sehingga pintu tidak bisa dibuka dari luar.'],
+            ],
         ];
 
-        $completedCountPerTech = [];
+        $categories = array_keys($realisticIssues);
 
-        foreach ($users as $user) {
-            // Each user creates 3 reports
-            for ($j = 0; $j < 3; $j++) {
-                $priority = $faker->randomElement($priorities);
-                $status = $faker->randomElement($statuses);
-                
-                // Random creation date within the last 5 days so it falls in 'Bulan Ini'
-                $createdAt = Carbon::now()->subDays(rand(0, 5));
+        // ─── Ambil data dari UserSeeder ──────────────────────────────────────
+        $admin    = User::where('role', 'admin')->first();
+        $pelapors = User::where('role', 'pelapor')->get();
 
-                $building = $faker->randomElement(array_keys($telULocations));
-                $location = $faker->randomElement($telULocations[$building]);
-                $category = $faker->randomElement($categories);
-                $issue = $faker->randomElement($realisticIssues[$category]);
+        if ($pelapors->isEmpty()) {
+            $this->command->error('Tidak ada user pelapor! Jalankan UserSeeder terlebih dahulu.');
+            return;
+        }
 
-                // SLA deadline: 1-7 hari setelah dibuat
-                $slaDeadline = $createdAt->copy()->addDays(rand(1, 7));
+        $technicians = Technician::with('user')->get();
 
-                // closed_at & rating untuk laporan selesai
-                $closedAt = null;
-                $rating = null;
+        if ($technicians->count() < 5) {
+            $this->command->error('Teknisi tidak lengkap! Jalankan UserSeeder terlebih dahulu.');
+            return;
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        // Helper: buat satu laporan
+        // ════════════════════════════════════════════════════════════════════
+        $makeReport = function (
+            string $status,
+            string $priority,
+            Carbon $createdAt,
+            ?Carbon $closedAt = null,
+            ?int $rating = null,
+            ?string $feedbackText = null
+        ) use ($faker, $telULocations, $realisticIssues, $categories, $campusLat, $campusLng, $pelapors) {
+            $building  = $faker->randomElement(array_keys($telULocations));
+            $location  = $faker->randomElement($telULocations[$building]);
+            $category  = $faker->randomElement($categories);
+            $issue     = $faker->randomElement($realisticIssues[$category]);
+
+            // SLA deadline: 2–7 hari setelah dibuat
+            $slaDeadline = $createdAt->copy()->addDays(rand(2, 7));
+
+            $latitude  = $campusLat + $faker->randomFloat(4, -0.003, 0.003);
+            $longitude = $campusLng + $faker->randomFloat(4, -0.003, 0.003);
+
+            return Report::create([
+                'title'         => $issue['title'],
+                'description'   => $issue['desc'],
+                'category'      => $category,
+                'location'      => $location,
+                'building'      => $building,
+                'latitude'      => $latitude,
+                'longitude'     => $longitude,
+                'priority'      => $priority,
+                'status'        => $status,
+                'reporter_id'   => $faker->randomElement($pelapors)->id,
+                'is_analyzed'   => $status !== 'menunggu',
+                'sla_deadline'  => $slaDeadline,
+                'closed_at'     => $closedAt,
+                'rating'        => $rating,
+                'feedback_text' => $feedbackText,
+                'created_at'    => $createdAt,
+                'updated_at'    => $closedAt ?? $createdAt,
+            ]);
+        };
+
+        // ════════════════════════════════════════════════════════════════════
+        // Helper: tambah history entry
+        // ════════════════════════════════════════════════════════════════════
+        $addHistory = function (
+            int $reportId,
+            int $userId,
+            string $title,
+            ?string $description = null,
+            ?Carbon $at = null
+        ) {
+            ReportHistory::create([
+                'report_id'   => $reportId,
+                'user_id'     => $userId,
+                'title'       => $title,
+                'description' => $description,
+                'created_at'  => $at ?? now(),
+                'updated_at'  => $at ?? now(),
+            ]);
+        };
+
+        // ════════════════════════════════════════════════════════════════════
+        // 3 LAPORAN MENUNGGU — belum di-assign, tidak ada teknisi
+        // ════════════════════════════════════════════════════════════════════
+        $waitingData = [
+            ['priority' => 'belum_ditentukan', 'daysAgo' => 1],
+            ['priority' => 'belum_ditentukan', 'daysAgo' => 2],
+            ['priority' => 'belum_ditentukan', 'daysAgo' => 3],
+        ];
+
+        foreach ($waitingData as $wd) {
+            $createdAt = Carbon::now()->subDays($wd['daysAgo'])->subHours(rand(1, 5));
+            $report    = $makeReport('menunggu', $wd['priority'], $createdAt);
+
+            // History: laporan baru dibuat
+            $addHistory($report->id, $report->reporter_id, 'Laporan dibuat',
+                'Laporan baru masuk dan menunggu penugasan teknisi.', $createdAt);
+        }
+
+        $this->command->info('✅ 3 laporan MENUNGGU berhasil dibuat.');
+
+        // ════════════════════════════════════════════════════════════════════
+        // 15 LAPORAN TER-ASSIGN — 5 teknisi × 3 laporan masing-masing
+        // Alur status resmi: menunggu → ditugaskan → assessment → dalam_proses → selesai/eskalasi
+        // ════════════════════════════════════════════════════════════════════
+
+        /**
+         * Setiap baris = 1 teknisi, berisi 3 laporan dengan konfigurasi:
+         * [status_akhir, priority, hari_lalu_dibuat]
+         */
+        $assignedMatrix = [
+            // Budi Santoso — Listrik & Lab
+            [
+                ['status' => 'ditugaskan',   'priority' => 'tinggi',  'daysAgo' => 1],
+                ['status' => 'assessment',   'priority' => 'sedang',  'daysAgo' => 3],
+                ['status' => 'selesai',      'priority' => 'rendah',  'daysAgo' => 7],
+            ],
+            // Eko Prasetyo — Plumbing & HVAC
+            [
+                ['status' => 'assessment',   'priority' => 'kritis',  'daysAgo' => 2],
+                ['status' => 'dalam_proses', 'priority' => 'tinggi',  'daysAgo' => 4],
+                ['status' => 'selesai',      'priority' => 'sedang',  'daysAgo' => 9],
+            ],
+            // Hendro Kurniawan — Lift & Mekanikal
+            [
+                ['status' => 'ditugaskan',   'priority' => 'tinggi',  'daysAgo' => 1],
+                ['status' => 'dalam_proses', 'priority' => 'kritis',  'daysAgo' => 5],
+                ['status' => 'eskalasi',     'priority' => 'sedang',  'daysAgo' => 6],
+            ],
+            // Slamet Riyadi — Jaringan & IT
+            [
+                ['status' => 'assessment',   'priority' => 'sedang',  'daysAgo' => 2],
+                ['status' => 'selesai',      'priority' => 'tinggi',  'daysAgo' => 8],
+                ['status' => 'selesai',      'priority' => 'rendah',  'daysAgo' => 10],
+            ],
+            // Wahyu Pramono — Umum (status cuti, laporan lama)
+            [
+                ['status' => 'dalam_proses', 'priority' => 'tinggi',  'daysAgo' => 3],
+                ['status' => 'eskalasi',     'priority' => 'kritis',  'daysAgo' => 7],
+                ['status' => 'selesai',      'priority' => 'sedang',  'daysAgo' => 12],
+            ],
+        ];
+
+        $feedbackPool = [
+            'Perbaikan cepat dan memuaskan!',
+            'Teknisi ramah dan profesional.',
+            'Lumayan, tapi agak lama prosesnya.',
+            'Bagus, terima kasih atas penanganannya.',
+            'Cepat tanggap, sangat membantu.',
+            'Pelayanan sangat baik, terima kasih.',
+        ];
+
+        foreach ($technicians as $techIdx => $tech) {
+            $techUserId = $tech->user->id;
+            $matrix     = $assignedMatrix[$techIdx];
+
+            foreach ($matrix as $item) {
+                $status   = $item['status'];
+                $priority = $item['priority'];
+                $daysAgo  = $item['daysAgo'];
+
+                // Waktu pembuatan laporan
+                $t0 = Carbon::now()->subDays($daysAgo)->setTime(rand(7, 10), rand(0, 59));
+
+                // Waktu setiap transisi (bertahap, masing-masing +beberapa jam)
+                $t1 = $t0->copy()->addHours(rand(1, 3));   // ditugaskan
+                $t2 = $t1->copy()->addHours(rand(2, 6));   // assessment
+                $t3 = $t2->copy()->addHours(rand(4, 12));  // dalam_proses / eskalasi
+                $t4 = $t3->copy()->addHours(rand(6, 24));  // selesai
+
+                // Tentukan closedAt dan rating untuk laporan selesai
+                $closedAt    = null;
+                $rating      = null;
                 $feedbackText = null;
 
                 if ($status === 'selesai') {
-                    // 70% tepat waktu (closed sebelum deadline), 30% terlambat
-                    if ($faker->boolean(70)) {
-                        // Tepat waktu: close 1-5 hari setelah dibuat, tapi sebelum deadline
-                        $closedAt = $createdAt->copy()->addDays(rand(1, max(1, $slaDeadline->diffInDays($createdAt) - 1)));
-                        if ($closedAt->gt($slaDeadline)) {
-                            $closedAt = $slaDeadline->copy()->subHours(rand(1, 12));
-                        }
-                    } else {
-                        // Terlambat: close setelah deadline
-                        $closedAt = $slaDeadline->copy()->addDays(rand(1, 5));
-                    }
-                    
-                    $rating = $faker->randomElement([3, 4, 4, 5, 5, 5]);
-                    $feedbackText = $faker->randomElement([
-                        'Perbaikan cepat dan memuaskan!',
-                        'Teknisi ramah dan profesional.',
-                        'Lumayan, tapi agak lama prosesnya.',
-                        'Bagus, terima kasih atas penanganannya.',
-                        'Cepat tanggap, sangat membantu.',
-                        null,
-                    ]);
+                    $closedAt     = $t4;
+                    $rating       = $faker->randomElement([3, 4, 4, 5, 5, 5]);
+                    $feedbackText = $faker->randomElement($feedbackPool);
                 }
 
-                // Latitude & Longitude random di sekitar kampus Tel-U
-                $latitude = $campusLat + ($faker->randomFloat(4, -0.003, 0.003));
-                $longitude = $campusLng + ($faker->randomFloat(4, -0.003, 0.003));
+                // Buat laporan
+                $report = $makeReport($status, $priority, $t0, $closedAt, $rating, $feedbackText);
 
-                $report = Report::create([
-                    'title' => $issue['title'],
-                    'description' => $issue['desc'],
-                    'category' => $category,
-                    'location' => $location,
-                    'building' => $building,
-                    'latitude' => $latitude,
-                    'longitude' => $longitude,
-                    'priority' => $priority,
-                    'status' => $status,
-                    'reporter_id' => $user->id,
-                    'is_analyzed' => $status !== 'menunggu' ? true : $faker->boolean,
-                    'sla_deadline' => $slaDeadline,
-                    'closed_at' => $closedAt,
-                    'rating' => $rating,
-                    'feedback_text' => $feedbackText,
-                    'created_at' => $createdAt,
-                    'updated_at' => $closedAt ?? $createdAt,
+                // ── Buat ReportAssignment ───────────────────────────────
+                // is_active = true untuk semua status (termasuk selesai)
+                // agar tampil sebagai "sudah di-assign" di panel admin
+                ReportAssignment::create([
+                    'report_id'      => $report->id,
+                    'technician_id'  => $techUserId,
+                    'assigned_by'    => $admin ? $admin->id : $techUserId,
+                    'is_active'      => true,
+                    'is_force_override' => false,
                 ]);
 
-                // Assign teknisi untuk status assessment, dalam_proses, selesai, eskalasi
-                if (in_array($status, ['assessment', 'dalam_proses', 'selesai', 'eskalasi']) && !empty($technicianUserIds)) {
-                    $techUserId = $faker->randomElement($technicianUserIds);
+                // ── Buat ReportHistory sesuai alur status ───────────────
+                $adminId = $admin ? $admin->id : $techUserId;
 
-                    ReportAssignment::create([
-                        'report_id' => $report->id,
-                        'technician_id' => $techUserId,
-                        'assigned_by' => $admin ? $admin->id : $techUserId,
-                        'is_active' => $status !== 'selesai',
-                    ]);
+                // [1] Laporan dibuat — selalu ada
+                $addHistory($report->id, $report->reporter_id,
+                    'Laporan dibuat',
+                    'Laporan baru masuk dan sedang menunggu penugasan teknisi.',
+                    $t0);
 
-                    // Track completed count
-                    if ($status === 'selesai') {
-                        if (!isset($completedCountPerTech[$techUserId])) {
-                            $completedCountPerTech[$techUserId] = 0;
-                        }
-                        $completedCountPerTech[$techUserId]++;
+                // [2] Prioritas diverifikasi admin — selalu ada (karena is_analyzed = true)
+                $addHistory($report->id, $adminId,
+                    'Prioritas diverifikasi',
+                    "Admin menentukan tingkat prioritas: " . ucfirst($priority) . ". SLA deadline telah ditetapkan.",
+                    $t0->copy()->addMinutes(rand(30, 90)));
+
+                // [3] Teknisi ditugaskan — selalu ada
+                $addHistory($report->id, $adminId,
+                    "Teknisi ditugaskan",
+                    "Teknisi {$tech->user->name} ditugaskan untuk menangani laporan ini.",
+                    $t1);
+
+                // [4] Status: assessment — jika status >= assessment
+                if (in_array($status, ['assessment', 'dalam_proses', 'selesai', 'eskalasi'])) {
+                    $addHistory($report->id, $techUserId,
+                        'Status diubah: ditugaskan → assessment',
+                        'Teknisi melakukan kunjungan awal untuk menilai kondisi kerusakan di lapangan.',
+                        $t2);
+                }
+
+                // [5] Status: dalam_proses — jika status >= dalam_proses atau eskalasi
+                if (in_array($status, ['dalam_proses', 'selesai', 'eskalasi'])) {
+                    $addHistory($report->id, $techUserId,
+                        'Status diubah: assessment → dalam_proses',
+                        'Asesmen selesai dilakukan. Perbaikan sudah dimulai oleh teknisi.',
+                        $t3);
+                }
+
+                // [6a] Status: eskalasi — jika status = eskalasi
+                if ($status === 'eskalasi') {
+                    $addHistory($report->id, $techUserId,
+                        'Mengajukan Eskalasi',
+                        'Perbaikan memerlukan peralatan khusus atau bantuan pihak ketiga. Teknisi mengajukan eskalasi kepada admin.',
+                        $t3->copy()->addHours(rand(1, 3)));
+
+                    $addHistory($report->id, $adminId,
+                        'Status diubah: dalam_proses → eskalasi',
+                        'Admin menyetujui pengajuan eskalasi. Laporan diteruskan ke pihak yang berwenang.',
+                        $t3->copy()->addHours(rand(3, 6)));
+                }
+
+                // [6b] Status: selesai — jika status = selesai
+                if ($status === 'selesai') {
+                    $addHistory($report->id, $techUserId,
+                        'Status diubah: dalam_proses → selesai',
+                        'Perbaikan telah selesai dilakukan. Foto bukti penyelesaian telah diunggah.',
+                        $t4);
+
+                    if ($rating !== null) {
+                        $addHistory($report->id, $report->reporter_id,
+                            "Pelapor memberikan rating: {$rating}/5",
+                            $feedbackText ?? 'Pelapor memberikan penilaian terhadap penanganan laporan.',
+                            $t4->copy()->addHours(rand(1, 24)));
                     }
                 }
             }
+
+            $this->command->info("✅ 3 laporan untuk teknisi [{$tech->user->name}] berhasil dibuat (dengan riwayat lengkap).");
         }
 
-        // Update completed_count dan rating_avg di tabel technicians
+        // ─── Update statistik teknisi ────────────────────────────────────────
         foreach ($technicians as $tech) {
-            $userId = $tech->user->id;
+            $userId            = $tech->user->id;
             $assignedReportIds = ReportAssignment::where('technician_id', $userId)->pluck('report_id');
-            
+
             $completedCount = Report::whereIn('id', $assignedReportIds)->where('status', 'selesai')->count();
-            $avgRating = Report::whereIn('id', $assignedReportIds)->where('status', 'selesai')->whereNotNull('rating')->avg('rating');
+            $avgRating      = Report::whereIn('id', $assignedReportIds)
+                ->where('status', 'selesai')
+                ->whereNotNull('rating')
+                ->avg('rating');
 
             $tech->update([
                 'completed_count' => $completedCount,
-                'rating_avg' => $avgRating ? round($avgRating, 1) : null,
+                'rating_avg'      => $avgRating ? round($avgRating, 1) : null,
             ]);
         }
 
-        $this->command->info('MassDataSeeder completed: Created 50 users and 150 reports with assignments, ratings & SLA data.');
+        $this->command->info('');
+        $this->command->info('════════════════════════════════════════════════════════');
+        $this->command->info('  MassDataSeeder selesai!');
+        $this->command->info('  Total laporan    : 18 (3 menunggu + 15 ter-assign)');
+        $this->command->info('  Setiap teknisi   : 3 laporan masing-masing');
+        $this->command->info('  Riwayat          : Lengkap per perubahan status');
+        $this->command->info('  is_active        : true untuk semua assignment');
+        $this->command->info('════════════════════════════════════════════════════════');
     }
 }

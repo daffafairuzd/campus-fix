@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -28,7 +29,7 @@ class ReportDetailTeknisi extends StatefulWidget {
 
 class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
   late FacilityReport _report;
-  List<File> _buktiFotos = [];
+  List<XFile> _buktiFotos = [];
   bool _isSaving = false;
   final _picker = ImagePicker();
 
@@ -107,14 +108,14 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
         if (files.isNotEmpty && mounted) {
           setState(() {
             for (var f in files) {
-              if (_buktiFotos.length < 5) _buktiFotos.add(File(f.path));
+              if (_buktiFotos.length < 5) _buktiFotos.add(f);
             }
           });
         }
       } else {
         final file = await _picker.pickImage(source: source, imageQuality: 80);
         if (file != null && mounted) {
-          setState(() => _buktiFotos.add(File(file.path)));
+          setState(() => _buktiFotos.add(file));
         }
       }
     } catch (_) {
@@ -469,7 +470,9 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
                                 children: [
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(8),
-                                    child: Image.file(_buktiFotos[i], width: 120, height: 120, fit: BoxFit.cover),
+                                    child: kIsWeb
+                                        ? Image.network(_buktiFotos[i].path, width: 120, height: 120, fit: BoxFit.cover)
+                                        : Image.file(File(_buktiFotos[i].path), width: 120, height: 120, fit: BoxFit.cover),
                                   ),
                                   Positioned(
                                     top: 4, right: 4,

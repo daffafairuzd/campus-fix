@@ -158,7 +158,7 @@ class FacilityReport {
       assignedTechnician: assignedTechnician,
       completedAt: completedAt,
       rating: json['rating'] as int?,
-      feedback: json['feedback'] as String?,
+      feedback: (json['feedback_text'] ?? json['feedback']) as String?,
       slaDeadline: json['sla_deadline'] as String?,
       isEscalationRequested: json['is_escalation_requested'] == true || json['is_escalation_requested'] == 1,
       escalationReason: json['escalation_reason'] as String?,

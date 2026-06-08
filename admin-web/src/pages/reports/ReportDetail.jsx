@@ -34,6 +34,14 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
 
+  // Sync prop report with currentReport state when prop changes
+  useEffect(() => {
+    setCurrentReport(report);
+    if (report.priority && report.priority !== 'belum_ditentukan') {
+      setSelectedPriority(report.priority);
+    }
+  }, [report]);
+
   // Fetch photos when tab changes
   useEffect(() => {
     if (activeTab === 'Foto Bukti') fetchPhotos();
@@ -328,9 +336,23 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
               ))}
             </div>
             {currentReport.rating && (
-              <div className="card p-4 flex justify-between items-center">
-                <div className="text-[10px] text-ui-muted font-bold tracking-wider">RATING PENYELESAIAN</div>
-                <div className="text-ui-warning text-xl tracking-widest">{'★'.repeat(currentReport.rating)}{'☆'.repeat(5 - currentReport.rating)}</div>
+              <div className="card p-4 flex flex-col gap-3">
+                <div className="flex justify-between items-center">
+                  <div className="text-[10px] text-ui-muted font-bold tracking-wider">RATING PENYELESAIAN</div>
+                  <div className="text-ui-warning text-xl tracking-widest">{'★'.repeat(currentReport.rating)}{'☆'.repeat(5 - currentReport.rating)}</div>
+                </div>
+                <div className="pt-3 border-t border-dark-border">
+                  <div className="text-[10px] text-ui-muted font-bold tracking-wider mb-2">FEEDBACK PELAPOR</div>
+                  {currentReport.feedback_text ? (
+                    <div className="text-[13px] text-ui-text italic leading-relaxed bg-dark-bg/60 px-3 py-2.5 rounded-lg border border-dark-border/50">
+                      "{currentReport.feedback_text}"
+                    </div>
+                  ) : (
+                    <div className="text-[12px] text-ui-dim italic">
+                      Pelapor tidak memberikan ulasan teks.
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -423,17 +445,7 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
                   )}
                 </div>
 
-                {/* Upload area */}
-                {photos.length < 5 && (
-                  <div className="pt-4 border-t border-dark-border/30">
-                    <label className={`flex flex-col items-center justify-center p-10 border-2 border-dashed rounded-xl transition-colors cursor-pointer group ${isUploadingPhoto ? 'border-brand-primary/50 bg-brand-primary/5' : 'border-dark-border bg-dark-bg hover:bg-dark-hover hover:border-brand-primary/50'}`}>
-                      {isUploadingPhoto ? <Loader2 className="w-10 h-10 animate-spin text-brand-primary mb-3" /> : <Upload className="w-10 h-10 text-ui-dim group-hover:text-brand-primary mb-3 transition-colors" />}
-                      <div className="text-[14px] text-ui-text font-medium mb-1">{isUploadingPhoto ? 'Mengupload...' : 'Unggah Foto Laporan Baru (Admin)'}</div>
-                      <div className="text-[12px] text-ui-muted">PNG, JPG, WEBP — Maks. total 5 foto ({5 - photos.length} tersisa)</div>
-                      <input type="file" accept="image/*" multiple className="hidden" disabled={isUploadingPhoto} onChange={handlePhotoUpload} />
-                    </label>
-                  </div>
-                )}
+
               </>
             )}
           </div>
@@ -448,11 +460,15 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
               <div key={i} className="relative pb-6 pl-6 border-l-2 border-dark-border last:border-l-transparent last:pb-0">
                 <div className="absolute -left-[5px] top-1 w-2 h-2 rounded-full bg-brand-primary ring-4 ring-dark-bg" />
                 <div className="text-[14px] font-bold text-ui-text leading-none mb-1.5">{h.title}</div>
-                <div className="text-[12px] text-ui-muted">
+                <div className="text-[12px] text-ui-muted mb-1">
                   {new Date(h.created_at).toLocaleString('id-ID')}
-                  {h.description ? ` · ${h.description}` : ''}
-                  {h.user?.name ? ` oleh ${h.user.name}` : ''}
+                  {h.user?.name ? ` · oleh ${h.user.name}` : ''}
                 </div>
+                {h.description && (
+                  <div className="text-[12px] text-ui-dim bg-dark-bg/50 border border-dark-border/40 rounded-lg px-3 py-2 mt-1.5 leading-relaxed italic">
+                    "{h.description}"
+                  </div>
+                )}
               </div>
             ))}
             {!(currentReport.histories?.length) && <div className="text-[13px] text-ui-muted py-4">Belum ada riwayat tercatat.</div>}

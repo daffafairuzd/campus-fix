@@ -4,6 +4,11 @@ import { Search, Plus, X, Edit, Trash2, AlertTriangle, UserCheck, ChevronLeft, C
 import { Avatar, Badge } from '../components/ui';
 import api from '../api';
 
+const SPECIALTY_OPTIONS = [
+  'Listrik', 'HVAC', 'Plumbing', 'Jaringan & IT',
+  'Lab & Komputer', 'Lift & Mekanikal', 'Umum',
+];
+
 export default function Users() {
   const [filters, setFilters] = useState({ search: "", role: "Semua", page: 1, per_page: 10 });
   const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
@@ -15,7 +20,17 @@ export default function Users() {
   const [userSummary, setUserSummary] = useState({ admin: 0, teknisi: 0, pelapor: 0 });
   const [tempPassword, setTempPassword] = useState(null); // for new accounts
 
-  const [userForm, setUserForm] = useState({ id:'', name:'', email:'', nim:'', role:'teknisi', status:'aktif', specialty:'', availability_status:'aktif' });
+  const [userForm, setUserForm] = useState({ id:'', name:'', email:'', nim:'', role:'teknisi', status:'aktif', specialty:[], availability_status:'aktif' });
+
+  // Toggle satu keahlian di/off dalam array
+  const toggleSpecialty = (opt) => {
+    setUserForm(prev => ({
+      ...prev,
+      specialty: prev.specialty.includes(opt)
+        ? prev.specialty.filter(s => s !== opt)
+        : [...prev.specialty, opt],
+    }));
+  };
 
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
   const CURRENT_USER_ID = currentUser.id;
@@ -59,11 +74,11 @@ export default function Users() {
     
     try {
       if (isEditMode) {
-        await api.put(`/users/${userForm.id}`, userForm);
+        await api.put(`/users/${userForm.id}`, { ...userForm, specialty: userForm.specialty.join(', ') });
         closeModal();
         fetchUsers();
       } else {
-        const res = await api.post('/users', userForm);
+        const res = await api.post('/users', { ...userForm, specialty: userForm.specialty.join(', ') });
         setTempPassword(res.data.temp_password);
         fetchUsers();
       }
@@ -80,7 +95,7 @@ export default function Users() {
       nim: u.nim || '',
       role: u.role,
       status: u.status,
-      specialty: u.technician?.specialty || '',
+      specialty: u.technician?.specialty ? u.technician.specialty.split(',').map(s => s.trim()).filter(Boolean) : [],
       availability_status: u.technician?.availability_status || 'aktif'
     });
     setIsEditMode(true);
@@ -91,7 +106,7 @@ export default function Users() {
     setShowModal(false);
     setIsEditMode(false);
     setTempPassword(null);
-    setUserForm({ id:'', name:'', email:'', nim:'', role:'teknisi', status:'aktif', specialty:'', availability_status:'aktif' });
+    setUserForm({ id:'', name:'', email:'', nim:'', role:'teknisi', status:'aktif', specialty:[], availability_status:'aktif' });
   };
 
   const handleDeleteClick = (u) => {
@@ -330,6 +345,32 @@ export default function Users() {
                       </select>
                     </div>
                   </div>
+                  {/* Keahlian — tampil jika role = teknisi (create & edit) */}
+                  {userForm.role === 'teknisi' && (
+                    <div>
+                      <label className="block text-[11px] font-semibold tracking-wider text-ui-muted mb-2">KEAHLIAN (pilih satu atau lebih)</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {SPECIALTY_OPTIONS.map(opt => (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => toggleSpecialty(opt)}
+                            className={`text-left text-[11px] px-3 py-2 rounded-lg border transition-colors ${
+                              userForm.specialty.includes(opt)
+                                ? 'bg-brand-primary/15 border-brand-primary text-brand-primary font-semibold'
+                                : 'bg-dark-bg border-dark-border text-ui-dim hover:border-dark-border/80'
+                            }`}
+                          >
+                            {userForm.specialty.includes(opt) ? '✓ ' : ''}{opt}
+                          </button>
+                        ))}
+                      </div>
+                      {userForm.specialty.length === 0 && (
+                        <p className="text-[10px] text-ui-danger mt-1.5">Pilih minimal 1 keahlian untuk teknisi.</p>
+                      )}
+                    </div>
+                  )}
+
                   {!isEditMode && (
                     <div className="bg-dark-bg border border-brand-primary/20 rounded-lg p-3">
                       <div className="text-[10px] text-brand-primary font-bold mb-1">📌 INFO PEMBUATAN AKUN</div>

@@ -291,13 +291,21 @@ class ReportController extends Controller
             'feedback_text' => 'nullable|string|max:500',
         ]);
 
-        if ($report->reporter_id !== $request->user()->id) {
+        if ((int) $report->reporter_id !== (int) $request->user()->id) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
         $report->update([
             'rating'        => $request->rating,
             'feedback_text' => $request->feedback_text,
+        ]);
+
+        // Catat ke riwayat laporan
+        ReportHistory::create([
+            'report_id'   => $report->id,
+            'user_id'     => $request->user()->id,
+            'title'       => "Pelapor memberikan rating: {$request->rating}/5",
+            'description' => $request->feedback_text ?: 'Pelapor memberikan penilaian terhadap penanganan laporan.',
         ]);
 
         return response()->json(['message' => 'Rating berhasil disimpan.']);

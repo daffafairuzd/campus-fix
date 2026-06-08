@@ -71,7 +71,7 @@ export default function Dashboard() {
         ]);
         
         setOverview(resOverview.data);
-        setWeekly(resWeekly.data.reverse()); // Ensure chronological order if necessary
+        setWeekly(resWeekly.data); // Backend sudah mengirim urutan kronologis: hari terlama → hari ini
         setCategories(resCats.data);
         setRecentReports(resReports.data.data.slice(0, 5)); // top 5
         setTechnicians(resTechs.data); // show all techs dynamically

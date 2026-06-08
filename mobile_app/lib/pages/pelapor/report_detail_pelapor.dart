@@ -145,6 +145,18 @@ class _ReportDetailPelaporState extends State<ReportDetailPelapor> {
                       _InfoRow(icon: Icons.engineering_rounded, label: 'Teknisi', value: report.assignedTechnician!),
                     if (report.completedAt != null)
                       _InfoRow(icon: Icons.check_circle_outline, label: 'Selesai', value: report.completedAt!),
+                    if (report.rating != null)
+                      _InfoRow(
+                        icon: Icons.star_rounded,
+                        label: 'Rating',
+                        value: '${'⭐' * report.rating!} (${report.rating}/5)',
+                      ),
+                    if (report.feedback != null && report.feedback!.isNotEmpty)
+                      _InfoRow(
+                        icon: Icons.chat_bubble_outline_rounded,
+                        label: 'Feedback',
+                        value: report.feedback!,
+                      ),
                   ]),
                   const SizedBox(height: 16),
 

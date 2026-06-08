@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io' show Platform, File;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import '../models/report_model.dart';
@@ -12,7 +13,7 @@ import '../models/report_model.dart';
 /// - Device fisik (iOS/Android) → ganti dengan IP lokal PC kamu
 String get _baseUrl {
   // Alamat IP lokal laptop agar bisa diakses dari HP fisik (satu jaringan Wi-Fi)
-  const String localIp = '10.176.208.9';
+  const String localIp = '10.141.110.180';
 
   if (kIsWeb) return 'http://localhost:8000/api';
   if (Platform.isAndroid || Platform.isIOS) return 'http://$localIp:8000/api';
@@ -345,11 +346,11 @@ class ApiService {
   }
 
   /// Upload foto laporan dalam format base64
-  Future<void> uploadPhoto(int reportId, File imageFile, {String type = 'bukti_laporan'}) async {
+  Future<void> uploadPhoto(int reportId, XFile imageFile, {String type = 'bukti_laporan'}) async {
     final bytes = await imageFile.readAsBytes();
     final base64Str = base64Encode(bytes);
     // Tentukan mime type berdasarkan ekstensi
-    final ext = imageFile.path.split('.').last.toLowerCase();
+    final ext = imageFile.name.split('.').last.toLowerCase();
     final mime = ext == 'png' ? 'image/png' : 'image/jpeg';
 
     final res = await http.post(
@@ -358,7 +359,7 @@ class ApiService {
       body: jsonEncode({
         'photo_data': base64Str,
         'mime_type': mime,
-        'original_name': imageFile.path.split('/').last,
+        'original_name': imageFile.name,
         'type': type,
       }),
     );
@@ -419,7 +420,7 @@ class ApiService {
     final res = await http.post(
       _uri('/reports/$reportId/rate'),
       headers: _headers,
-      body: jsonEncode({'rating': rating, 'feedback': feedback}),
+      body: jsonEncode({'rating': rating, 'feedback_text': feedback}),
     );
 
     if (res.statusCode == 200) return;

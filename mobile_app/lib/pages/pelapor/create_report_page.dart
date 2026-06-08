@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -20,7 +21,7 @@ class _CreateReportPageState extends State<CreateReportPage> {
   final _locationController = TextEditingController();
   final _descController = TextEditingController();
   String _category = 'Listrik';
-  List<File> _selectedImages = [];
+  List<XFile> _selectedImages = [];
   bool _isLoading = false;
   bool _isFetchingLocation = false;
   double? _latitude;
@@ -104,7 +105,7 @@ class _CreateReportPageState extends State<CreateReportPage> {
           setState(() {
             for (var f in files) {
               if (_selectedImages.length < 5) {
-                _selectedImages.add(File(f.path));
+                _selectedImages.add(f);
               }
             }
           });
@@ -112,7 +113,7 @@ class _CreateReportPageState extends State<CreateReportPage> {
       } else {
         final file = await _picker.pickImage(source: source, imageQuality: 80);
         if (file != null && mounted) {
-          setState(() => _selectedImages.add(File(file.path)));
+          setState(() => _selectedImages.add(file));
         }
       }
     } catch (_) {
@@ -337,7 +338,9 @@ class _CreateReportPageState extends State<CreateReportPage> {
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: Image.file(_selectedImages[i], width: 120, height: 120, fit: BoxFit.cover),
+                          child: kIsWeb
+                              ? Image.network(_selectedImages[i].path, width: 120, height: 120, fit: BoxFit.cover)
+                              : Image.file(File(_selectedImages[i].path), width: 120, height: 120, fit: BoxFit.cover),
                         ),
                         Positioned(
                           top: 4, right: 4,
