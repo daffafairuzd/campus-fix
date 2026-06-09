@@ -15,12 +15,12 @@ export default function Users() {
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [usersData, setUsersData] = useState([]);
-  const [deleteConfirm, setDeleteConfirm] = useState(null); 
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [userSummary, setUserSummary] = useState({ admin: 0, teknisi: 0, pelapor: 0 });
   const [tempPassword, setTempPassword] = useState(null); // for new accounts
 
-  const [userForm, setUserForm] = useState({ id:'', name:'', email:'', nim:'', role:'teknisi', status:'aktif', specialty:[], availability_status:'aktif' });
+  const [userForm, setUserForm] = useState({ id: '', name: '', email: '', nim: '', role: 'teknisi', status: 'aktif', specialty: [], availability_status: 'aktif' });
 
   // Toggle satu keahlian di/off dalam array
   const toggleSpecialty = (opt) => {
@@ -64,14 +64,14 @@ export default function Users() {
   };
 
   const summary = ["admin", "teknisi", "pelapor"].map(r => ({
-    role: r.charAt(0).toUpperCase() + r.slice(1), 
+    role: r.charAt(0).toUpperCase() + r.slice(1),
     count: userSummary[r] || 0
   }));
 
   const handleSaveUser = async (e) => {
     e.preventDefault();
     if (!userForm.name || !userForm.email) return;
-    
+
     try {
       if (isEditMode) {
         await api.put(`/users/${userForm.id}`, { ...userForm, specialty: userForm.specialty.join(', ') });
@@ -106,7 +106,7 @@ export default function Users() {
     setShowModal(false);
     setIsEditMode(false);
     setTempPassword(null);
-    setUserForm({ id:'', name:'', email:'', nim:'', role:'teknisi', status:'aktif', specialty:[], availability_status:'aktif' });
+    setUserForm({ id: '', name: '', email: '', nim: '', role: 'teknisi', status: 'aktif', specialty: [], availability_status: 'aktif' });
   };
 
   const handleDeleteClick = (u) => {
@@ -130,7 +130,7 @@ export default function Users() {
 
   return (
     <div className="p-6 md:p-7 flex flex-col gap-6 relative">
-      
+
       {/* Confirm Delete Dialog */}
       {deleteConfirm && createPortal(
         <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-dark-bg/80 animate-fade-in">
@@ -168,11 +168,11 @@ export default function Users() {
       <div className="flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[240px]">
           <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-ui-muted" />
-          <input 
-            className="input pl-9" 
-            placeholder="Cari nama, email, atau NIM/NIP..." 
-            value={filters.search} 
-            onChange={e => setFilters(prev => ({ ...prev, search: e.target.value, page: 1 }))} 
+          <input
+            className="input pl-9"
+            placeholder="Cari nama, email, atau NIM/NIP..."
+            value={filters.search}
+            onChange={e => setFilters(prev => ({ ...prev, search: e.target.value, page: 1 }))}
           />
         </div>
         <select className="input w-[160px]" value={filters.role} onChange={e => setFilters(prev => ({ ...prev, role: e.target.value, page: 1 }))}>
@@ -180,9 +180,9 @@ export default function Users() {
         </select>
         <div className="flex items-center gap-2">
           <span className="text-[12px] text-ui-muted font-semibold">Tampilkan:</span>
-          <select 
-            className="input w-[75px]" 
-            value={filters.per_page} 
+          <select
+            className="input w-[75px]"
+            value={filters.per_page}
             onChange={e => setFilters(prev => ({ ...prev, per_page: parseInt(e.target.value), page: 1 }))}
           >
             {[10, 20, 50].map(val => (
@@ -212,7 +212,7 @@ export default function Users() {
                 <tr key={u.id} className="table-row border-b border-dark-border/40 last:border-0 hover:bg-dark-hover transition-colors">
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
-                      <Avatar initials={u.name.split(" ").map(w=>w[0]).join("").slice(0,2)} size={32} />
+                      <Avatar initials={u.name.split(" ").map(w => w[0]).join("").slice(0, 2)} size={32} />
                       <div>
                         <div className="text-[13px] font-bold text-ui-text flex items-center gap-2">
                           {u.name}
@@ -227,12 +227,12 @@ export default function Users() {
                   <td className="py-3 px-4">
                     <Badge label={u.status} status={u.status} />
                     {u.role === 'teknisi' && u.technician?.availability_status === 'cuti' && (
-                       <span className="ml-1.5 text-[9px] bg-ui-muted/20 text-ui-muted px-1.5 py-0.5 rounded-sm font-semibold">Cuti</span>
+                      <span className="ml-1.5 text-[9px] bg-ui-muted/20 text-ui-muted px-1.5 py-0.5 rounded-sm font-semibold">Cuti</span>
                     )}
                   </td>
                   <td className="py-3 px-4 flex gap-2">
                     <button className="btn btn-ghost py-1 px-2 text-[11px]" onClick={() => handleEditClick(u)}><Edit className="w-3.5 h-3.5" /></button>
-                    <button 
+                    <button
                       className={`btn py-1 px-2 text-[11px] ${isSelf ? 'opacity-30 cursor-not-allowed bg-dark-hover border-dark-border text-ui-muted' : 'btn-danger'}`}
                       onClick={() => handleDeleteClick(u)}
                       title={isSelf ? 'Tidak dapat menghapus akun sendiri' : 'Hapus user'}
@@ -252,11 +252,11 @@ export default function Users() {
       {pagination && pagination.last_page > 1 && (
         <div className="flex items-center justify-between px-2 mt-2">
           <div className="text-[12px] text-ui-muted">
-            Menampilkan halaman <span className="font-bold text-ui-text">{pagination.current_page}</span> dari <span className="font-bold text-ui-text">{pagination.last_page}</span> 
+            Menampilkan halaman <span className="font-bold text-ui-text">{pagination.current_page}</span> dari <span className="font-bold text-ui-text">{pagination.last_page}</span>
             <span className="ml-2">({pagination.total} total user)</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <button 
+            <button
               className={`p-1.5 rounded-md border ${pagination.current_page === 1 ? 'border-transparent text-ui-muted opacity-50 cursor-not-allowed' : 'border-dark-border text-ui-text hover:bg-dark-hover'}`}
               onClick={() => setFilters(prev => ({ ...prev, page: pagination.current_page - 1 }))}
               disabled={pagination.current_page === 1}
@@ -282,7 +282,7 @@ export default function Users() {
                 return null;
               })}
             </div>
-            <button 
+            <button
               className={`p-1.5 rounded-md border ${pagination.current_page === pagination.last_page ? 'border-transparent text-ui-muted opacity-50 cursor-not-allowed' : 'border-dark-border text-ui-text hover:bg-dark-hover'}`}
               onClick={() => setFilters(prev => ({ ...prev, page: pagination.current_page + 1 }))}
               disabled={pagination.current_page === pagination.last_page}
@@ -310,7 +310,7 @@ export default function Users() {
                 <p className="text-sm text-ui-dim mb-8 max-w-[280px]">
                   Berikan password sementara di bawah ini kepada user tersebut.
                 </p>
-                
+
                 <div className="w-full bg-dark-bg border border-dark-border rounded-xl p-5 mb-8 flex flex-col gap-2 group relative">
                   <span className="text-[10px] font-bold text-ui-muted tracking-widest uppercase">Password Sementara</span>
                   <div className="text-2xl font-mono font-bold text-brand-primary tracking-wider select-all cursor-pointer">
@@ -327,20 +327,20 @@ export default function Users() {
                 <div className="px-6 py-5 flex flex-col gap-4">
                   <div>
                     <label className="block text-[11px] font-semibold tracking-wider text-ui-muted mb-1.5">NAMA LENGKAP</label>
-                    <input type="text" className="input text-[12px]" placeholder="Masukkan nama..." value={userForm.name} onChange={e=>setUserForm({...userForm, name:e.target.value})} required/>
+                    <input type="text" className="input text-[12px]" placeholder="Masukkan nama..." value={userForm.name} onChange={e => setUserForm({ ...userForm, name: e.target.value })} required />
                   </div>
                   <div>
                     <label className="block text-[11px] font-semibold tracking-wider text-ui-muted mb-1.5">EMAIL AKADEMIK</label>
-                    <input type="email" className="input text-[12px]" placeholder="email@telkomuniversity.ac.id" value={userForm.email} onChange={e=>setUserForm({...userForm, email:e.target.value})} required/>
+                    <input type="email" className="input text-[12px]" placeholder="email@telkomuniversity.ac.id" value={userForm.email} onChange={e => setUserForm({ ...userForm, email: e.target.value })} required />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-[11px] font-semibold tracking-wider text-ui-muted mb-1.5">NIP / NIM</label>
-                      <input type="text" className="input text-[12px] font-mono" placeholder="Kosongkan jika tidak ada" value={userForm.nim} onChange={e=>setUserForm({...userForm, nim:e.target.value})} />
+                      <input type="text" className="input text-[12px] font-mono" placeholder="Kosongkan jika tidak ada" value={userForm.nim} onChange={e => setUserForm({ ...userForm, nim: e.target.value })} />
                     </div>
                     <div>
                       <label className="block text-[11px] font-semibold tracking-wider text-ui-muted mb-1.5">ROLE AKSES</label>
-                      <select className="input text-[12px]" value={userForm.role} onChange={e=>setUserForm({...userForm, role:e.target.value})}>
+                      <select className="input text-[12px]" value={userForm.role} onChange={e => setUserForm({ ...userForm, role: e.target.value })}>
                         {["Teknisi", "Admin", "Pelapor"].map(r => <option key={r} value={r.toLowerCase()} className="bg-dark-bg">{r}</option>)}
                       </select>
                     </div>
@@ -355,11 +355,10 @@ export default function Users() {
                             key={opt}
                             type="button"
                             onClick={() => toggleSpecialty(opt)}
-                            className={`text-left text-[11px] px-3 py-2 rounded-lg border transition-colors ${
-                              userForm.specialty.includes(opt)
+                            className={`text-left text-[11px] px-3 py-2 rounded-lg border transition-colors ${userForm.specialty.includes(opt)
                                 ? 'bg-brand-primary/15 border-brand-primary text-brand-primary font-semibold'
                                 : 'bg-dark-bg border-dark-border text-ui-dim hover:border-dark-border/80'
-                            }`}
+                              }`}
                           >
                             {userForm.specialty.includes(opt) ? '✓ ' : ''}{opt}
                           </button>
@@ -375,7 +374,7 @@ export default function Users() {
                     <div className="bg-dark-bg border border-brand-primary/20 rounded-lg p-3">
                       <div className="text-[10px] text-brand-primary font-bold mb-1">📌 INFO PEMBUATAN AKUN</div>
                       <div className="text-[11px] text-ui-dim leading-relaxed">
-                        Password sementara akan digenerate otomatis. Teknisi/Admin akan diminta mengganti password saat login pertama kali.
+                        Password sementara akan digenerate otomatis. Minta user untuk mengganti password saat login pertama kali.
                       </div>
                     </div>
                   )}
@@ -383,14 +382,14 @@ export default function Users() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-[11px] font-semibold tracking-wider text-ui-muted mb-1.5">STATUS AKUN (LOGIN)</label>
-                        <select className="input text-[12px]" value={userForm.status} onChange={e=>setUserForm({...userForm, status:e.target.value})}>
+                        <select className="input text-[12px]" value={userForm.status} onChange={e => setUserForm({ ...userForm, status: e.target.value })}>
                           {["Aktif", "Nonaktif"].map(s => <option key={s} value={s.toLowerCase()} className="bg-dark-bg">{s}</option>)}
                         </select>
                       </div>
                       {userForm.role === 'teknisi' && (
                         <div>
                           <label className="block text-[11px] font-semibold tracking-wider text-ui-muted mb-1.5">KETERSEDIAAN TEKNISI</label>
-                          <select className="input text-[12px]" value={userForm.availability_status} onChange={e=>setUserForm({...userForm, availability_status:e.target.value})}>
+                          <select className="input text-[12px]" value={userForm.availability_status} onChange={e => setUserForm({ ...userForm, availability_status: e.target.value })}>
                             <option value="aktif" className="bg-dark-bg">Tersedia (Aktif)</option>
                             <option value="cuti" className="bg-dark-bg">Sedang Cuti / Libur</option>
                           </select>
