@@ -44,7 +44,7 @@ const MiniBarChart = ({ data, dataKey, maxKey, gradientFrom = "from-brand-primar
               style={{ height: `${(d[dataKey] / max) * 100}%` }}
             ></div>
           </div>
-          <div className="text-[9px] text-ui-muted tracking-widest">{d.day || d.month}</div>
+          <div className="text-[9px] text-ui-muted tracking-widest">{d.label || d.day || d.month}</div>
         </div>
       ))}
     </div>
@@ -62,16 +62,15 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [resOverview, resWeekly, resCats, resReports, resTechs] = await Promise.all([
-          api.get('/analytics/overview'),
-          api.get('/analytics/weekly'),
+        const [resDashboard, resCats, resReports, resTechs] = await Promise.all([
+          api.get('/analytics/dashboard?period=7_hari'),
           api.get('/analytics/categories'),
           api.get('/reports?sort_by=created_at&sort_dir=desc'),
           api.get('/technicians')
         ]);
         
-        setOverview(resOverview.data);
-        setWeekly(resWeekly.data); // Backend sudah mengirim urutan kronologis: hari terlama → hari ini
+        setOverview(resDashboard.data.overview);
+        setWeekly(resDashboard.data.chart); // Menggunakan chart dari dashboard
         setCategories(resCats.data);
         setRecentReports(resReports.data.data.slice(0, 5)); // top 5
         setTechnicians(resTechs.data); // show all techs dynamically

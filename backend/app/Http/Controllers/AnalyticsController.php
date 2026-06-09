@@ -29,11 +29,15 @@ class AnalyticsController extends Controller
         $query = Report::query();
 
         $total = (clone $query)->count();
-        $dalamProses = (clone $query)->where('status', 'dalam_proses')->count();
-        $selesai = (clone $query)->where('status', 'selesai')->count();
-        $eskalasi = (clone $query)->where('status', 'eskalasi')->count();
-        $menunggu = (clone $query)->where('status', 'menunggu')->count();
 
+        // Dynamic status count via GROUP BY — always accurate
+        $statusCounts = (clone $query)
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->toArray();
+
+        $selesai = $statusCounts['selesai'] ?? 0;
         $compliance = $total > 0 ? round(($selesai / $total) * 100) : 0;
 
         $slaAlert = Report::whereNotIn('status', ['selesai'])
@@ -42,10 +46,13 @@ class AnalyticsController extends Controller
 
         return response()->json([
             'total_laporan' => $total,
-            'dalam_proses' => $dalamProses,
+            'dalam_proses' => $statusCounts['dalam_proses'] ?? 0,
             'selesai' => $selesai,
-            'eskalasi' => $eskalasi,
-            'menunggu' => $menunggu,
+            'eskalasi' => $statusCounts['eskalasi'] ?? 0,
+            'menunggu' => $statusCounts['menunggu'] ?? 0,
+            'ditugaskan' => $statusCounts['ditugaskan'] ?? 0,
+            'assessment' => $statusCounts['assessment'] ?? 0,
+            'status_distribution' => $statusCounts,
             'sla_compliance' => $compliance,
             'sla_alert' => $slaAlert,
             'period' => $period,
@@ -255,6 +262,19 @@ class AnalyticsController extends Controller
             'bottlenecks' => $bottlenecks,
             'priorities' => $priorities,
             'categories_stats' => $categoriesStats,
+        ]);
+    }
+
+    public function dashboard(Request $request)
+    {
+        $overview = $this->overview($request)->getData(true);
+        $chart = $this->chart($request)->getData(true);
+        $advanced = $this->advancedStats($request)->getData(true);
+
+        return response()->json([
+            'overview' => $overview,
+            'chart' => $chart,
+            'advanced' => $advanced,
         ]);
     }
 }

@@ -17,41 +17,41 @@ use App\Http\Controllers\NotificationController;
 */
 
 // --- Public Routes ---
-Route::post('/auth/login',    [AuthController::class, 'login']);
+Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/register', [AuthController::class, 'register']); // hanya pelapor
 
 // Forgot Password (OTP Flow) — public, tidak butuh token
-Route::post('/auth/forgot-password/send-otp',  [AuthController::class, 'sendOtp']);
-Route::post('/auth/forgot-password/verify-otp',[AuthController::class, 'verifyOtp']);
-Route::post('/auth/forgot-password/reset',     [AuthController::class, 'resetPassword']);
+Route::post('/auth/forgot-password/send-otp', [AuthController::class, 'sendOtp']);
+Route::post('/auth/forgot-password/verify-otp', [AuthController::class, 'verifyOtp']);
+Route::post('/auth/forgot-password/reset', [AuthController::class, 'resetPassword']);
 
 // --- Protected Routes ---
 Route::middleware('auth:sanctum')->group(function () {
 
     // Auth
-    Route::post('/auth/logout',          [AuthController::class, 'logout']);
-    Route::get('/auth/me',               [AuthController::class, 'me']);
+    Route::post('/auth/logout', [AuthController::class, 'logout']);
+    Route::get('/auth/me', [AuthController::class, 'me']);
     Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
 
     // Reports
-    Route::get('/reports',                    [ReportController::class, 'index']);
-    Route::post('/reports',                   [ReportController::class, 'store']);
-    Route::get('/reports/{report}',           [ReportController::class, 'show']);
-    Route::put('/reports/{report}',           [ReportController::class, 'update']);
-    Route::delete('/reports/{report}',        [ReportController::class, 'destroy']);
-    Route::post('/reports/{report}/status',   [ReportController::class, 'updateStatus']);
+    Route::get('/reports', [ReportController::class, 'index']);
+    Route::post('/reports', [ReportController::class, 'store']);
+    Route::get('/reports/{report}', [ReportController::class, 'show']);
+    Route::put('/reports/{report}', [ReportController::class, 'update']);
+    Route::delete('/reports/{report}', [ReportController::class, 'destroy']);
+    Route::post('/reports/{report}/status', [ReportController::class, 'updateStatus']);
     Route::post('/reports/{report}/verify-priority', [ReportController::class, 'verifyPriority']);
     Route::post('/reports/{report}/request-escalation', [ReportController::class, 'requestEscalation']);
     Route::post('/reports/{report}/reject-escalation', [ReportController::class, 'rejectEscalation']);
-    Route::post('/reports/{report}/rate',     [ReportController::class, 'rate']);
+    Route::post('/reports/{report}/rate', [ReportController::class, 'rate']);
 
     // Report Photos — simpan base64 ke PostgreSQL
-    Route::get('/reports/{report}/photos',                      [ReportController::class, 'photos']);
-    Route::delete('/reports/{report}/photos/{photo}',           [ReportController::class, 'deletePhoto']);
+    Route::get('/reports/{report}/photos', [ReportController::class, 'photos']);
+    Route::delete('/reports/{report}/photos/{photo}', [ReportController::class, 'deletePhoto']);
 
     // Assignments — admin only
-    Route::get('/assignments',               [AssignmentController::class, 'index']);
-    Route::post('/assignments',              [AssignmentController::class, 'store']);
+    Route::get('/assignments', [AssignmentController::class, 'index']);
+    Route::post('/assignments', [AssignmentController::class, 'store']);
     Route::delete('/assignments/{assignment}', [AssignmentController::class, 'destroy']);
 });
 
@@ -60,20 +60,21 @@ Route::post('/reports/{report}/photos', [App\Http\Controllers\ReportController::
 
 Route::middleware('auth:sanctum')->group(function () {
     // Technicians
-    Route::get('/technicians',               [TechnicianController::class, 'index']);
-    Route::get('/technicians/my-performance',[TechnicianController::class, 'myPerformance']);
-    Route::put('/technicians/{technician}',  [TechnicianController::class, 'update']);
+    Route::get('/technicians', [TechnicianController::class, 'index']);
+    Route::get('/technicians/my-performance', [TechnicianController::class, 'myPerformance']);
+    Route::put('/technicians/{technician}', [TechnicianController::class, 'update']);
 
     // Users
-    Route::get('/users',           [UserController::class, 'index']);
-    Route::post('/users',          [UserController::class, 'store']);
-    Route::put('/users/{user}',    [UserController::class, 'update']);
+    Route::get('/users', [UserController::class, 'index']);
+    Route::post('/users', [UserController::class, 'store']);
+    Route::put('/users/{user}', [UserController::class, 'update']);
     Route::delete('/users/{user}', [UserController::class, 'destroy']);
 
     // SLA Tracking
     Route::get('/sla', [SlaController::class, 'index']);
 
     // Analytics
+    Route::get('/analytics/dashboard', 'App\Http\Controllers\AnalyticsController@dashboard');
     Route::get('/analytics/overview', 'App\Http\Controllers\AnalyticsController@overview');
     Route::get('/analytics/chart', 'App\Http\Controllers\AnalyticsController@chart');
     Route::get('/analytics/categories', 'App\Http\Controllers\AnalyticsController@categories');
@@ -82,10 +83,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/analytics/advanced-stats', 'App\Http\Controllers\AnalyticsController@advancedStats');
 
     // Notifications
-    Route::get('/notifications',                        [NotificationController::class, 'index']);
-    Route::patch('/notifications/{notification}/read',  [NotificationController::class, 'markRead']);
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markRead']);
     // Notification read all
-    Route::post('/notifications/read-all',              [NotificationController::class, 'markAllRead']);
-    Route::delete('/notifications/delete-all',          [NotificationController::class, 'deleteAll']);
-    Route::delete('/notifications/{notification}',      [NotificationController::class, 'destroy']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead']);
+    Route::delete('/notifications/delete-all', [NotificationController::class, 'deleteAll']);
+    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy']);
 });

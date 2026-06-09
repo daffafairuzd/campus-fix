@@ -51,7 +51,7 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
     e.preventDefault(); // Mencegah teks terpilih secara default
     const x = e.pageX - containerRef.current.offsetLeft;
     const y = e.pageY - containerRef.current.offsetTop;
-    const walkX = (x - posRef.current.startX); 
+    const walkX = (x - posRef.current.startX);
     const walkY = (y - posRef.current.startY);
     containerRef.current.scrollLeft = posRef.current.scrollLeft - walkX;
     containerRef.current.scrollTop = posRef.current.scrollTop - walkY;
@@ -163,10 +163,15 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
       icon: CheckCircle,
       onConfirm: async () => {
         try {
-          const res = await api.post(`/reports/${currentReport.id}/status`, { status: 'eskalasi', description: 'Admin menyetujui pengajuan eskalasi.' });
+          const res = await api.post(`/reports/${currentReport.id}/status`, {
+            status: 'eskalasi',
+            description: 'Admin menyetujui pengajuan eskalasi.'
+          });
           setCurrentReport(res.data);
           if (onStatusUpdated) onStatusUpdated(res.data);
-        } catch (err) { alert('Gagal update status: ' + (err.response?.data?.message || err.message)); }
+        } catch (err) {
+          alert('Gagal menyetujui eskalasi: ' + (err.response?.data?.message || err.message));
+        }
       }
     });
   };
@@ -273,9 +278,9 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 flex-shrink-0 mt-2 md:mt-0 items-center">
-            <select 
-              className="input w-[140px] font-semibold text-[13px] border-brand-primary/40 focus:border-brand-primary" 
-              value={selectedPriority} 
+            <select
+              className="input w-[140px] font-semibold text-[13px] border-brand-primary/40 focus:border-brand-primary"
+              value={selectedPriority}
               onChange={e => setSelectedPriority(e.target.value)}
               disabled={isVerifying}
             >
@@ -284,8 +289,8 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
               <option value="sedang">Sedang</option>
               <option value="rendah">Rendah</option>
             </select>
-            <button 
-              className="btn btn-primary shadow-sm" 
+            <button
+              className="btn btn-primary shadow-sm"
               onClick={handleVerifyPriority}
               disabled={isVerifying}
             >
@@ -514,11 +519,11 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
 
       {/* Premium Confirmation Dialog */}
       {confirmDialog && (
-        <div 
+        <div
           className="fixed inset-0 bg-zinc-950/45 backdrop-blur-sm z-[1000] flex items-center justify-center p-4 animate-fade-in"
           onClick={() => setConfirmDialog(null)}
         >
-          <div 
+          <div
             className="bg-white rounded-2xl shadow-2xl border border-zinc-100 max-w-sm w-full p-6 text-center animate-scale-in relative"
             onClick={(e) => e.stopPropagation()}
           >
@@ -537,15 +542,15 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
                 </div>
               );
             })()}
-            
+
             <h3 className="font-display font-bold text-lg text-brand-secondary leading-snug mb-2">
               {confirmDialog.title}
             </h3>
-            
+
             <p className="text-sm text-ui-muted mb-6">
               {confirmDialog.message}
             </p>
-            
+
             <div className="flex gap-3">
               <button
                 className="btn btn-ghost flex-1 py-2.5 text-xs font-semibold justify-center hover:bg-zinc-50"
@@ -580,31 +585,31 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
 
       {/* Image Preview Modal */}
       {previewImage && createPortal(
-        <div 
+        <div
           className="fixed inset-0 bg-black/95 backdrop-blur-md z-[9999] flex items-center justify-center animate-fade-in"
           onClick={() => { setPreviewImage(null); setZoomLevel(1); }}
         >
           {/* Close Button */}
-          <button 
+          <button
             className="absolute top-6 right-6 z-[10000] p-3 bg-white/10 hover:bg-white/25 text-white rounded-full transition-all backdrop-blur-md"
             onClick={(e) => { e.stopPropagation(); setPreviewImage(null); setZoomLevel(1); }}
             title="Tutup Preview"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
           </button>
-          
+
           {/* Zoom Controls */}
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-[10000] flex items-center gap-4 bg-zinc-900/90 backdrop-blur-md px-6 py-3 rounded-full border border-white/20 shadow-2xl" onClick={e => e.stopPropagation()}>
             <button className="text-white hover:text-brand-primary transition-colors p-1.5" onClick={() => setZoomLevel(z => Math.max(0.5, z - 0.25))} title="Zoom Out">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14"/></svg>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14" /></svg>
             </button>
             <span className="text-white text-[14px] font-mono font-bold w-14 text-center select-none">{Math.round(zoomLevel * 100)}%</span>
             <button className="text-white hover:text-brand-primary transition-colors p-1.5" onClick={() => setZoomLevel(z => Math.min(4, z + 0.25))} title="Zoom In">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
             </button>
           </div>
 
-          <div 
+          <div
             ref={containerRef}
             className={`relative w-full h-full overflow-auto custom-scrollbar p-4 md:p-12 select-none ${zoomLevel <= 1 ? 'flex items-center justify-center' : 'block text-center'}`}
             onClick={(e) => e.stopPropagation()}
@@ -614,12 +619,12 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
             onMouseLeave={handleMouseUpOrLeave}
             onContextMenu={handleContextMenu}
           >
-            <img 
-              src={previewImage} 
-              alt="Preview" 
+            <img
+              src={previewImage}
+              alt="Preview"
               className={`max-w-none shadow-2xl transition-all duration-200 inline-block`}
-              style={{ 
-                width: `${Math.max(30, 100 * zoomLevel)}%`, 
+              style={{
+                width: `${Math.max(30, 100 * zoomLevel)}%`,
                 maxHeight: zoomLevel <= 1 ? '100%' : 'none',
                 objectFit: 'contain',
                 cursor: zoomLevel > 1 ? 'crosshair' : 'zoom-in',

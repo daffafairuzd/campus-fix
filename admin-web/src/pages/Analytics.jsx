@@ -52,14 +52,12 @@ export default function Analytics() {
     
     setIsLoading(true);
     try {
-      const [resChart, resOverview, resAdvanced] = await Promise.all([
-        api.get(`/analytics/chart?period=${periodParam}`),
-        api.get(`/analytics/overview?period=${periodParam}`),
-        api.get(`/analytics/advanced-stats?period=${periodParam}`)
-      ]);
-      setChartData(resChart.data || []);
-      setOverview(resOverview.data);
-      setAdvancedStats(resAdvanced.data);
+      const res = await api.get(`/analytics/dashboard?period=${periodParam}`);
+      const { chart, overview, advanced } = res.data;
+      
+      setChartData(chart || []);
+      setOverview(overview);
+      setAdvancedStats(advanced);
     } catch (err) {
       console.error("Gagal load analytics", err);
     } finally {
@@ -154,8 +152,8 @@ export default function Analytics() {
           <p className="text-[10px] text-ui-muted mb-2">Rata-rata waktu pengerjaan (Jam)</p>
           <div className="h-40 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={advancedStats?.bottlenecks || []} margin={{ top: 10, right: 0, left: -25, bottom: 0 }} layout="horizontal">
-                <XAxis dataKey="category" stroke="#6b7280" fontSize={9} axisLine={false} tickLine={false} />
+              <BarChart data={advancedStats?.bottlenecks || []} margin={{ top: 10, right: 0, left: -25, bottom: 25 }} layout="horizontal">
+                <XAxis dataKey="category" stroke="#6b7280" fontSize={9} axisLine={false} tickLine={false} angle={-45} textAnchor="end" interval={0} />
                 <YAxis stroke="#6b7280" fontSize={9} axisLine={false} tickLine={false} domain={[0, 'auto']} />
                 <RechartsTooltip contentStyle={{ backgroundColor: '#1f242d', border: '1px solid #2e3643', borderRadius: '8px', fontSize: '11px' }} itemStyle={{ color: '#fff' }} formatter={(value) => `${value} Jam`} />
                 <Bar dataKey="process" fill="#f59e0b" name="Waktu Pengerjaan" radius={[2, 2, 0, 0]} />
@@ -219,8 +217,8 @@ export default function Analytics() {
           <p className="text-[10px] text-ui-muted mb-2">Total laporan masuk</p>
           <div className="h-40 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={advancedStats?.categories_stats || []} margin={{ top: 10, right: 0, left: -25, bottom: 0 }} layout="horizontal">
-                <XAxis dataKey="category" stroke="#6b7280" fontSize={9} axisLine={false} tickLine={false} />
+              <BarChart data={advancedStats?.categories_stats || []} margin={{ top: 10, right: 0, left: -25, bottom: 25 }} layout="horizontal">
+                <XAxis dataKey="category" stroke="#6b7280" fontSize={9} axisLine={false} tickLine={false} angle={-45} textAnchor="end" interval={0} />
                 <YAxis stroke="#6b7280" fontSize={9} axisLine={false} tickLine={false} domain={[0, 'auto']} />
                 <RechartsTooltip contentStyle={{ backgroundColor: '#1f242d', border: '1px solid #2e3643', borderRadius: '8px', fontSize: '11px' }} itemStyle={{ color: '#fff' }} formatter={(value) => `${value} Laporan`} />
                 <Bar dataKey="total" fill="#3b82f6" name="Total Laporan" radius={[2, 2, 0, 0]} />
@@ -236,12 +234,18 @@ export default function Analytics() {
         <div className="card p-5">
           <h3 className="text-[13px] font-bold text-ui-text mb-4">Status Laporan</h3>
           <div className="flex flex-col gap-3.5">
-            {[
-              { label: "Selesai", val: overview?.selesai || 0, color: "bg-ui-success", text: "text-ui-success" },
-              { label: "Dalam Proses", val: overview?.dalam_proses || 0, color: "bg-ui-info", text: "text-ui-info" },
-              { label: "Menunggu", val: overview?.menunggu || 0, color: "bg-ui-warning", text: "text-ui-warning" },
-              { label: "Eskalasi", val: overview?.eskalasi || 0, color: "bg-ui-danger", text: "text-ui-danger" },
-            ].map(s => {
+            {(() => {
+              const dist = overview?.status_distribution || {};
+              const statusOrder = [
+                { key: "menunggu", label: "Menunggu", color: "bg-ui-warning", text: "text-ui-warning" },
+                { key: "ditugaskan", label: "Ditugaskan", color: "bg-purple-500", text: "text-purple-500" },
+                { key: "assessment", label: "Assessment", color: "bg-teal-500", text: "text-teal-500" },
+                { key: "dalam_proses", label: "Dalam Proses", color: "bg-ui-info", text: "text-ui-info" },
+                { key: "selesai", label: "Selesai", color: "bg-ui-success", text: "text-ui-success" },
+                { key: "eskalasi", label: "Eskalasi", color: "bg-ui-danger", text: "text-ui-danger" },
+              ];
+              return statusOrder.map(s => ({ ...s, val: dist[s.key] || 0 }));
+            })().map(s => {
               const total = overview?.total_laporan || 1;
               const pct = (s.val / total) * 100;
               return (

@@ -19,23 +19,23 @@ class ReportController extends Controller
     {
         $query = Report::with(['reporter', 'activeTechnicians', 'assignments.technician', 'histories', 'photos'])
             // Filter berdasarkan role
-            ->when($request->user()->isReporter(), function($q) use ($request) {
+            ->when($request->user()->isReporter(), function ($q) use ($request) {
                 return $q->where('reporter_id', $request->user()->id);
             })
-            ->when($request->user()->isTechnician(), function($q) use ($request) {
-                return $q->whereHas('activeTechnicians', function($q2) use ($request) {
+            ->when($request->user()->isTechnician(), function ($q) use ($request) {
+                return $q->whereHas('activeTechnicians', function ($q2) use ($request) {
                     $q2->where('users.id', $request->user()->id);
                 });
             })
             // Filter request
-            ->when($request->status,   fn($q) => $q->where('status', $request->status))
+            ->when($request->status, fn($q) => $q->where('status', $request->status))
             ->when($request->priority, fn($q) => $q->where('priority', $request->priority))
             ->when($request->category, fn($q) => $q->where('category', $request->category))
             ->when($request->has('is_analyzed'), fn($q) => $q->where('is_analyzed', filter_var($request->is_analyzed, FILTER_VALIDATE_BOOLEAN)))
-            ->when($request->search,   fn($q) => $q->where(function($q2) use ($request) {
+            ->when($request->search, fn($q) => $q->where(function ($q2) use ($request) {
                 $q2->where('title', 'ilike', "%{$request->search}%")
-                   ->orWhere('report_number', 'ilike', "%{$request->search}%")
-                   ->orWhere('location', 'ilike', "%{$request->search}%");
+                    ->orWhere('report_number', 'ilike', "%{$request->search}%")
+                    ->orWhere('location', 'ilike', "%{$request->search}%");
             }));
 
         $sortBy = $request->sort_by ?? 'created_at';
@@ -44,7 +44,7 @@ class ReportController extends Controller
         if ($sortBy === 'priority') {
             $query->orderByRaw("CASE priority WHEN 'kritis' THEN 4 WHEN 'tinggi' THEN 3 WHEN 'sedang' THEN 2 ELSE 1 END DESC");
         } elseif ($sortBy === 'sla_deadline') {
-            
+
             $query->orderByRaw('sla_deadline ASC NULLS LAST');
         } else {
             $query->orderBy('created_at', $sortDir);
@@ -64,30 +64,30 @@ class ReportController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title'       => 'required|string|max:255',
+            'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'category'    => 'required|string',
-            'location'    => 'required|string',
-            'building'    => 'nullable|string',
-            'floor'       => 'nullable|string',
-            'photo_urls'  => 'nullable|array',
-            'latitude'    => 'nullable|numeric',
-            'longitude'   => 'nullable|numeric',
+            'category' => 'required|string',
+            'location' => 'required|string',
+            'building' => 'nullable|string',
+            'floor' => 'nullable|string',
+            'photo_urls' => 'nullable|array',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
         ]);
 
         $report = Report::create([
             ...$validated,
-            'reporter_id'  => $request->user()->id,
-            'status'       => 'menunggu',
-            'priority'     => 'belum_ditentukan',
+            'reporter_id' => $request->user()->id,
+            'status' => 'menunggu',
+            'priority' => 'belum_ditentukan',
             'sla_deadline' => null, // SLA determined later by Admin
         ]);
 
         // Tambah history entry pertama
         ReportHistory::create([
             'report_id' => $report->id,
-            'user_id'   => $request->user()->id,
-            'title'     => 'Laporan dibuat',
+            'user_id' => $request->user()->id,
+            'title' => 'Laporan dibuat',
         ]);
 
         // 1. Broadcast realtime event (ke channel 'reports')
@@ -97,11 +97,11 @@ class ReportController extends Controller
         $admins = User::where('role', 'admin')->get();
         foreach ($admins as $admin) {
             Notification::create([
-                'user_id'   => $admin->id,
+                'user_id' => $admin->id,
                 'report_id' => $report->id,
-                'type'      => 'new_report',
-                'title'     => 'Laporan Baru Masuk',
-                'message'   => "Terdapat laporan baru #{$report->report_number}: {$report->title}",
+                'type' => 'new_report',
+                'title' => 'Laporan Baru Masuk',
+                'message' => "Terdapat laporan baru #{$report->report_number}: {$report->title}",
             ]);
         }
 
@@ -111,14 +111,14 @@ class ReportController extends Controller
     public function update(Request $request, Report $report)
     {
         $validated = $request->validate([
-            'title'       => 'sometimes|string|max:255',
+            'title' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
-            'category'    => 'sometimes|string',
-            'location'    => 'sometimes|string',
-            'priority'    => 'sometimes|in:belum_ditentukan,kritis,tinggi,sedang,rendah',
-            'latitude'    => 'nullable|numeric',
-            'longitude'   => 'nullable|numeric',
-            'photo_urls'  => 'nullable|array',
+            'category' => 'sometimes|string',
+            'location' => 'sometimes|string',
+            'priority' => 'sometimes|in:belum_ditentukan,kritis,tinggi,sedang,rendah',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'photo_urls' => 'nullable|array',
         ]);
 
         $report->update($validated);
@@ -144,12 +144,12 @@ class ReportController extends Controller
     public function uploadPhoto(Request $request, Report $report)
     {
         \Log::info('Upload photo attempt for report: ' . $report->id, $request->except('photo_data'));
-        
+
         $validator = \Validator::make($request->all(), [
-            'photo_data'    => 'required|string',
+            'photo_data' => 'required|string',
             'original_name' => 'nullable|string|max:255',
-            'mime_type'     => 'nullable|string|max:50',
-            'type'          => 'nullable|in:bukti_laporan,bukti_penyelesaian',
+            'mime_type' => 'nullable|string|max:50',
+            'type' => 'nullable|in:bukti_laporan,bukti_penyelesaian',
         ]);
 
         if ($validator->fails()) {
@@ -162,11 +162,11 @@ class ReportController extends Controller
         }
 
         $photo = $report->photos()->create([
-            'uploader_id'   => $request->user()?->id,
-            'photo_data'    => $request->photo_data,
+            'uploader_id' => $request->user()?->id,
+            'photo_data' => $request->photo_data,
             'original_name' => $request->original_name,
-            'mime_type'     => $request->mime_type,
-            'type'          => $request->type ?? 'bukti_laporan',
+            'mime_type' => $request->mime_type,
+            'type' => $request->type ?? 'bukti_laporan',
         ]);
 
         return response()->json($photo, 201);
@@ -201,7 +201,7 @@ class ReportController extends Controller
     public function updateStatus(Request $request, Report $report)
     {
         $request->validate([
-            'status'      => 'required|in:menunggu,ditugaskan,assessment,dalam_proses,selesai,eskalasi',
+            'status' => 'required|in:menunggu,ditugaskan,assessment,dalam_proses,selesai,eskalasi',
             'description' => 'nullable|string',
         ]);
 
@@ -268,9 +268,9 @@ class ReportController extends Controller
 
         // Tambah history
         ReportHistory::create([
-            'report_id'   => $report->id,
-            'user_id'     => $request->user()->id,
-            'title'       => "Status diubah: {$oldStatus} → {$newStatus}",
+            'report_id' => $report->id,
+            'user_id' => $request->user()->id,
+            'title' => "Status diubah: {$oldStatus} → {$newStatus}",
             'description' => $request->description,
         ]);
 
@@ -279,21 +279,24 @@ class ReportController extends Controller
 
         // Notifikasi ke pelapor
         Notification::create([
-            'user_id'   => $report->reporter_id,
+            'user_id' => $report->reporter_id,
             'report_id' => $report->id,
-            'type'      => 'status_update',
-            'title'     => 'Status Laporan Diperbarui',
-            'message'   => "Laporan #{$report->report_number} kini berstatus: {$newStatus}.",
+            'type' => 'status_update',
+            'title' => 'Status Laporan Diperbarui',
+            'message' => "Laporan #{$report->report_number} kini berstatus: {$newStatus}.",
         ]);
 
         if ($newStatus === 'eskalasi') {
-            Notification::create([
-                'user_id' => null, // null berarti untuk semua admin
-                'title' => 'Pengajuan Eskalasi',
-                'message' => "Laporan {$report->report_number} mengajukan eskalasi: {$report->title}",
-                'report_id' => $report->id,
-                'type' => 'status_update'
-            ]);
+            $admins = User::where('role', 'admin')->get();
+            foreach ($admins as $admin) {
+                Notification::create([
+                    'user_id' => $admin->id,
+                    'report_id' => $report->id,
+                    'type' => 'status_update',
+                    'title' => 'Eskalasi Disetujui',
+                    'message' => "Laporan #{$report->report_number} telah dieskalasikan ke vendor/pihak ketiga.",
+                ]);
+            }
         }
         return response()->json($report->fresh()->load(['reporter', 'activeTechnicians', 'assignments.technician', 'histories.user']));
     }
@@ -304,7 +307,7 @@ class ReportController extends Controller
     public function rate(Request $request, Report $report)
     {
         $validated = $request->validate([
-            'rating'   => 'required|integer|min:1|max:5',
+            'rating' => 'required|integer|min:1|max:5',
             'feedback' => 'nullable|string|max:500',
         ]);
 
@@ -313,15 +316,15 @@ class ReportController extends Controller
         }
 
         $report->update([
-            'rating'        => $validated['rating'],
+            'rating' => $validated['rating'],
             'feedback_text' => $validated['feedback'],
         ]);
 
         // Catat ke riwayat laporan
         ReportHistory::create([
-            'report_id'   => $report->id,
-            'user_id'     => $request->user()->id,
-            'title'       => "Pelapor memberikan rating: {$validated['rating']}/5",
+            'report_id' => $report->id,
+            'user_id' => $request->user()->id,
+            'title' => "Pelapor memberikan rating: {$validated['rating']}/5",
             'description' => $validated['feedback'] ?: 'Pelapor memberikan penilaian terhadap penanganan laporan.',
         ]);
 
@@ -338,7 +341,7 @@ class ReportController extends Controller
         ]);
 
         // Hitung SLA deadline berdasarkan priority config yang baru diset admin
-        $slaConfig   = SlaConfig::forPriority($request->priority);
+        $slaConfig = SlaConfig::forPriority($request->priority);
         $slaDeadline = $slaConfig
             ? Carbon::now()->addHours($slaConfig->resolution_hours)
             : Carbon::now()->addDays(7);
@@ -347,16 +350,16 @@ class ReportController extends Controller
             : Carbon::now()->addDays(1);
 
         $report->update([
-            'priority'    => $request->priority,
+            'priority' => $request->priority,
             'is_analyzed' => true,
             'sla_deadline' => $slaDeadline,
             'response_deadline' => $responseDeadline,
         ]);
 
         ReportHistory::create([
-            'report_id'   => $report->id,
-            'user_id'     => $request->user()->id,
-            'title'       => 'Prioritas diverifikasi',
+            'report_id' => $report->id,
+            'user_id' => $request->user()->id,
+            'title' => 'Prioritas diverifikasi',
             'description' => "Admin menentukan tingkat prioritas: " . ucfirst($request->priority),
         ]);
 
@@ -374,13 +377,13 @@ class ReportController extends Controller
 
         $report->update([
             'is_escalation_requested' => true,
-            'escalation_reason'       => $request->reason,
+            'escalation_reason' => $request->reason,
         ]);
 
         ReportHistory::create([
-            'report_id'   => $report->id,
-            'user_id'     => $request->user()->id,
-            'title'       => 'Mengajukan Eskalasi',
+            'report_id' => $report->id,
+            'user_id' => $request->user()->id,
+            'title' => 'Mengajukan Eskalasi',
             'description' => $request->reason,
         ]);
 
@@ -388,11 +391,11 @@ class ReportController extends Controller
         $admins = User::where('role', 'admin')->get();
         foreach ($admins as $admin) {
             Notification::create([
-                'user_id'   => $admin->id,
+                'user_id' => $admin->id,
                 'report_id' => $report->id,
-                'type'      => 'status_update',
-                'title'     => 'Pengajuan Eskalasi',
-                'message'   => "Teknisi mengajukan eskalasi untuk laporan #{$report->report_number}. Menunggu persetujuan Anda.",
+                'type' => 'status_update',
+                'title' => 'Pengajuan Eskalasi',
+                'message' => "Teknisi mengajukan eskalasi untuk laporan #{$report->report_number}. Menunggu persetujuan Anda.",
             ]);
         }
 
@@ -406,13 +409,13 @@ class ReportController extends Controller
     {
         $report->update([
             'is_escalation_requested' => false,
-            'escalation_reason'       => null,
+            'escalation_reason' => null,
         ]);
 
         ReportHistory::create([
-            'report_id'   => $report->id,
-            'user_id'     => $request->user()->id,
-            'title'       => 'Pengajuan Eskalasi Ditolak',
+            'report_id' => $report->id,
+            'user_id' => $request->user()->id,
+            'title' => 'Pengajuan Eskalasi Ditolak',
             'description' => 'Admin menolak pengajuan eskalasi. Silakan lanjutkan pengerjaan.',
         ]);
 
