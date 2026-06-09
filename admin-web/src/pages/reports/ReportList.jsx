@@ -23,11 +23,12 @@ const PRIORITY_OPTIONS = [
 
 const CATEGORY_OPTIONS = [
   { value: 'Semua', label: 'Semua Kategori' },
-  { value: 'Listrik & AC', label: 'Listrik & AC' },
-  { value: 'Air & Pipa', label: 'Air & Pipa' },
-  { value: 'Gedung & Fasilitas', label: 'Gedung & Fasilitas' },
-  { value: 'IT & Jaringan', label: 'IT & Jaringan' },
-  { value: 'Kebersihan', label: 'Kebersihan' },
+  { value: 'Listrik', label: 'Listrik' },
+  { value: 'HVAC', label: 'HVAC' },
+  { value: 'Lab', label: 'Lab' },
+  { value: 'Plumbing', label: 'Plumbing' },
+  { value: 'Jaringan', label: 'Jaringan' },
+  { value: 'Lift', label: 'Lift' },
   { value: 'Lainnya', label: 'Lainnya' },
 ];
 

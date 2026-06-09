@@ -187,6 +187,10 @@ class ReportController extends Controller
 
     public function destroy(Report $report)
     {
+        if ($report->status !== 'menunggu') {
+            return response()->json(['message' => 'Laporan yang sudah diproses atau ditugaskan tidak dapat dihapus.'], 403);
+        }
+
         $report->delete();
         return response()->json(['message' => 'Laporan dihapus.']);
     }
