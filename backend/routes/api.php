@@ -75,8 +75,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Analytics
     Route::get('/analytics/overview', 'App\Http\Controllers\AnalyticsController@overview');
-    Route::get('/analytics/weekly', 'App\Http\Controllers\AnalyticsController@weekly');
-    Route::get('/analytics/monthly', 'App\Http\Controllers\AnalyticsController@monthly');
+    Route::get('/analytics/chart', 'App\Http\Controllers\AnalyticsController@chart');
     Route::get('/analytics/categories', 'App\Http\Controllers\AnalyticsController@categories');
     Route::get('/analytics/technicians', 'App\Http\Controllers\AnalyticsController@technicianPerformance');
     Route::get('/analytics/reporters', 'App\Http\Controllers\AnalyticsController@topReporters');

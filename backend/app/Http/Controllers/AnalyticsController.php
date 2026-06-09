@@ -3,27 +3,30 @@
 namespace App\Http\Controllers;
 
 use App\Models\Report;
-use App\Models\Technician;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class AnalyticsController extends Controller
 {
-    /**
-     * Overview stats untuk dashboard
-     */
+    private function applyPeriodScope($query, $period, $now)
+    {
+        if ($period === '7_hari') {
+            $query->where('created_at', '>=', $now->copy()->subDays(7));
+        } elseif ($period === '4_minggu') {
+            $query->where('created_at', '>=', $now->copy()->subWeeks(4));
+        } elseif ($period === '6_bulan') {
+            $query->where('created_at', '>=', $now->copy()->subMonths(6));
+        }
+        return $query;
+    }
+
     public function overview(Request $request)
     {
         $now = now();
-        $period = $request->query('period', 'bulan_ini'); // bulan_ini | tahun_ini
+        $period = $request->query('period', '7_hari');
 
         $query = Report::query();
-        if ($period === 'bulan_ini') {
-            $query->whereMonth('created_at', $now->month)->whereYear('created_at', $now->year);
-        } else {
-            $query->whereYear('created_at', $now->year);
-        }
 
         $total = (clone $query)->count();
         $dalamProses = (clone $query)->where('status', 'dalam_proses')->count();
@@ -49,47 +52,46 @@ class AnalyticsController extends Controller
         ]);
     }
 
-    /**
-     * Data chart mingguan (7 hari terakhir)
-     */
-    public function weekly()
+    public function chart(Request $request)
     {
-        $days = [];
-        for ($i = 6; $i >= 0; $i--) {
-            $date = now()->subDays($i);
-            $dayName = $date->isoFormat('ddd'); // Sen, Sel, ...
+        $period = $request->query('period', '7_hari');
+        $data = [];
 
-            $days[] = [
-                'day' => $dayName,
-                'laporan' => Report::whereDate('created_at', $date->toDateString())->count(),
-                'selesai' => Report::where('status', 'selesai')->whereDate('closed_at', $date->toDateString())->count(),
-            ];
+        if ($period === '7_hari') {
+            for ($i = 6; $i >= 0; $i--) {
+                $date = now()->subDays($i);
+                $dayName = $date->isoFormat('ddd');
+
+                $data[] = [
+                    'label' => $dayName,
+                    'laporan' => Report::whereDate('created_at', $date->toDateString())->count(),
+                    'selesai' => Report::where('status', 'selesai')->whereDate('closed_at', $date->toDateString())->count(),
+                ];
+            }
+        } elseif ($period === '4_minggu') {
+            for ($i = 3; $i >= 0; $i--) {
+                $startOfWeek = now()->subWeeks($i)->startOfWeek();
+                $endOfWeek = now()->subWeeks($i)->endOfWeek();
+                $data[] = [
+                    'label' => 'Mg ' . (4 - $i),
+                    'laporan' => Report::whereBetween('created_at', [$startOfWeek, $endOfWeek])->count(),
+                    'selesai' => Report::where('status', 'selesai')->whereBetween('closed_at', [$startOfWeek, $endOfWeek])->count(),
+                ];
+            }
+        } elseif ($period === '6_bulan') {
+            for ($i = 5; $i >= 0; $i--) {
+                $date = now()->subMonths($i);
+                $data[] = [
+                    'label' => $date->isoFormat('MMM'),
+                    'laporan' => Report::whereYear('created_at', $date->year)->whereMonth('created_at', $date->month)->count(),
+                    'selesai' => Report::where('status', 'selesai')->whereYear('closed_at', $date->year)->whereMonth('closed_at', $date->month)->count(),
+                ];
+            }
         }
 
-        return response()->json($days);
+        return response()->json($data);
     }
 
-    /**
-     * Data chart bulanan (6 bulan terakhir)
-     */
-    public function monthly()
-    {
-        $months = [];
-        for ($i = 5; $i >= 0; $i--) {
-            $date = now()->subMonths($i);
-            $months[] = [
-                'month' => $date->isoFormat('MMM'),
-                'laporan' => Report::whereYear('created_at', $date->year)->whereMonth('created_at', $date->month)->count(),
-                'selesai' => Report::where('status', 'selesai')->whereYear('created_at', $date->year)->whereMonth('created_at', $date->month)->count(),
-            ];
-        }
-
-        return response()->json($months);
-    }
-
-    /**
-     * Breakdown per kategori
-     */
     public function categories()
     {
         $data = Report::select('category', DB::raw('count(*) as total'))
@@ -107,38 +109,42 @@ class AnalyticsController extends Controller
         ]));
     }
 
-    /**
-     * Statistik tambahan untuk SLA, dan CSAT
-     */
     public function advancedStats(Request $request)
     {
         $now = now();
-        $period = $request->query('period', 'bulan_ini');
+        $period = $request->query('period', '7_hari');
 
-        // Base query scoped by period
         $scopedQuery = Report::query();
-        if ($period === 'bulan_ini') {
-            $scopedQuery->whereMonth('created_at', $now->month)->whereYear('created_at', $now->year);
-        } else {
-            $scopedQuery->whereYear('created_at', $now->year);
-        }
-
 
         // 1. SLA Ratio: Hit vs Miss (Overall)
-        $totalSelesai = (clone $scopedQuery)->where('status', 'selesai')->count();
-        $slaHit = (clone $scopedQuery)->where('status', 'selesai')
+        $baseQueryForSla = (clone $scopedQuery)->where(function($q) use ($now) {
+            $q->where('status', 'selesai')
+              ->orWhere(function($q2) use ($now) {
+                  $q2->where('status', '!=', 'selesai')
+                     ->where('sla_deadline', '<', $now);
+              });
+        });
+
+        $totalSlaRelevant = (clone $baseQueryForSla)->count();
+        $slaHit = (clone $baseQueryForSla)->where('status', 'selesai')
             ->whereColumn('closed_at', '<=', 'sla_deadline')
             ->count();
-        $slaMiss = $totalSelesai - $slaHit;
+        $slaMiss = $totalSlaRelevant - $slaHit;
 
         $allCategories = ['HVAC', 'Listrik', 'Lab', 'Plumbing', 'Jaringan', 'Lift', 'Lainnya'];
 
         // 1b. SLA Ratio Per Category
-        $slaCategoriesRaw = (clone $scopedQuery)->where('status', 'selesai')
+        $slaCategoriesRaw = (clone $scopedQuery)->where(function($q) use ($now) {
+                $q->where('status', 'selesai')
+                  ->orWhere(function($q2) use ($now) {
+                      $q2->where('status', '!=', 'selesai')
+                         ->where('sla_deadline', '<', $now);
+                  });
+            })
             ->select(
                 'category',
-                DB::raw('count(*) as total_selesai'),
-                DB::raw('SUM(CASE WHEN closed_at <= sla_deadline THEN 1 ELSE 0 END) as hit')
+                DB::raw('count(*) as total_relevant'),
+                DB::raw('SUM(CASE WHEN status = \'selesai\' AND closed_at <= sla_deadline THEN 1 ELSE 0 END) as hit')
             )
             ->groupBy('category')
             ->get()
@@ -147,8 +153,8 @@ class AnalyticsController extends Controller
         $slaCategories = collect($allCategories)->map(function ($cat) use ($slaCategoriesRaw) {
             $item = $slaCategoriesRaw->get($cat);
             if ($item) {
-                $miss = $item->total_selesai - $item->hit;
-                $percentage = $item->total_selesai > 0 ? round(($item->hit / $item->total_selesai) * 100) : 0;
+                $miss = $item->total_relevant - $item->hit;
+                $percentage = $item->total_relevant > 0 ? round(($item->hit / $item->total_relevant) * 100) : 0;
                 return [
                     'category' => $cat,
                     'chart' => [
@@ -235,7 +241,7 @@ class AnalyticsController extends Controller
                         ['name' => 'Tepat Waktu', 'value' => $slaHit],
                         ['name' => 'Terlambat', 'value' => $slaMiss],
                     ],
-                    'percentage' => $totalSelesai > 0 ? round(($slaHit / $totalSelesai) * 100) : 0
+                    'percentage' => $totalSlaRelevant > 0 ? round(($slaHit / $totalSlaRelevant) * 100) : 0
                 ],
                 'per_category' => $slaCategories
             ],

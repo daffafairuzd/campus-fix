@@ -34,10 +34,9 @@ const BarGraph = ({ data, xAxisValue }) => {
 };
 
 export default function Analytics() {
-  const [period, setPeriod] = useState('Bulan Ini');
+  const [period, setPeriod] = useState('7 Hari Terakhir');
 
-  const [weeklyData, setWeeklyData] = useState([]);
-  const [monthlyData, setMonthlyData] = useState([]);
+  const [chartData, setChartData] = useState([]);
   const [overview, setOverview] = useState(null);
   const [advancedStats, setAdvancedStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,17 +46,18 @@ export default function Analytics() {
   }, [period]);
 
   const fetchData = async (p) => {
-    const periodParam = p === 'Bulan Ini' ? 'bulan_ini' : 'tahun_ini';
+    let periodParam = '7_hari';
+    if (p === '4 Minggu Terakhir') periodParam = '4_minggu';
+    if (p === '6 Bulan Terakhir') periodParam = '6_bulan';
+    
     setIsLoading(true);
     try {
-      const [resWeekly, resMonthly, resOverview, resAdvanced] = await Promise.all([
-        api.get('/analytics/weekly'),
-        api.get('/analytics/monthly'),
+      const [resChart, resOverview, resAdvanced] = await Promise.all([
+        api.get(`/analytics/chart?period=${periodParam}`),
         api.get(`/analytics/overview?period=${periodParam}`),
         api.get(`/analytics/advanced-stats?period=${periodParam}`)
       ]);
-      setWeeklyData(resWeekly.data || []);
-      setMonthlyData(resMonthly.data || []);
+      setChartData(resChart.data || []);
       setOverview(resOverview.data);
       setAdvancedStats(resAdvanced.data);
     } catch (err) {
@@ -67,12 +67,11 @@ export default function Analytics() {
     }
   };
 
-  const chartData = period === 'Bulan Ini' ? weeklyData : monthlyData;
-  const xAxis = period === 'Bulan Ini' ? 'day' : 'month';
+  const xAxis = 'label';
 
-  // Tren data: Bulan Ini = weekly, Tahun Ini = monthly
-  const trendData = period === 'Bulan Ini' ? weeklyData : monthlyData;
-  const trendXKey = period === 'Bulan Ini' ? 'day' : 'month';
+  // Tren data
+  const trendData = chartData;
+  const trendXKey = 'label';
   const totalMasukTrend = trendData.reduce((acc, curr) => acc + curr.laporan, 0);
   const totalSelesaiTrend = trendData.reduce((acc, curr) => acc + curr.selesai, 0);
 
@@ -85,10 +84,10 @@ export default function Analytics() {
       <div className="flex justify-between items-center bg-dark-card p-4 rounded-xl border border-dark-border">
         <div>
           <h2 className="text-[15px] font-bold text-ui-text">Performa Penanganan Laporan</h2>
-          <p className="text-[11px] text-ui-muted">Metrik ringkasan untuk {period.toLowerCase()}</p>
+          <p className="text-[11px] text-ui-muted">Metrik ringkasan keseluruhan waktu</p>
         </div>
         <div className="flex gap-2 p-1 bg-dark-bg rounded-lg border border-dark-border">
-          {['Bulan Ini', 'Tahun Ini'].map(p => (
+          {['7 Hari Terakhir', '4 Minggu Terakhir', '6 Bulan Terakhir'].map(p => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
@@ -122,8 +121,8 @@ export default function Analytics() {
         </div> */}
         <div className="flex justify-between items-end mb-6">
           <div>
-            <h3 className="text-[14px] font-bold text-ui-text mb-1">{period === 'Bulan Ini' ? 'Tren Laporan Harian' : 'Tren Laporan Bulanan'}</h3>
-            <p className="text-[11px] text-ui-muted">Data faktual {period === 'Bulan Ini' ? '7 hari terakhir' : '6 bulan terakhir'}</p>
+            <h3 className="text-[14px] font-bold text-ui-text mb-1">Tren Laporan</h3>
+            <p className="text-[11px] text-ui-muted">Data faktual {period.toLowerCase()}</p>
           </div>
           <div className="flex gap-4 text-[10px] items-center">
             <span className="flex items-center gap-1.5 text-ui-dim"><span className="w-2 h-2 rounded-full bg-blue-500"></span> Masuk ({totalMasukTrend})</span>
@@ -229,7 +228,7 @@ export default function Analytics() {
             </ResponsiveContainer>
           </div>
           <div className="flex gap-4 mt-3 text-[10px] justify-center items-center">
-            <span className="flex items-center gap-1.5 text-ui-dim"><span className="w-2 h-2 rounded-[2px] bg-brand-primary"></span> Jumlah Laporan</span>
+            <span className="flex items-center gap-1.5 text-ui-dim"><span className="w-2 h-2 rounded-[2px] bg-blue-500"></span> Jumlah Laporan</span>
           </div>
         </div>
 
