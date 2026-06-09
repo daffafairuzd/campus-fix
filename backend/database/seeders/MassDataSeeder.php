@@ -101,7 +101,8 @@ class MassDataSeeder extends Seeder
             Carbon $createdAt,
             ?Carbon $closedAt = null,
             ?int $rating = null,
-            ?string $feedbackText = null
+            ?string $feedbackText = null,
+            ?Carbon $respondedAt = null
         ) use ($faker, $telULocations, $realisticIssues, $categories, $campusLat, $campusLng, $pelapors) {
             $building  = $faker->randomElement(array_keys($telULocations));
             $location  = $faker->randomElement($telULocations[$building]);
@@ -110,6 +111,7 @@ class MassDataSeeder extends Seeder
 
             // SLA deadline: 2–7 hari setelah dibuat
             $slaDeadline = $createdAt->copy()->addDays(rand(2, 7));
+            $responseDeadline = $createdAt->copy()->addHours(rand(4, 24));
 
             $latitude  = $campusLat + $faker->randomFloat(4, -0.003, 0.003);
             $longitude = $campusLng + $faker->randomFloat(4, -0.003, 0.003);
@@ -127,6 +129,8 @@ class MassDataSeeder extends Seeder
                 'reporter_id'   => $faker->randomElement($pelapors)->id,
                 'is_analyzed'   => $status !== 'menunggu',
                 'sla_deadline'  => $slaDeadline,
+                'response_deadline' => $responseDeadline,
+                'responded_at'  => $respondedAt,
                 'closed_at'     => $closedAt,
                 'rating'        => $rating,
                 'feedback_text' => $feedbackText,
@@ -255,8 +259,10 @@ class MassDataSeeder extends Seeder
                     $feedbackText = $faker->randomElement($feedbackPool);
                 }
 
+                $respondedAt = in_array($status, ['assessment', 'dalam_proses', 'eskalasi', 'selesai']) ? $t2 : null;
+
                 // Buat laporan
-                $report = $makeReport($status, $priority, $t0, $closedAt, $rating, $feedbackText);
+                $report = $makeReport($status, $priority, $t0, $closedAt, $rating, $feedbackText, $respondedAt);
 
                 // ── Buat ReportAssignment ───────────────────────────────
                 // is_active = true untuk semua status (termasuk selesai)

@@ -93,7 +93,7 @@ class ReportController extends Controller
         // 1. Broadcast realtime event (ke channel 'reports')
         broadcast(new ReportCreated($report->load('reporter')));
 
-        // 2. Simpan notifikasi ke semua admin
+        // 2. Simpan notifikasi ke semua admin (KIRIM: Laporan Masuk)
         $admins = User::where('role', 'admin')->get();
         foreach ($admins as $admin) {
             Notification::create([
@@ -230,6 +230,10 @@ class ReportController extends Controller
 
         $updateData = ['status' => $newStatus];
 
+        if ($newStatus === 'assessment' && !$report->responded_at) {
+            $updateData['responded_at'] = now();
+        }
+
         if ($newStatus === 'selesai') {
             // Aturan Ketat 2: Transisi dari dalam_proses ke selesai wajib menyertakan validasi pelampiran bukti foto
             $hasPhotoProof = $report->photos()->where('type', 'bukti_penyelesaian')->exists();
@@ -278,6 +282,15 @@ class ReportController extends Controller
             'message'   => "Laporan #{$report->report_number} kini berstatus: {$newStatus}.",
         ]);
 
+        if ($newStatus === 'eskalasi') {
+            Notification::create([
+                'user_id' => null, // null berarti untuk semua admin
+                'title' => 'Pengajuan Eskalasi',
+                'message' => "Laporan {$report->report_number} mengajukan eskalasi: {$report->title}",
+                'report_id' => $report->id,
+                'type' => 'status_update'
+            ]);
+        }
         return response()->json($report->fresh()->load(['reporter', 'activeTechnicians', 'assignments.technician', 'histories.user']));
     }
 
@@ -325,11 +338,15 @@ class ReportController extends Controller
         $slaDeadline = $slaConfig
             ? Carbon::now()->addHours($slaConfig->resolution_hours)
             : Carbon::now()->addDays(7);
+        $responseDeadline = $slaConfig
+            ? Carbon::now()->addHours($slaConfig->response_hours)
+            : Carbon::now()->addDays(1);
 
         $report->update([
             'priority'    => $request->priority,
             'is_analyzed' => true,
             'sla_deadline' => $slaDeadline,
+            'response_deadline' => $responseDeadline,
         ]);
 
         ReportHistory::create([

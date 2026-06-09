@@ -18,20 +18,29 @@ class SlaController extends Controller
         $now = now();
 
         $slaData = $activeReports->map(function ($report) use ($now) {
-            $slaDeadline = $report->sla_deadline;
             $createdAt   = $report->created_at;
+            
+            // Switching logic
+            $isResponded = $report->responded_at !== null;
+            $activeDeadline = $isResponded ? $report->sla_deadline : $report->response_deadline;
+            $slaType = $isResponded ? 'penyelesaian' : 'respon';
 
-            $totalMs  = $slaDeadline ? $slaDeadline->timestamp - $createdAt->timestamp : 0;
-            $passedMs = $slaDeadline ? $now->timestamp - $createdAt->timestamp : 0;
+            // If the deadline is not set yet (e.g. priority not assigned), fallback to some default behavior
+            if (!$activeDeadline && !$isResponded) {
+                $activeDeadline = $report->sla_deadline; // fallback if somehow response_deadline is null
+            }
+
+            $totalMs  = $activeDeadline ? $activeDeadline->timestamp - $createdAt->timestamp : 0;
+            $passedMs = $activeDeadline ? $now->timestamp - $createdAt->timestamp : 0;
 
             $percentage = $totalMs > 0 ? min(100, max(0, ($passedMs / $totalMs) * 100)) : 0;
 
             $warningLevel = 'safe';
             if ($percentage > 75) $warningLevel = 'warning';
             if ($percentage > 95) $warningLevel = 'danger';
-            if ($slaDeadline && $slaDeadline->isPast()) $warningLevel = 'expired';
+            if ($activeDeadline && $activeDeadline->isPast()) $warningLevel = 'expired';
 
-            $hoursLeft = $slaDeadline ? round($now->diffInHours($slaDeadline, false)) : null;
+            $hoursLeft = $activeDeadline ? round($now->diffInHours($activeDeadline, false)) : null;
             $timeText  = $hoursLeft === null
                 ? 'Tidak ada deadline'
                 : ($hoursLeft > 24
@@ -44,7 +53,11 @@ class SlaController extends Controller
                 'title'           => $report->title,
                 'status'          => $report->status,
                 'priority'        => $report->priority,
-                'sla_deadline'    => $slaDeadline?->toDateTimeString(),
+                'sla_deadline'    => $report->sla_deadline?->toDateTimeString(),
+                'response_deadline' => $report->response_deadline?->toDateTimeString(),
+                'responded_at'    => $report->responded_at?->toDateTimeString(),
+                'active_deadline' => $activeDeadline?->toDateTimeString(),
+                'sla_type'        => $slaType,
                 'percentage'      => round($percentage, 1),
                 'warning_level'   => $warningLevel,
                 'time_text'       => $timeText,

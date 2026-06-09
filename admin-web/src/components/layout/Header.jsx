@@ -49,11 +49,12 @@ export default function Header() {
       // Dengarkan event update status dari channel "reports" (Public Channel)
       const channel = echo.channel('reports');
       channel.listen('.report.status.updated', (e) => {
+        if (e.status !== 'eskalasi') return;
         const newNotif = {
           id: "temp_" + Date.now(), // dummy id
-          title: "Status Laporan Diperbarui",
+          title: "Pengajuan Eskalasi",
           report: { id: e.report_id, report_number: e.report_number },
-          message: `Laporan ${e.title} sekarang berstatus: ${e.status.replace('_', ' ').toUpperCase()}`,
+          message: `Laporan ${e.title} mengajukan eskalasi.`,
           created_at: new Date().toISOString(),
           is_read: false
         };
@@ -61,19 +62,7 @@ export default function Header() {
         setUnreadCount(prev => prev + 1);
       });
 
-      // Dengarkan event SLA Breached
-      channel.listen('.report.sla.breached', (e) => {
-        const newNotif = {
-          id: "temp_sla_" + Date.now(),
-          title: "SLA Laporan Terlewati",
-          report: { id: e.report_id, report_number: e.report_number },
-          message: `⚠️ Laporan ${e.title} telah melewati batas waktu SLA!`,
-          created_at: new Date().toISOString(),
-          is_read: false
-        };
-        setNotifications(prev => [newNotif, ...prev]);
-        setUnreadCount(prev => prev + 1);
-      });
+      // Dengarkan event SLA Breached (Dihilangkan sesuai request)
 
       // Dengarkan event laporan baru
       channel.listen('.report.created', (e) => {

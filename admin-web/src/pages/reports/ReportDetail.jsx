@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { ArrowLeft, Edit2, Trash2, MapPin, Upload, Search, Loader2, AlertTriangle, CheckCircle, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '../../components/ui';
@@ -24,6 +25,41 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
   );
   const [isVerifying, setIsVerifying] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const containerRef = useRef(null);
+  const posRef = useRef({ isDragging: false, startX: 0, startY: 0, scrollLeft: 0, scrollTop: 0 });
+
+  const handleMouseDown = (e) => {
+    if (!containerRef.current) return;
+    if (e.button !== 2) return; // Hanya proses jika klik kanan
+    posRef.current = {
+      isDragging: true,
+      startX: e.pageX - containerRef.current.offsetLeft,
+      startY: e.pageY - containerRef.current.offsetTop,
+      scrollLeft: containerRef.current.scrollLeft,
+      scrollTop: containerRef.current.scrollTop,
+    };
+  };
+
+  const handleContextMenu = (e) => {
+    e.preventDefault(); // Mencegah menu klik kanan bawaan browser muncul
+  };
+
+  const handleMouseMove = (e) => {
+    if (!posRef.current.isDragging || !containerRef.current) return;
+    e.preventDefault(); // Mencegah teks terpilih secara default
+    const x = e.pageX - containerRef.current.offsetLeft;
+    const y = e.pageY - containerRef.current.offsetTop;
+    const walkX = (x - posRef.current.startX); 
+    const walkY = (y - posRef.current.startY);
+    containerRef.current.scrollLeft = posRef.current.scrollLeft - walkX;
+    containerRef.current.scrollTop = posRef.current.scrollTop - walkY;
+  };
+
+  const handleMouseUpOrLeave = () => {
+    posRef.current.isDragging = false;
+  };
 
   const navigate = useNavigate();
 
@@ -393,14 +429,12 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  <a
-                    href={photo.photo_data.startsWith('data:') ? photo.photo_data : `data:${photo.mime_type || 'image/jpeg'};base64,${photo.photo_data}`}
-                    target="_blank"
-                    rel="noreferrer"
+                  <button
+                    onClick={() => setPreviewImage(photo.photo_data.startsWith('data:') ? photo.photo_data : `data:${photo.mime_type || 'image/jpeg'};base64,${photo.photo_data}`)}
                     className="p-2 bg-dark-card/80 rounded-lg hover:bg-dark-card"
                   >
                     <Search className="w-4 h-4 text-white" />
-                  </a>
+                  </button>
                   <button onClick={() => handleDeletePhoto(photo.id)} className="p-2 bg-red-500/80 rounded-lg hover:bg-red-500">
                     <Trash2 className="w-4 h-4 text-white" />
                   </button>
@@ -540,6 +574,62 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
             </div>
           </div>
         </div>
+      )}
+
+      {/* Image Preview Modal */}
+      {previewImage && createPortal(
+        <div 
+          className="fixed inset-0 bg-black/95 backdrop-blur-md z-[9999] flex items-center justify-center animate-fade-in"
+          onClick={() => { setPreviewImage(null); setZoomLevel(1); }}
+        >
+          {/* Close Button */}
+          <button 
+            className="absolute top-6 right-6 z-[10000] p-3 bg-white/10 hover:bg-white/25 text-white rounded-full transition-all backdrop-blur-md"
+            onClick={(e) => { e.stopPropagation(); setPreviewImage(null); setZoomLevel(1); }}
+            title="Tutup Preview"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+          
+          {/* Zoom Controls */}
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-[10000] flex items-center gap-4 bg-zinc-900/90 backdrop-blur-md px-6 py-3 rounded-full border border-white/20 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <button className="text-white hover:text-brand-primary transition-colors p-1.5" onClick={() => setZoomLevel(z => Math.max(0.5, z - 0.25))} title="Zoom Out">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14"/></svg>
+            </button>
+            <span className="text-white text-[14px] font-mono font-bold w-14 text-center select-none">{Math.round(zoomLevel * 100)}%</span>
+            <button className="text-white hover:text-brand-primary transition-colors p-1.5" onClick={() => setZoomLevel(z => Math.min(4, z + 0.25))} title="Zoom In">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+          </div>
+
+          <div 
+            ref={containerRef}
+            className={`relative w-full h-full overflow-auto custom-scrollbar p-4 md:p-12 select-none ${zoomLevel <= 1 ? 'flex items-center justify-center' : 'block text-center'}`}
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUpOrLeave}
+            onMouseLeave={handleMouseUpOrLeave}
+            onContextMenu={handleContextMenu}
+          >
+            <img 
+              src={previewImage} 
+              alt="Preview" 
+              className={`max-w-none shadow-2xl transition-all duration-200 inline-block`}
+              style={{ 
+                width: `${Math.max(30, 100 * zoomLevel)}%`, 
+                maxHeight: zoomLevel <= 1 ? '100%' : 'none',
+                objectFit: 'contain',
+                cursor: zoomLevel > 1 ? 'crosshair' : 'zoom-in',
+                verticalAlign: 'middle'
+              }}
+              onClick={() => setZoomLevel(z => z >= 3 ? 1 : z + 0.5)}
+              onContextMenu={(e) => e.preventDefault()}
+              draggable="false"
+            />
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -10,6 +10,7 @@ class Report extends Model
         'report_number', 'title', 'description', 'category', 'location',
         'building', 'floor', 'status', 'priority',
         'latitude', 'longitude', 'reporter_id', 'sla_deadline',
+        'response_deadline', 'responded_at',
         'escalated_at', 'closed_at', 'rating', 'feedback_text',
         'is_escalation_requested', 'escalation_reason', 'is_analyzed',
     ];
@@ -18,6 +19,8 @@ class Report extends Model
     {
         return [
             'sla_deadline'  => 'datetime',
+            'response_deadline' => 'datetime',
+            'responded_at'  => 'datetime',
             'escalated_at'  => 'datetime',
             'closed_at'     => 'datetime',
             'is_analyzed'   => 'boolean',
