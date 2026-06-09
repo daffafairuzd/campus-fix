@@ -44,7 +44,7 @@ class ReportController extends Controller
         if ($sortBy === 'priority') {
             $query->orderByRaw("CASE priority WHEN 'kritis' THEN 4 WHEN 'tinggi' THEN 3 WHEN 'sedang' THEN 2 ELSE 1 END DESC");
         } elseif ($sortBy === 'sla_deadline') {
-            // NULLS LAST: laporan tanpa SLA (belum ditentukan prioritas) tampil di paling bawah
+            
             $query->orderByRaw('sla_deadline ASC NULLS LAST');
         } else {
             $query->orderBy('created_at', $sortDir);

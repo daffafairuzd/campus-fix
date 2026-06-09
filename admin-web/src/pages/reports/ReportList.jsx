@@ -6,6 +6,7 @@ import { Badge } from '../../components/ui';
 const STATUS_OPTIONS = [
   { value: 'Semua', label: 'Semua Status' },
   { value: 'Menunggu', label: 'Menunggu' },
+  { value: 'Ditugaskan', label: 'Ditugaskan' },
   { value: 'Assessment', label: 'Assessment' },
   { value: 'Dalam Proses', label: 'Dalam Proses' },
   { value: 'Selesai', label: 'Selesai' },
