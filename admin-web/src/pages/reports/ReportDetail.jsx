@@ -255,7 +255,9 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
             <button className="btn btn-primary px-3 shadow-md" onClick={() => navigate('/assign')} title="Assign Teknisi">Assign Teknisi</button>
           )}
           <button className="btn btn-ghost px-3" onClick={() => onEdit(currentReport)} title="Edit"><Edit2 className="w-4 h-4" /></button>
-          <button className="btn btn-danger px-3" onClick={handleDelete} title="Hapus"><Trash2 className="w-4 h-4" /></button>
+          {currentReport.status === 'menunggu' && (
+            <button className="btn btn-danger px-3" onClick={handleDelete} title="Hapus"><Trash2 className="w-4 h-4" /></button>
+          )}
         </div>
       </div>
 
