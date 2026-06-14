@@ -232,7 +232,7 @@ class MassDataSeeder extends Seeder
 
         foreach ($technicians as $techIdx => $tech) {
             $techUserId = $tech->user->id;
-            $matrix     = $assignedMatrix[$techIdx];
+            $matrix     = $assignedMatrix[$techIdx % count($assignedMatrix)];
 
             foreach ($matrix as $item) {
                 $status   = $item['status'];

@@ -32,6 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
+    Route::post('/auth/fcm-token',       [AuthController::class, 'saveFcmToken']);
 
     // Reports
     Route::get('/reports', [ReportController::class, 'index']);
@@ -47,6 +48,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Report Photos — simpan base64 ke PostgreSQL
     Route::get('/reports/{report}/photos', [ReportController::class, 'photos']);
+    Route::post('/reports/{report}/photos', [ReportController::class, 'uploadPhoto']);
     Route::delete('/reports/{report}/photos/{photo}', [ReportController::class, 'deletePhoto']);
 
     // Assignments — admin only
@@ -55,8 +57,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/assignments/{assignment}', [AssignmentController::class, 'destroy']);
 });
 
-// TEMPORARY: Move photo upload out of auth for debugging
-Route::post('/reports/{report}/photos', [App\Http\Controllers\ReportController::class, 'uploadPhoto']);
 
 Route::middleware('auth:sanctum')->group(function () {
     // Technicians

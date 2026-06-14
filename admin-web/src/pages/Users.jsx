@@ -5,8 +5,8 @@ import { Avatar, Badge } from '../components/ui';
 import api from '../api';
 
 const SPECIALTY_OPTIONS = [
-  'Listrik', 'HVAC', 'Plumbing', 'Jaringan & IT',
-  'Lab & Komputer', 'Lift & Mekanikal', 'Umum',
+  'HVAC', 'Listrik', 'Lab', 'Plumbing',
+  'Jaringan', 'Lift', 'Lainnya'
 ];
 
 export default function Users() {

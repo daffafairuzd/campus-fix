@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('specialty')->nullable();
             $table->enum('availability_status', ['aktif', 'cuti'])->default('aktif');
-            $table->unsignedTinyInteger('max_capacity')->default(3);
+            $table->unsignedTinyInteger('max_capacity')->default(5);
             $table->unsignedInteger('completed_count')->default(0);
             $table->decimal('rating_avg', 3, 2)->nullable();
             $table->timestamps();

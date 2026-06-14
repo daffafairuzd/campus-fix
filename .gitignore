@@ -42,3 +42,7 @@ Thumbs.db
 # Project specific
 pdf_output.txt
 read_pdf_ext.py
+
+# Firebase
+firebase-credentials.json
+

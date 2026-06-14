@@ -69,7 +69,7 @@ class UserController extends Controller
                 'user_id'             => $user->id,
                 'specialty'           => $request->specialty,
                 'availability_status' => 'aktif',
-                'max_capacity'        => 3,
+                'max_capacity'        => 5,
             ]);
         }
 

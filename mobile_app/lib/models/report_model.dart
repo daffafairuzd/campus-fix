@@ -29,6 +29,7 @@ class FacilityReport {
   final double? latitude;
   final double? longitude;
   final List<ReportHistory> histories;
+  final List<int> activeTechnicianIds;
 
   FacilityReport({
     required this.id,
@@ -55,6 +56,7 @@ class FacilityReport {
     this.latitude,
     this.longitude,
     this.histories = const [],
+    this.activeTechnicianIds = const [],
   });
 
   /// Membuat FacilityReport dari JSON response backend Laravel
@@ -119,15 +121,23 @@ class FacilityReport {
       }
     }
 
-    // Nama teknisi dari relasi activeTechnicians
+    // Nama & ID teknisi dari relasi activeTechnicians
     String? assignedTechnician;
+    List<int> activeTechnicianIds = [];
     try {
       if (json['active_technicians'] != null && (json['active_technicians'] as List).isNotEmpty) {
-        assignedTechnician = json['active_technicians'][0]['name'] as String?;
+        final techs = json['active_technicians'] as List;
+        assignedTechnician = techs[0]['name'] as String?;
+        activeTechnicianIds = techs
+            .map((t) => t['id'] as int? ?? 0)
+            .where((id) => id != 0)
+            .toList();
       } else if (json['assignments'] != null && (json['assignments'] as List).isNotEmpty) {
         final assignment = json['assignments'][0];
         if (assignment['technician'] != null) {
           assignedTechnician = assignment['technician']['name'] as String?;
+          final techId = assignment['technician']['id'] as int?;
+          if (techId != null) activeTechnicianIds = [techId];
         }
       }
     } catch (e) {
@@ -169,6 +179,7 @@ class FacilityReport {
               .map((h) => ReportHistory.fromJson(h as Map<String, dynamic>))
               .toList()
           : [],
+      activeTechnicianIds: activeTechnicianIds,
     );
   }
 

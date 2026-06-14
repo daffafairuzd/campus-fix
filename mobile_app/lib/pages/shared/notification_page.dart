@@ -60,6 +60,19 @@ class _NotificationPageState extends State<NotificationPage> {
         final report = await api.getReport(n.reportId!);
         if (mounted) Navigator.pop(context); // tutup loader
 
+        if (!mounted) return;
+
+        if (widget.session.role == UserRole.teknisi &&
+            !report.activeTechnicianIds.contains(widget.session.id)) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Anda sudah tidak lagi ditugaskan ke laporan ini.'),
+              duration: Duration(seconds: 3),
+            ),
+          );
+          return;
+        }
+
         if (mounted) {
           Navigator.push(
             context,

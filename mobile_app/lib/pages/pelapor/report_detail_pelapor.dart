@@ -97,8 +97,12 @@ class _ReportDetailPelaporState extends State<ReportDetailPelapor> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
+      body: RefreshIndicator(
+        onRefresh: _refreshReport,
+        color: AppColors.primary,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
           children: [
             // Photo / placeholder
             if (report.reportPhotos.isNotEmpty)

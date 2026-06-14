@@ -30,17 +30,18 @@ class UserSeeder extends Seeder
 
         // ─── Teknisi ────────────────────────────────────────────────────────
         $teknisis = [
-            ['name' => 'Budi Santoso', 'email' => 'bsantoso@telkomuniversity.ac.id', 'specialty' => 'Listrik & Lab', 'max_capacity' => 3],
-            ['name' => 'Eko Prasetyo', 'email' => 'eprasetyo@telkomuniversity.ac.id', 'specialty' => 'Plumbing & HVAC', 'max_capacity' => 3],
-            ['name' => 'Hendro Kurniawan', 'email' => 'hkurniawan@telkomuniversity.ac.id', 'specialty' => 'Lift & Mekanikal', 'max_capacity' => 3],
-            ['name' => 'Slamet Riyadi', 'email' => 'sriyadi@telkomuniversity.ac.id', 'specialty' => 'Jaringan & IT', 'max_capacity' => 3],
-            ['name' => 'Wahyu Pramono', 'email' => 'wpramono@telkomuniversity.ac.id', 'specialty' => 'Umum', 'max_capacity' => 3],
+            ['name' => 'Budi Santoso', 'email' => 'bsantoso@telkomuniversity.ac.id', 'specialty' => 'Listrik, Lab', 'max_capacity' => 5],
+            ['name' => 'Eko Prasetyo', 'email' => 'eprasetyo@telkomuniversity.ac.id', 'specialty' => 'Plumbing, HVAC', 'max_capacity' => 5],
+            ['name' => 'Hendro Kurniawan', 'email' => 'hkurniawan@telkomuniversity.ac.id', 'specialty' => 'Lift', 'max_capacity' => 5],
+            ['name' => 'Slamet Riyadi', 'email' => 'sriyadi@telkomuniversity.ac.id', 'specialty' => 'Jaringan', 'max_capacity' => 5],
+            ['name' => 'Wahyu Pramono', 'email' => 'wpramono@telkomuniversity.ac.id', 'specialty' => 'Lainnya', 'max_capacity' => 5],
+            ['name' => 'Daffa Fairuz', 'email' => 'daffafairuzd@student.telkomuniversity.ac.id', 'specialty' => 'Jaringan, Lainnya', 'max_capacity' => 5, 'password' => '12345678'],
         ];
 
         foreach ($teknisis as $t) {
             $user = User::updateOrCreate(['email' => $t['email']], [
                 'name' => $t['name'],
-                'password' => Hash::make('teknisi123'),
+                'password' => Hash::make($t['password'] ?? 'teknisi123'),
                 'role' => 'teknisi',
                 'status' => 'aktif',
                 'must_change_password' => true,
@@ -61,12 +62,13 @@ class UserSeeder extends Seeder
             ['name' => 'Reza Alif', 'email' => 'ralif@student.telkomuniversity.ac.id', 'nim' => '10301230095'],
             ['name' => 'Dewi Nastiti', 'email' => 'dnastiti@student.telkomuniversity.ac.id', 'nim' => '10301230097'],
             ['name' => 'Fajar Wibowo', 'email' => 'fwibowo@student.telkomuniversity.ac.id', 'nim' => '10301230099'],
+            ['name' => 'Nurendra Bagaskara', 'email' => 'nrdbagask@student.telkomuniversity.ac.id', 'nim' => '10301230000', 'password' => '12345678'],
         ];
 
         foreach ($pelapors as $p) {
             User::updateOrCreate(['email' => $p['email']], [
                 'name' => $p['name'],
-                'password' => Hash::make('pelapor123'),
+                'password' => Hash::make($p['password'] ?? 'pelapor123'),
                 'role' => 'pelapor',
                 'nim' => $p['nim'],
                 'status' => $p['name'] === 'Reza Alif' ? 'nonaktif' : 'aktif',

@@ -1,13 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'services/api_service.dart';
+import 'services/fcm_service.dart';
 import 'models/user_model.dart';
 import 'theme/app_theme.dart';
 import 'pages/auth/login_page.dart';
 import 'pages/pelapor/pelapor_home_page.dart';
 import 'pages/teknisi/teknisi_home_page.dart';
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+}
+
+/// Global navigator key — untuk navigate dari luar widget tree (FCM tap)
+final navigatorKey = GlobalKey<NavigatorState>();
 
 /// Global theme notifier — accessible from any widget
 final themeNotifier = ValueNotifier<ThemeMode>(ThemeMode.light);
@@ -20,8 +31,10 @@ Future<void> _loadThemePreference() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await _loadThemePreference();
-  await initializeDateFormatting('id', null); // init locale Indonesia untuk intl
+  await initializeDateFormatting('id', null);
   runApp(const CampusFixApp());
 }
 
@@ -34,6 +47,7 @@ class CampusFixApp extends StatelessWidget {
       valueListenable: themeNotifier,
       builder: (context, mode, _) {
         return MaterialApp(
+          navigatorKey: navigatorKey,
           debugShowCheckedModeBanner: false,
           title: 'Campus Fix',
           theme: AppTheme.light(),
@@ -68,6 +82,11 @@ class _SplashRouterState extends State<_SplashRouter> {
     if (!mounted) return;
 
     if (session != null) {
+      // Init FCM untuk user yang sudah login (auto-login)
+      await FcmService.init();
+
+      if (!mounted) return;
+
       // Ada sesi tersimpan — langsung ke home page yang sesuai
       final page = session.role == UserRole.pelapor
           ? PelaporHomePage(session: session)

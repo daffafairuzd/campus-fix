@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
+import 'fcm_service.dart';
 import '../models/report_model.dart';
 
 /// Base URL backend Laravel — otomatis menyesuaikan platform:
@@ -191,6 +192,7 @@ class ApiService {
   /// Logout — hapus token dari backend & local
   Future<void> logout() async {
     try {
+      await FcmService.clearToken();
       await http.post(_uri('/auth/logout'), headers: _headers);
     } catch (_) {
       // Ignore network errors saat logout
@@ -425,6 +427,20 @@ class ApiService {
 
     if (res.statusCode == 200) return;
     _handleError(res);
+  }
+
+  // ── FCM TOKEN ────────────────────────────────────────────
+
+  Future<void> sendFcmToken(String token) async {
+    try {
+      await http.post(
+        _uri('/auth/fcm-token'),
+        headers: _headers,
+        body: jsonEncode({'fcm_token': token}),
+      );
+    } catch (_) {
+      // Gagal kirim token tidak perlu crash app
+    }
   }
 
   // ── NOTIFICATIONS ────────────────────────────────────────
