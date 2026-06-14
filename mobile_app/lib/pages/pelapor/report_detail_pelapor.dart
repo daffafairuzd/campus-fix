@@ -299,6 +299,7 @@ class _ReportDetailPelaporState extends State<ReportDetailPelapor> {
           ],
         ),
       ),
+      ),
     );
   }
 }

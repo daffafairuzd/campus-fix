@@ -113,20 +113,15 @@ class ApiService {
 
   // ── AUTH ─────────────────────────────────────────────────
 
-  /// Login menggunakan SSO ID (akan dikonversi ke email @student.telkomuniversity.ac.id)
+  /// Login menggunakan SSO ID / Email (Backend akan mengecek otomatis untuk Mahasiswa / Teknisi)
   Future<UserSession> login({
     required String ssoId,
     required String password,
   }) async {
-    // Konversi SSO ID ke format email
-    final email = ssoId.contains('@')
-        ? ssoId
-        : '$ssoId@student.telkomuniversity.ac.id';
-
     final res = await http.post(
       _uri('/auth/login'),
       headers: _headers,
-      body: jsonEncode({'email': email, 'password': password}),
+      body: jsonEncode({'email': ssoId, 'password': password}),
     );
 
     if (res.statusCode == 200) {

@@ -14,17 +14,30 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    private function resolveEmail($login)
+    {
+        if (strpos($login, '@') !== false) {
+            return $login;
+        }
+        $user = User::where('email', $login)
+            ->orWhere('email', $login . '@student.telkomuniversity.ac.id')
+            ->orWhere('email', $login . '@telkomuniversity.ac.id')
+            ->first();
+        return $user ? $user->email : $login;
+    }
+
     /**
      * Login — semua role
      */
     public function login(Request $request)
     {
         $request->validate([
-            'email'    => 'required|email',
+            'email'    => 'required|string',
             'password' => 'required|string',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $resolvedEmail = $this->resolveEmail($request->email);
+        $user = User::where('email', $resolvedEmail)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
@@ -142,9 +155,10 @@ class AuthController extends Controller
      */
     public function sendOtp(Request $request)
     {
-        $request->validate(['email' => 'required|email']);
+        $request->validate(['email' => 'required|string']);
 
-        $user = User::where('email', $request->email)->first();
+        $resolvedEmail = $this->resolveEmail($request->email);
+        $user = User::where('email', $resolvedEmail)->first();
 
         // Selalu kembalikan sukses agar tidak bocorkan info user mana yang terdaftar
         if (!$user) {
@@ -152,13 +166,13 @@ class AuthController extends Controller
         }
 
         // Invalidate OTP lama
-        PasswordResetOtp::where('email', $request->email)->update(['used' => true]);
+        PasswordResetOtp::where('email', $resolvedEmail)->update(['used' => true]);
 
         // Buat OTP 6 digit
         $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
         PasswordResetOtp::create([
-            'email'      => $request->email,
+            'email'      => $resolvedEmail,
             'otp'        => $otp,
             'used'       => false,
             'expires_at' => Carbon::now()->addMinutes(10),
@@ -176,11 +190,12 @@ class AuthController extends Controller
     public function verifyOtp(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email' => 'required|string',
             'otp'   => 'required|string|size:6',
         ]);
 
-        $record = PasswordResetOtp::where('email', $request->email)
+        $resolvedEmail = $this->resolveEmail($request->email);
+        $record = PasswordResetOtp::where('email', $resolvedEmail)
             ->where('otp', $request->otp)
             ->where('used', false)
             ->latest()
@@ -199,12 +214,13 @@ class AuthController extends Controller
     public function resetPassword(Request $request)
     {
         $request->validate([
-            'email'                 => 'required|email',
+            'email'                 => 'required|string',
             'otp'                   => 'required|string|size:6',
             'password'              => 'required|string|min:8|confirmed',
         ]);
 
-        $record = PasswordResetOtp::where('email', $request->email)
+        $resolvedEmail = $this->resolveEmail($request->email);
+        $record = PasswordResetOtp::where('email', $resolvedEmail)
             ->where('otp', $request->otp)
             ->where('used', false)
             ->latest()
@@ -214,7 +230,7 @@ class AuthController extends Controller
             return response()->json(['message' => 'Kode OTP tidak valid atau sudah kadaluarsa.'], 422);
         }
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $resolvedEmail)->first();
         if (!$user) {
             return response()->json(['message' => 'User tidak ditemukan.'], 404);
         }
