@@ -24,43 +24,33 @@
 
 ---
 
-## 🚀 Panduan Instalasi (Setup Project)
+## ✨ Fitur Utama
 
-Pastikan sistem Anda telah memiliki:
-- **PHP** (v8.2+) & **Composer**
-- **Node.js** (v18+) & **npm**
-- **Flutter SDK** (v3.19+)
-- **PostgreSQL** atau **MySQL**
+### 🛠️ Backend (Laravel)
+- **Autentikasi & Manajemen User:** Sistem Multi-Role (Admin, Pelapor, Teknisi).
+- **SLA Engine (Service Level Agreement):** Perhitungan otomatis tenggat waktu maksimal penyelesaian berdasarkan prioritas.
+- **Real-Time WebSockets:** Integrasi **Laravel Reverb** untuk mem-*broadcast* pembaruan data secara instan ke Web Admin.
+- **Sistem Notifikasi Pintar:**
+  - **Email:** Mengirim OTP (*One Time Password*) untuk fitur Lupa Kata Sandi.
+  - **Push Notification (FCM):** Mengirim notifikasi otomatis ke *smartphone* Pelapor (saat status berubah) dan Teknisi (saat mendapat tugas baru).
 
-### 1. Setup Backend (Laravel)
-Buka terminal dan arahkan ke direktori `backend/`:
-```bash
-cd backend
-composer install
-cp .env.example .env
-php artisan key:generate
+### 💻 Web Admin (React.js)
+- **Dashboard Analitik:** Visualisasi status fasilitas kampus dan rasio penyelesaian laporan.
+- **Live Ticket Board:** Tabel laporan yang ter-*update* secara otomatis (tanpa *refresh*) begitu ada laporan baru masuk dari aplikasi *mobile*.
+- **Manajemen Penugasan:** Memantau kapasitas beban teknisi dan melakukan *assign* tugas langsung kepada ahlinya.
 
-# Konfigurasi database di file .env (DB_DATABASE, DB_USERNAME, DB_PASSWORD)
+### 📱 Mobile App (Flutter)
+- **Untuk Pelapor:**
+  - Memfoto dan melokalisasi (GPS/Nama Gedung) fasilitas yang rusak.
+  - Memantau riwayat Status laporan yang telah dibuat.
+  - Sistem pemberian *Rating* & *Review* setelah laporan ditutup.
+- **Untuk Teknisi:**
+  - Menerima lembar tugas (*Ticketing*) langsung ke HP.
+  - Mengubah status pengerjaan (Misal: dari *Ditugaskan* menjadi *Assessment* atau *Selesai*).
+  - Melampirkan foto hasil perbaikan sebagai bukti penyelesaian.
 
-php artisan migrate:fresh --seed
-php artisan db:seed --class=MassDataSeeder
-php artisan serve
-```
+---
 
-### 2. Setup Admin Web (React/Vite)
-Buka terminal baru dan arahkan ke direktori `admin-web/`:
-```bash
-cd admin-web
-npm install
-npm run dev
-```
-*Web Admin berjalan di `http://localhost:5173`.*
+## 🚀 Panduan Instalasi & Pengujian
 
-### 3. Setup Mobile App (Flutter)
-Buka terminal baru dan arahkan ke direktori `mobile_app/`:
-```bash
-cd mobile_app
-flutter clean
-flutter pub get
-flutter run
-```
+Untuk panduan instalasi dan pengujian proyek secara lokal, silahkan akses Panduan Instalasi dan Konfigurasi project ini melalui link **Google Drive** yang telah kami cantumkan pada bagian **"Submission Comments" di LMS**.

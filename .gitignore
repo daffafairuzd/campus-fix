@@ -43,6 +43,7 @@ Thumbs.db
 pdf_output.txt
 read_pdf_ext.py
 
-# Firebase
+# Firebase & credentials
 firebase-credentials.json
+google-services.json
 
