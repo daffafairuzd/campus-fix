@@ -96,16 +96,16 @@ class ReportCard extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        Row(
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             _CategoryChip(report.category),
-                            const SizedBox(width: 6),
                             StatusBadge(status: report.status, compact: true),
-                            if (showPriority) ...[
-                              const SizedBox(width: 6),
+                            if (showPriority)
                               PriorityBadge(
                                   priority: report.priority, compact: true),
-                            ],
                           ],
                         ),
                       ],

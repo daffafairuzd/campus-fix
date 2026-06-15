@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:fl_chart/fl_chart.dart';
 import '../../models/user_model.dart';
 import '../../models/report_model.dart';
 import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/stat_card.dart';
 import 'report_detail_teknisi.dart';
 
 class PerformancePage extends StatefulWidget {
@@ -17,7 +15,6 @@ class PerformancePage extends StatefulWidget {
 }
 
 class _PerformancePageState extends State<PerformancePage> {
-  TechnicianPerformance? _perf;
   List<FacilityReport> _history = [];
   bool _isLoading = true;
 
@@ -29,12 +26,10 @@ class _PerformancePageState extends State<PerformancePage> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    final perf = await api.getPerformance();
     final all = await api.getMyReports();
     final done = all.where((r) => r.status == ReportStatus.selesai).toList();
     if (mounted) {
       setState(() {
-        _perf = perf;
         _history = done;
         _isLoading = false;
       });
@@ -48,7 +43,7 @@ class _PerformancePageState extends State<PerformancePage> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: Text('Kinerja Individu',
+        title: Text('Kinerja',
             style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w800)),
       ),
       body: _isLoading
@@ -59,198 +54,6 @@ class _PerformancePageState extends State<PerformancePage> {
               child: ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
-                  // Stat cards
-                  Row(
-                    children: [
-                      Expanded(
-                        child: StatCard(
-                          label: 'Selesai',
-                          value: '${_perf!.completedTasks}',
-                          subtitle: 'Total tugas',
-                          icon: Icons.task_alt_rounded,
-                          accentColor: AppColors.statusCompleted,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: StatCard(
-                          label: 'Rating',
-                          value: '${_perf!.rating}',
-                          subtitle: 'Dari pelapor',
-                          icon: Icons.star_rounded,
-                          accentColor: Colors.amber,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: StatCard(
-                          label: 'Avg. Waktu',
-                          value: _perf!.avgResolutionTime,
-                          subtitle: 'Per laporan',
-                          icon: Icons.timer_rounded,
-                          accentColor: AppColors.info,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: StatCard(
-                          label: 'Tepat Waktu',
-                          value: '${_perf!.onTimeCount}/${_perf!.onTimeCount + _perf!.lateCount}',
-                          subtitle: 'SLA compliance',
-                          icon: Icons.verified_rounded,
-                          accentColor: AppColors.statusCompleted,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Bar chart
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: isDark ? AppColors.cardDark : AppColors.cardLight,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: isDark ? AppColors.borderDark : AppColors.borderLight),
-                      boxShadow: [
-                        if (!isDark)
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.03),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          )
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Penyelesaian Minggu Ini',
-                            style: GoogleFonts.spaceGrotesk(
-                                fontSize: 14, fontWeight: FontWeight.w700)),
-                        Text('7 hari terakhir',
-                            style: GoogleFonts.spaceGrotesk(
-                                fontSize: 11, color: AppColors.textMuted)),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          height: 160,
-                          child: BarChart(
-                            BarChartData(
-                              maxY: 10,
-                              alignment: BarChartAlignment.spaceAround,
-                              barGroups: _perf!.weeklyData.asMap().entries.map((e) {
-                                final val = (e.value['selesai'] as int).toDouble();
-                                return BarChartGroupData(
-                                  x: e.key,
-                                  barRods: [
-                                    BarChartRodData(
-                                      toY: val,
-                                      color: AppColors.primary,
-                                      width: 22,
-                                      borderRadius: const BorderRadius.vertical(
-                                          top: Radius.circular(6)),
-                                      backDrawRodData: BackgroundBarChartRodData(
-                                        show: true,
-                                        toY: 10,
-                                        color: AppColors.primary.withValues(alpha: 0.08),
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              }).toList(),
-                              titlesData: FlTitlesData(
-                                leftTitles: const AxisTitles(
-                                    sideTitles: SideTitles(showTitles: false)),
-                                rightTitles: const AxisTitles(
-                                    sideTitles: SideTitles(showTitles: false)),
-                                topTitles: const AxisTitles(
-                                    sideTitles: SideTitles(showTitles: false)),
-                                bottomTitles: AxisTitles(
-                                  sideTitles: SideTitles(
-                                    showTitles: true,
-                                    reservedSize: 28,
-                                    getTitlesWidget: (val, meta) {
-                                      final days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
-                                      final i = val.toInt();
-                                      if (i < 0 || i >= days.length) return const SizedBox();
-                                      return Text(days[i],
-                                          style: GoogleFonts.spaceGrotesk(
-                                              fontSize: 10, color: AppColors.textMuted));
-                                    },
-                                  ),
-                                ),
-                              ),
-                              gridData: const FlGridData(show: false),
-                              borderData: FlBorderData(show: false),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // SLA compliance bar
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: isDark ? AppColors.cardDark : AppColors.cardLight,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: isDark ? AppColors.borderDark : AppColors.borderLight),
-                      boxShadow: [
-                        if (!isDark)
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.03),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          )
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('SLA Compliance',
-                            style: GoogleFonts.spaceGrotesk(
-                                fontSize: 14, fontWeight: FontWeight.w700)),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('Tepat Waktu',
-                                style: GoogleFonts.spaceGrotesk(
-                                    fontSize: 12, color: AppColors.textMuted)),
-                            Text(
-                              '${((_perf!.onTimeCount / (_perf!.onTimeCount + _perf!.lateCount)) * 100).toStringAsFixed(0)}%',
-                              style: GoogleFonts.spaceGrotesk(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.statusCompleted),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: LinearProgressIndicator(
-                            value: _perf!.onTimeCount /
-                                (_perf!.onTimeCount + _perf!.lateCount),
-                            minHeight: 10,
-                            backgroundColor:
-                                isDark ? AppColors.borderDark : AppColors.borderLight,
-                            valueColor: const AlwaysStoppedAnimation(AppColors.statusCompleted),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Recent completed
                   Text('Riwayat Penyelesaian',
                       style: GoogleFonts.spaceGrotesk(
                           fontSize: 16, fontWeight: FontWeight.w800)),
@@ -277,7 +80,7 @@ class _PerformancePageState extends State<PerformancePage> {
                                   session: widget.session,
                                 ),
                               ),
-                            ).then((_) => _loadData()); // reload data saat kembali jika ada perubahan
+                            ).then((_) => _loadData());
                           },
                         )),
                 ],

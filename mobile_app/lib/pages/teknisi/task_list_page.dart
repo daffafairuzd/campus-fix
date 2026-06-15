@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/user_model.dart';
 import '../../models/report_model.dart';
 import '../../services/api_service.dart';
+import '../../services/fcm_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/report_card.dart';
 import '../../widgets/campus_fix_logo.dart';
@@ -20,11 +22,22 @@ class TaskListPage extends StatefulWidget {
 class _TaskListPageState extends State<TaskListPage> {
   List<FacilityReport> _tasks = [];
   bool _isLoading = true;
+  StreamSubscription<void>? _fcmSubscription;
 
   @override
   void initState() {
     super.initState();
     _loadTasks();
+    // Dengarkan notifikasi FCM — auto refresh saat ada penugasan baru
+    _fcmSubscription = FcmService.onNewTaskAssigned.listen((_) {
+      _loadTasks();
+    });
+  }
+
+  @override
+  void dispose() {
+    _fcmSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadTasks() async {

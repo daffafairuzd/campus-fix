@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/user_model.dart';
 import '../../models/report_model.dart';
 import '../../services/api_service.dart';
+import '../../services/fcm_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/report_card.dart';
 import 'report_detail_pelapor.dart';
@@ -19,11 +21,22 @@ class _ReportHistoryPageState extends State<ReportHistoryPage> {
   List<FacilityReport> _reports = [];
   bool _isLoading = true;
   ReportStatus? _filterStatus;
+  StreamSubscription<void>? _fcmSubscription;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    // Auto-refresh saat ada notifikasi perubahan status laporan
+    _fcmSubscription = FcmService.onReportStatusChanged.listen((_) {
+      _loadData();
+    });
+  }
+
+  @override
+  void dispose() {
+    _fcmSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
