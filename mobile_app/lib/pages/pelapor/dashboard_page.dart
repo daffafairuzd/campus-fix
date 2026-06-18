@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/user_model.dart';
 import '../../models/report_model.dart';
 import '../../services/api_service.dart';
+import '../../services/fcm_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/report_card.dart';
 import '../../widgets/campus_fix_logo.dart';
@@ -21,15 +23,34 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   List<FacilityReport> _reports = [];
   bool _isLoading = true;
+  Timer? _pollingTimer;
+  StreamSubscription<void>? _fcmSubscription;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    
+    // Dengarkan FCM untuk auto-refresh
+    _fcmSubscription = FcmService.onReportStatusChanged.listen((_) {
+      _loadData(silent: true);
+    });
+
+    // Polling fallback agar auto refresh tetap jalan saat push notif dimatikan
+    _pollingTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      if (mounted) _loadData(silent: true);
+    });
   }
 
-  Future<void> _loadData() async {
-    setState(() => _isLoading = true);
+  @override
+  void dispose() {
+    _pollingTimer?.cancel();
+    _fcmSubscription?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadData({bool silent = false}) async {
+    if (!silent) setState(() => _isLoading = true);
     try {
       final data = await api.getMyReports();
       if (mounted) {
@@ -41,12 +62,14 @@ class _DashboardPageState extends State<DashboardPage> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal memuat data: ${e.toString().replaceAll('Exception: ', '')}'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        if (!silent) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Gagal memuat data: ${e.toString().replaceAll('Exception: ', '')}'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
     }
   }

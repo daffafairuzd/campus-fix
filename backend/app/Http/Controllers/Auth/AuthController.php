@@ -119,7 +119,7 @@ class AuthController extends Controller
      */
     public function saveFcmToken(Request $request)
     {
-        $request->validate(['fcm_token' => 'required|string']);
+        $request->validate(['fcm_token' => 'nullable|string']);
         $token = $request->fcm_token;
         $request->user()->update(['fcm_token' => $token === '' ? null : $token]);
         return response()->json(['message' => 'FCM token saved.']);

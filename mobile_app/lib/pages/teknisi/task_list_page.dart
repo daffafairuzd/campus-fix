@@ -23,6 +23,7 @@ class _TaskListPageState extends State<TaskListPage> {
   List<FacilityReport> _tasks = [];
   bool _isLoading = true;
   StreamSubscription<void>? _fcmSubscription;
+  Timer? _pollingTimer;
 
   @override
   void initState() {
@@ -30,18 +31,24 @@ class _TaskListPageState extends State<TaskListPage> {
     _loadTasks();
     // Dengarkan notifikasi FCM — auto refresh saat ada penugasan baru
     _fcmSubscription = FcmService.onNewTaskAssigned.listen((_) {
-      _loadTasks();
+      _loadTasks(silent: true);
+    });
+
+    // Polling fallback agar auto refresh tetap jalan saat FCM mati
+    _pollingTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      if (mounted) _loadTasks(silent: true);
     });
   }
 
   @override
   void dispose() {
     _fcmSubscription?.cancel();
+    _pollingTimer?.cancel();
     super.dispose();
   }
 
-  Future<void> _loadTasks() async {
-    setState(() => _isLoading = true);
+  Future<void> _loadTasks({bool silent = false}) async {
+    if (!silent) setState(() => _isLoading = true);
     final data = await api.getTeknisiTasks();
     if (mounted) setState(() { _tasks = data; _isLoading = false; });
   }

@@ -578,26 +578,44 @@ class _ReportDetailTeknisiState extends State<ReportDetailTeknisi> {
                     
                     const SizedBox(height: 32),
                   ] else ...[
-                    // Laporan sudah selesai
+                    // Laporan sudah selesai atau eskalasi
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.success.withValues(alpha: 0.08),
+                        color: _report.status == ReportStatus.eskalasi 
+                            ? AppColors.danger.withValues(alpha: 0.08)
+                            : AppColors.success.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+                        border: Border.all(
+                            color: _report.status == ReportStatus.eskalasi
+                                ? AppColors.danger.withValues(alpha: 0.3)
+                                : AppColors.success.withValues(alpha: 0.3)),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.check_circle_rounded,
-                              color: AppColors.success, size: 24),
+                          Icon(
+                            _report.status == ReportStatus.eskalasi 
+                                ? Icons.report_problem_rounded
+                                : Icons.check_circle_rounded,
+                            color: _report.status == ReportStatus.eskalasi 
+                                ? AppColors.danger
+                                : AppColors.success,
+                            size: 24,
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              'Laporan ini telah selesai ditangani.',
+                              _report.status == ReportStatus.eskalasi
+                                  ? 'Dalam proses eskalasi'
+                                  : 'Laporan ini telah selesai ditangani.',
                               style: GoogleFonts.spaceGrotesk(
-                                  fontSize: 13, fontWeight: FontWeight.w600,
-                                  color: AppColors.success),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: _report.status == ReportStatus.eskalasi
+                                    ? AppColors.danger
+                                    : AppColors.success,
+                              ),
                             ),
                           ),
                         ],

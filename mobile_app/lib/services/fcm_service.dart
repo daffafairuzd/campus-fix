@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart' show navigatorKey;
 import '../models/user_model.dart';
 import '../pages/pelapor/report_detail_pelapor.dart';
@@ -68,6 +69,8 @@ class FcmService {
     await _syncToken();
 
     _messaging.onTokenRefresh.listen((newToken) async {
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getBool('notif_enabled') == false) return;
       await api.sendFcmToken(newToken);
     });
 
@@ -128,17 +131,23 @@ class FcmService {
   }
 
   static Future<void> _syncToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool('notif_enabled') == false) {
+      await api.sendFcmToken('');
+      return;
+    }
     final token = await _messaging.getToken();
     if (token != null) await api.sendFcmToken(token);
   }
 
   static Future<void> clearToken() async {
     await _messaging.deleteToken();
+    await api.sendFcmToken('');
   }
 
   static Future<void> disableNotifications() async {
     await _messaging.deleteToken();
-    await api.sendFcmToken('');
+    await api.sendFcmToken(''); // Now backend will accept empty string and set it to null
   }
 
   static Future<void> enableNotifications() async {

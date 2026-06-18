@@ -154,7 +154,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'SSO ID adalah prefix email Telkom-mu',
+                          'Gunakan email akun Telkom University kamu',
                           style: GoogleFonts.spaceGrotesk(
                               fontSize: 13, color: AppColors.textMuted),
                         ),
@@ -187,41 +187,16 @@ class _RegisterPageState extends State<RegisterPage> {
                         ],
 
                         // SSO ID
-                        _FieldLabel('SSO ID'),
+                        _FieldLabel('EMAIL SSO'),
                         TextField(
                           controller: _ssoController,
+                          keyboardType: TextInputType.emailAddress,
                           decoration: const InputDecoration(
-                            hintText: 'contoh: asep321',
+                            hintText: 'contoh: nama@student.telkomuniversity.ac.id',
                             prefixIcon: Icon(Icons.alternate_email_rounded),
                           ),
                         ),
-                        ValueListenableBuilder(
-                          valueListenable: _ssoController,
-                          builder: (_, __, ___) {
-                            final sso = _ssoController.text.trim();
-                            if (sso.isEmpty) return const SizedBox(height: 14);
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 6, bottom: 8),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.mail_outline_rounded,
-                                      size: 12, color: AppColors.primary),
-                                  const SizedBox(width: 5),
-                                  Flexible(
-                                    child: Text(
-                                      '$sso@student.telkomuniversity.ac.id',
-                                      style: GoogleFonts.spaceGrotesk(
-                                        fontSize: 11,
-                                        color: AppColors.primary,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
+                        const SizedBox(height: 14),
 
                         // Nama
                         _FieldLabel('NAMA LENGKAP'),
