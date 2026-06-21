@@ -3,10 +3,13 @@ import 'dart:io' show Platform, File;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart' show XFile;
+import 'package:flutter/material.dart' show MaterialPageRoute;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import 'fcm_service.dart';
 import '../models/report_model.dart';
+import '../main.dart' show navigatorKey;
+import '../pages/auth/login_page.dart' show LoginPage;
 
 /// Base URL backend Laravel — otomatis menembak ke VPS Production
 String get _baseUrl {
@@ -44,6 +47,15 @@ class ApiService {
 
   /// Throw exception dengan pesan yang readable
   void _handleError(http.Response res) {
+    if (res.statusCode == 401) {
+      clearSession();
+      navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+        (route) => false,
+      );
+      throw Exception('Sesi Anda telah berakhir karena akun digunakan di perangkat lain.');
+    }
+
     try {
       final body = jsonDecode(res.body) as Map<String, dynamic>;
       final message = body['message'] as String? ??
