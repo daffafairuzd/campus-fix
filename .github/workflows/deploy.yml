@@ -18,17 +18,17 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
             echo "🚀 Starting Deployment..."
+            echo "📥 Cloning latest code from GitHub..."
+            rm -rf /tmp/campusfix_repo
+            git clone https://github.com/daffafairuzd/campus-fix.git /tmp/campusfix_repo
+            
+            echo "🔄 Syncing backend files to production..."
+            cp -R /tmp/campusfix_repo/backend/* /var/www/campusfix/
+            cp /tmp/campusfix_repo/backend/.env.example /var/www/campusfix/ 2>/dev/null || true
+            
             cd /var/www/campusfix
             
-            echo "📥 Pulling latest code from GitHub..."
-            chown -R root:root /var/www/campusfix
-            git config --global --add safe.directory /var/www/campusfix
-            git reset --hard HEAD
-            git clean -fd
-            git pull origin main
-            
             echo "📦 Installing PHP dependencies..."
-            cd /var/www/campusfix/backend
             composer install --no-dev --optimize-autoloader
             
             echo "🗄️ Running database migrations..."
