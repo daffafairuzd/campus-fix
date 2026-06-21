@@ -49,6 +49,10 @@ class AuthController extends Controller
             return response()->json(['message' => 'Akun Anda telah dinonaktifkan.'], 403);
         }
 
+        // Fitur Single Session: Hapus semua token login sebelumnya
+        // Sehingga perangkat yang lama akan otomatis ter-logout (mendapat 401 Unauthorized)
+        $user->tokens()->delete();
+
         $token = $user->createToken('campusfix-token')->plainTextToken;
 
         return response()->json([
