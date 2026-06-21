@@ -21,6 +21,7 @@ jobs:
             cd /var/www/campusfix
             
             echo "📥 Pulling latest code from GitHub..."
+            git config --global --add safe.directory /var/www/campusfix
             git pull origin main
             
             echo "📦 Installing PHP dependencies..."
@@ -36,5 +37,8 @@ jobs:
             
             echo "🔄 Restarting Queue Workers..."
             php artisan queue:restart
+            
+            echo "🔧 Fixing permissions for Nginx/PHP..."
+            chown -R www-data:www-data /var/www/campusfix
             
             echo "✅ Deployment Successful!"
