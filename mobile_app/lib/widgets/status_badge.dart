@@ -60,6 +60,8 @@ class StatusBadge extends StatelessWidget {
         return ('Selesai', AppColors.statusCompleted, Icons.task_alt);
       case ReportStatus.eskalasi:
         return ('Eskalasi', AppColors.danger, Icons.warning_amber_rounded);
+      case ReportStatus.ditolak:
+        return ('Ditolak', const Color(0xFF6B21A8), Icons.cancel_rounded);
     }
   }
 }

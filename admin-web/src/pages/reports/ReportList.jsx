@@ -11,6 +11,7 @@ const STATUS_OPTIONS = [
   { value: 'Dalam Proses', label: 'Dalam Proses' },
   { value: 'Selesai', label: 'Selesai' },
   { value: 'Eskalasi', label: 'Eskalasi' },
+  { value: 'Ditolak', label: 'Ditolak' },
 ];
 
 const PRIORITY_OPTIONS = [

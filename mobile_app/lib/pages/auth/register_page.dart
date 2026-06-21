@@ -15,6 +15,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _ssoController = TextEditingController();
   final _nameController = TextEditingController();
   final _nimController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
   bool _isLoading = false;
@@ -27,6 +28,7 @@ class _RegisterPageState extends State<RegisterPage> {
     _ssoController.dispose();
     _nameController.dispose();
     _nimController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
     super.dispose();
@@ -36,13 +38,20 @@ class _RegisterPageState extends State<RegisterPage> {
     final ssoId = _ssoController.text.trim();
     final name = _nameController.text.trim();
     final nim = _nimController.text.trim();
+    final phone = _phoneController.text.trim();
     final password = _passwordController.text;
     final confirm = _confirmController.text;
 
-    if (ssoId.isEmpty || name.isEmpty || password.isEmpty) {
+    if (ssoId.isEmpty || name.isEmpty || nim.isEmpty || phone.isEmpty || password.isEmpty) {
       setState(() => _errorMessage = 'Semua field wajib diisi.');
       return;
     }
+    
+    if (!ssoId.endsWith('@telkomuniversity.ac.id') && !ssoId.endsWith('@student.telkomuniversity.ac.id')) {
+      setState(() => _errorMessage = 'Gunakan email dengan domain @telkomuniversity.ac.id atau @student.telkomuniversity.ac.id');
+      return;
+    }
+
     if (password.length < 8) {
       setState(() => _errorMessage = 'Password minimal 8 karakter.');
       return;
@@ -62,6 +71,7 @@ class _RegisterPageState extends State<RegisterPage> {
         ssoId: ssoId,
         name: name,
         nim: nim,
+        phone: phone,
         password: password,
         passwordConfirmation: confirm,
       );
@@ -104,30 +114,29 @@ class _RegisterPageState extends State<RegisterPage> {
             children: [
               SizedBox(
                 height: 220,
+                width: double.infinity,
                 child: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                              color: Colors.white, size: 20),
-                          onPressed: () => Navigator.pop(context),
-                          padding: EdgeInsets.zero,
-                        ),
-                        const SizedBox(height: 12),
-                        const CampusFixLogoLight(iconSize: 38, fontSize: 22),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Buat Akun SSO Baru',
-                          style: GoogleFonts.spaceGrotesk(
-                            color: Colors.white.withValues(alpha: 0.85),
-                            fontSize: 13,
+                  child: Stack(
+                    children: [
+                      Align(
+                        alignment: Alignment.topLeft,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 8.0, left: 8.0),
+                          child: IconButton(
+                            icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                                color: Colors.white, size: 20),
+                            onPressed: () => Navigator.pop(context),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            alignment: Alignment.centerLeft,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                      Align(
+                        alignment: Alignment.center,
+                        child: const CampusFixLogoLight(iconSize: 38, fontSize: 22),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -222,6 +231,16 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                         const SizedBox(height: 14),
 
+                        // Phone
+                        _FieldLabel('NOMOR TELEPON / WHATSAPP'),
+                        TextField(
+                          controller: _phoneController,
+                          keyboardType: TextInputType.phone,
+                          decoration: const InputDecoration(
+                            hintText: 'contoh: 081234567890',
+                            prefixIcon: Icon(Icons.phone_outlined),
+                          ),
+                        ),
                         const SizedBox(height: 14),
 
                         // Password

@@ -2,7 +2,7 @@ import 'package:intl/intl.dart';
 
 /// Status laporan — sesuai dengan backend Laravel
 /// Backend values: 'menunggu', 'assessment', 'dalam_proses', 'selesai', 'eskalasi'
-enum ReportStatus { menunggu, ditugaskan, assessment, dalamProses, selesai, eskalasi }
+enum ReportStatus { menunggu, ditugaskan, assessment, dalamProses, selesai, eskalasi, ditolak }
 
 class FacilityReport {
   final int id;
@@ -26,6 +26,7 @@ class FacilityReport {
   final String? slaDeadline;
   final bool isEscalationRequested;
   final String? escalationReason;
+  final String? rejectionReason;
   final double? latitude;
   final double? longitude;
   final List<ReportHistory> histories;
@@ -53,6 +54,7 @@ class FacilityReport {
     this.slaDeadline,
     this.isEscalationRequested = false,
     this.escalationReason,
+    this.rejectionReason,
     this.latitude,
     this.longitude,
     this.histories = const [],
@@ -172,6 +174,7 @@ class FacilityReport {
       slaDeadline: json['sla_deadline'] as String?,
       isEscalationRequested: json['is_escalation_requested'] == true || json['is_escalation_requested'] == 1,
       escalationReason: json['escalation_reason'] as String?,
+      rejectionReason: json['rejection_reason'] as String?,
       latitude: json['latitude'] != null ? double.tryParse(json['latitude'].toString()) : null,
       longitude: json['longitude'] != null ? double.tryParse(json['longitude'].toString()) : null,
       histories: json['histories'] != null
@@ -195,6 +198,8 @@ class FacilityReport {
         return ReportStatus.selesai;
       case 'eskalasi':
         return ReportStatus.eskalasi;
+      case 'ditolak':
+        return ReportStatus.ditolak;
       default:
         return ReportStatus.menunggu;
     }
@@ -215,6 +220,8 @@ class FacilityReport {
         return 'selesai';
       case ReportStatus.eskalasi:
         return 'eskalasi';
+      case ReportStatus.ditolak:
+        return 'ditolak';
     }
   }
 
@@ -341,6 +348,8 @@ String statusLabel(ReportStatus status) {
       return 'Selesai';
     case ReportStatus.eskalasi:
       return 'Eskalasi';
+    case ReportStatus.ditolak:
+      return 'Ditolak';
   }
 }
 

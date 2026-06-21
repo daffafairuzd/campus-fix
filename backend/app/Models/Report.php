@@ -13,6 +13,7 @@ class Report extends Model
         'response_deadline', 'responded_at',
         'escalated_at', 'closed_at', 'rating', 'feedback_text',
         'is_escalation_requested', 'escalation_reason', 'is_analyzed',
+        'rejection_reason',
     ];
 
     protected function casts(): array

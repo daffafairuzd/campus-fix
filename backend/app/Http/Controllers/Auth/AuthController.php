@@ -75,7 +75,8 @@ class AuthController extends Controller
                               }
                           }],
             'password' => 'required|string|min:8|confirmed',
-            'nim'      => 'nullable|string',
+            'nim'      => 'required|string',
+            'phone'    => 'required|string|max:20',
         ]);
 
         $user = User::create([
@@ -84,6 +85,7 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
             'role'     => 'pelapor', // hardcoded — tidak bisa diubah dari request
             'nim'      => $request->nim,
+            'phone'    => $request->phone,
             'status'   => 'aktif',
         ]);
 

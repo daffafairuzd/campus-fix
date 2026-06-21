@@ -14,7 +14,7 @@ import '../models/report_model.dart';
 /// - Device fisik (iOS/Android) → ganti dengan IP lokal PC kamu
 String get _baseUrl {
   // Alamat IP lokal laptop agar bisa diakses dari HP fisik (satu jaringan Wi-Fi)
-  const String localIp = '10.42.96.200';
+  const String localIp = '10.141.110.92';
 
   if (kIsWeb) return 'http://localhost:8000/api';
   if (Platform.isAndroid || Platform.isIOS) return 'http://$localIp:8000/api';
@@ -161,12 +161,11 @@ class ApiService {
     required String ssoId,
     required String name,
     required String nim,
+    required String phone,
     required String password,
     required String passwordConfirmation,
   }) async {
-    final email = ssoId.contains('@')
-        ? ssoId
-        : '$ssoId@student.telkomuniversity.ac.id';
+    final email = ssoId.trim();
 
     final res = await http.post(
       _uri('/auth/register'),
@@ -175,6 +174,7 @@ class ApiService {
         'name': name,
         'email': email,
         'nim': nim,
+        'phone': phone,
         'password': password,
         'password_confirmation': passwordConfirmation,
       }),
@@ -406,6 +406,18 @@ class ApiService {
       _uri('/reports/$reportId/request-escalation'),
       headers: _headers,
       body: jsonEncode({'reason': reason}),
+    );
+
+    if (res.statusCode == 200) return;
+    _handleError(res);
+  }
+
+  /// Tolak laporan (Admin) — hanya bisa jika status masih 'menunggu'
+  Future<void> rejectReport(int reportId, String rejectionReason) async {
+    final res = await http.post(
+      _uri('/reports/$reportId/reject'),
+      headers: _headers,
+      body: jsonEncode({'rejection_reason': rejectionReason}),
     );
 
     if (res.statusCode == 200) return;

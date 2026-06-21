@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeft, Edit2, Trash2, MapPin, Upload, Search, Loader2, AlertTriangle, CheckCircle, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Edit2, XCircle, MapPin, Upload, Search, Loader2, AlertTriangle, CheckCircle, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '../../components/ui';
 import api from '../../api';
@@ -213,17 +213,30 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
     });
   };
 
-  const handleDelete = async () => {
-    showConfirm({
-      title: 'Hapus Laporan',
-      message: `Apakah Anda yakin ingin menghapus laporan ${currentReport.report_number}? Tindakan ini tidak dapat dibatalkan.`,
-      type: 'danger',
-      icon: Trash2,
-      onConfirm: async () => {
-        try { await api.delete(`/reports/${currentReport.id}`); onDeleted(); }
-        catch (err) { alert('Gagal hapus: ' + (err.response?.data?.message || err.message)); }
-      }
-    });
+  const [rejectReason, setRejectReason] = useState('');
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+
+  const handleRejectReport = () => {
+    setRejectReason('');
+    setShowRejectModal(true);
+  };
+
+  const submitReject = async () => {
+    if (!rejectReason.trim()) { alert('Alasan penolakan wajib diisi.'); return; }
+    setIsRejecting(true);
+    try {
+      await api.post(`/reports/${currentReport.id}/reject`, { rejection_reason: rejectReason.trim() });
+      setShowRejectModal(false);
+      // Refresh data laporan
+      const res = await api.get(`/reports/${currentReport.id}`);
+      setCurrentReport(res.data);
+      if (onStatusUpdated) onStatusUpdated(res.data);
+    } catch (err) {
+      alert('Gagal menolak laporan: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setIsRejecting(false);
+    }
   };
 
   const NEXT_LABEL = { menunggu: 'Tugaskan Teknisi', ditugaskan: 'Mulai Assessment', assessment: 'Mulai Pengerjaan', dalam_proses: 'Selesaikan Laporan', selesai: 'Menunggu', eskalasi: 'Dalam Proses' };
@@ -261,13 +274,31 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
           )}
           <button className="btn btn-ghost px-3" onClick={() => onEdit(currentReport)} title="Edit"><Edit2 className="w-4 h-4" /></button>
           {currentReport.status === 'menunggu' && (
-            <button className="btn btn-danger px-3" onClick={handleDelete} title="Hapus"><Trash2 className="w-4 h-4" /></button>
+            <button
+              className="btn px-3 text-[12px] font-semibold bg-ui-danger/15 border border-ui-danger/50 text-ui-danger hover:bg-ui-danger/25"
+              onClick={handleRejectReport}
+              title="Tolak Laporan"
+            >
+              <XCircle className="w-4 h-4 mr-1" /> Tolak
+            </button>
           )}
         </div>
       </div>
 
+      {/* Rejection Banner — tampil jika laporan ditolak */}
+      {currentReport.status === 'ditolak' && (
+        <div className="bg-ui-danger/10 border border-ui-danger/40 rounded-xl p-4 flex flex-col gap-2 animate-fade-in">
+          <div className="text-ui-danger font-bold text-[14px] flex items-center gap-2">
+            <XCircle className="w-4 h-4" /> Laporan Ini Telah Ditolak
+          </div>
+          <div className="text-[13px] text-ui-text">
+            Alasan: <span className="font-bold text-ui-text">&ldquo;{currentReport.rejection_reason}&rdquo;</span>
+          </div>
+        </div>
+      )}
+
       {/* Verification Banner */}
-      {!currentReport.is_analyzed && (
+      {!currentReport.is_analyzed && currentReport.status !== 'ditolak' && (
         <div className="bg-brand-primary/5 border border-brand-primary/30 rounded-xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-fade-in shadow-sm">
           <div>
             <div className="text-brand-primary font-bold text-[14px] flex items-center gap-2">
@@ -581,6 +612,46 @@ export default function ReportDetail({ report, onBack, onEdit, onDeleted, onStat
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal Tolak Laporan */}
+      {showRejectModal && createPortal(
+        <div className="fixed inset-0 bg-zinc-950/60 backdrop-blur-sm z-[1000] flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-dark-card border border-ui-danger/40 rounded-2xl shadow-2xl max-w-sm w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-ui-danger/15 flex items-center justify-center border border-ui-danger/30">
+                <XCircle className="w-5 h-5 text-ui-danger" />
+              </div>
+              <div>
+                <div className="font-bold text-ui-text text-[15px]">Tolak Laporan</div>
+                <div className="text-[11px] text-ui-muted font-mono">{currentReport.report_number}</div>
+              </div>
+            </div>
+            <p className="text-[13px] text-ui-dim mb-4 leading-relaxed">
+              Masukkan alasan penolakan. Pelapor akan menerima notifikasi beserta alasan ini.
+            </p>
+            <textarea
+              className="input w-full min-h-[100px] text-[13px] resize-none mb-4"
+              placeholder="Contoh: Laporan duplikat dengan RPT-012. Mohon cek riwayat laporan Anda."
+              value={rejectReason}
+              onChange={e => setRejectReason(e.target.value)}
+              maxLength={500}
+              autoFocus
+            />
+            <div className="text-[10px] text-ui-muted text-right mb-4">{rejectReason.length}/500</div>
+            <div className="flex gap-3">
+              <button className="btn btn-ghost flex-1" onClick={() => setShowRejectModal(false)} disabled={isRejecting}>Batal</button>
+              <button
+                className="btn flex-1 bg-ui-danger hover:bg-ui-danger/80 text-white border-ui-danger"
+                onClick={submitReject}
+                disabled={isRejecting || !rejectReason.trim()}
+              >
+                {isRejecting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Tolak Laporan'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
 
       {/* Image Preview Modal */}

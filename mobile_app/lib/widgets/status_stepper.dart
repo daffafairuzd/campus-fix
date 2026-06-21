@@ -30,6 +30,63 @@ class StatusStepper extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    // Status ditolak — tampilkan tampilan khusus, bukan stepper normal
+    if (currentStatus == ReportStatus.ditolak) {
+      final rejectionReason = report?.rejectionReason ?? _getRejectionFromHistory();
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF6B21A8),
+                  border: Border.all(color: const Color(0xFF6B21A8), width: 2),
+                ),
+                child: const Icon(Icons.cancel_rounded, size: 14, color: Colors.white),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Laporan Ditolak',
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF6B21A8),
+                        ),
+                      ),
+                      if (rejectionReason != null && rejectionReason.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            'Alasan: $rejectionReason',
+                            style: GoogleFonts.spaceGrotesk(
+                              fontSize: 11,
+                              color: const Color(0xFF6B21A8).withValues(alpha: 0.8),
+                              fontWeight: FontWeight.w500,
+                              height: 1.5,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+
     // Gunakan alur eskalasi jika status saat ini eskalasi
     final steps = currentStatus == ReportStatus.eskalasi
         ? _stepsEskalasi
@@ -243,6 +300,9 @@ class StatusStepper extends StatelessWidget {
       case ReportStatus.eskalasi:
         keyword = 'eskalasi';
         break;
+      case ReportStatus.ditolak:
+        keyword = 'ditolak';
+        break;
     }
 
     for (final h in report!.histories.reversed) {
@@ -257,6 +317,16 @@ class StatusStepper extends StatelessWidget {
         } catch (_) {
           return h.createdAt;
         }
+      }
+    }
+    return null;
+  }
+
+  String? _getRejectionFromHistory() {
+    if (report == null) return null;
+    for (final h in report!.histories.reversed) {
+      if (h.title.toLowerCase().contains('ditolak')) {
+        return h.description;
       }
     }
     return null;

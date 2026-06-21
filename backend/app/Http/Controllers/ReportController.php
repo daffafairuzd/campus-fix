@@ -200,14 +200,62 @@ class ReportController extends Controller
         return response()->json(['message' => 'Foto berhasil dihapus.']);
     }
 
-    public function destroy(Report $report)
+    /**
+     * Tolak laporan — hanya bisa jika status masih 'menunggu'
+     * Menggantikan fitur delete. Laporan tidak dihapus, statusnya berubah ke 'ditolak'
+     */
+    public function reject(Request $request, Report $report)
     {
         if ($report->status !== 'menunggu') {
-            return response()->json(['message' => 'Laporan yang sudah diproses atau ditugaskan tidak dapat dihapus.'], 403);
+            return response()->json([
+                'message' => 'Laporan hanya dapat ditolak saat masih berstatus Menunggu.',
+            ], 422);
         }
 
-        $report->delete();
-        return response()->json(['message' => 'Laporan dihapus.']);
+        $request->validate([
+            'rejection_reason' => 'required|string|max:500',
+        ]);
+
+        $report->update([
+            'status'           => 'ditolak',
+            'rejection_reason' => $request->rejection_reason,
+        ]);
+
+        // Catat di history (audit trail)
+        ReportHistory::create([
+            'report_id'   => $report->id,
+            'user_id'     => $request->user()->id,
+            'title'       => 'Laporan ditolak',
+            'description' => $request->rejection_reason,
+        ]);
+
+        // Simpan notifikasi in-app ke pelapor
+        Notification::create([
+            'user_id'   => $report->reporter_id,
+            'report_id' => $report->id,
+            'type'      => 'status_update',
+            'title'     => 'Laporan Ditolak',
+            'message'   => "Laporan #{$report->report_number} ditolak. Alasan: {$request->rejection_reason}",
+        ]);
+
+        // Kirim FCM push notification ke pelapor
+        $pelapor = User::find($report->reporter_id);
+        if ($pelapor?->fcm_token) {
+            app(FcmService::class)->send(
+                $pelapor->fcm_token,
+                'Laporan Ditolak',
+                "Laporan #{$report->report_number} ditolak. Alasan: {$request->rejection_reason}",
+                ['report_id' => (string) $report->id, 'type' => 'status_update'],
+            );
+        }
+
+        // Broadcast realtime ke admin
+        broadcast(new ReportStatusUpdated($report));
+
+        return response()->json([
+            'message' => 'Laporan berhasil ditolak.',
+            'report'  => $report->fresh()->load(['reporter', 'histories.user']),
+        ]);
     }
 
     /**
