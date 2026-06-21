@@ -28,7 +28,7 @@ api.interceptors.response.use(
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       localStorage.removeItem('isAuthenticated');
-      window.dispatchEvent(new Event('auth-expired'));
+      window.location.href = '/login'; // Paksa pindah ke halaman login
     }
     return Promise.reject(error);
   }
