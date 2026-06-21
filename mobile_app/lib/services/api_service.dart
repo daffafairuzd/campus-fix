@@ -8,17 +8,9 @@ import '../models/user_model.dart';
 import 'fcm_service.dart';
 import '../models/report_model.dart';
 
-/// Base URL backend Laravel — otomatis menyesuaikan platform:
-/// - Web / Windows desktop → localhost:8000
-/// - Android Emulator      → 10.0.2.2:8000
-/// - Device fisik (iOS/Android) → ganti dengan IP lokal PC kamu
+/// Base URL backend Laravel — otomatis menembak ke VPS Production
 String get _baseUrl {
-  // Alamat IP lokal laptop agar bisa diakses dari HP fisik (satu jaringan Wi-Fi)
-  const String localIp = '10.141.110.92';
-
-  if (kIsWeb) return 'http://localhost:8000/api';
-  if (Platform.isAndroid || Platform.isIOS) return 'http://$localIp:8000/api';
-  return 'http://localhost:8000/api';
+  return 'http://103.247.8.224/api';
 }
 
 class ApiService {
