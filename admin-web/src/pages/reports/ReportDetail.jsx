@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeft, Edit2, XCircle, MapPin, Upload, Search, Loader2, AlertTriangle, CheckCircle, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Edit2, XCircle, MapPin, Upload, Search, Loader2, AlertTriangle, CheckCircle, ShieldCheck, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '../../components/ui';
 import api from '../../api';
