@@ -16,12 +16,12 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          script_stop: true
           script: |
             echo "🚀 Starting Deployment..."
             cd /var/www/campusfix
             
             echo "📥 Pulling latest code from GitHub..."
+            chown -R root:root /var/www/campusfix
             git config --global --add safe.directory /var/www/campusfix
             git reset --hard HEAD
             git clean -fd
