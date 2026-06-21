@@ -16,15 +16,19 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
+          script_stop: true
           script: |
             echo "🚀 Starting Deployment..."
             cd /var/www/campusfix
             
             echo "📥 Pulling latest code from GitHub..."
             git config --global --add safe.directory /var/www/campusfix
+            git reset --hard HEAD
+            git clean -fd
             git pull origin main
             
             echo "📦 Installing PHP dependencies..."
+            cd /var/www/campusfix/backend
             composer install --no-dev --optimize-autoloader
             
             echo "🗄️ Running database migrations..."
@@ -39,6 +43,7 @@ jobs:
             php artisan queue:restart
             
             echo "🔧 Fixing permissions for Nginx/PHP..."
+            cd /var/www/campusfix
             chown -R www-data:www-data /var/www/campusfix
             
             echo "✅ Deployment Successful!"
