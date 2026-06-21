@@ -11,6 +11,7 @@ import 'theme/app_theme.dart';
 import 'pages/auth/login_page.dart';
 import 'pages/pelapor/pelapor_home_page.dart';
 import 'pages/teknisi/teknisi_home_page.dart';
+import 'pages/shared/change_password_page.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -87,20 +88,32 @@ class _SplashRouterState extends State<_SplashRouter> {
 
       if (!mounted) return;
 
-      // Ada sesi tersimpan — langsung ke home page yang sesuai
-      final page = session.role == UserRole.pelapor
-          ? PelaporHomePage(session: session)
-          : TeknisiHomePage(session: session);
+      if (session.mustChangePassword) {
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => ChangePasswordPage(isForce: true, session: session),
+            transitionsBuilder: (_, animation, __, child) =>
+                FadeTransition(opacity: animation, child: child),
+            transitionDuration: const Duration(milliseconds: 400),
+          ),
+        );
+      } else {
+        // Ada sesi tersimpan — langsung ke home page yang sesuai
+        final page = session.role == UserRole.pelapor
+            ? PelaporHomePage(session: session)
+            : TeknisiHomePage(session: session);
 
-      Navigator.pushReplacement(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (_, __, ___) => page,
-          transitionsBuilder: (_, animation, __, child) =>
-              FadeTransition(opacity: animation, child: child),
-          transitionDuration: const Duration(milliseconds: 400),
-        ),
-      );
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => page,
+            transitionsBuilder: (_, animation, __, child) =>
+                FadeTransition(opacity: animation, child: child),
+            transitionDuration: const Duration(milliseconds: 400),
+          ),
+        );
+      }
     } else {
       // Tidak ada sesi — ke login
       Navigator.pushReplacement(

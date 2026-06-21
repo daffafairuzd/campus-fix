@@ -86,8 +86,8 @@ class _TeknisiHomePageState extends State<TeknisiHomePage> {
                   onTap: () => setState(() => _selectedIndex = 0),
                 ),
                 _NavItem(
-                  icon: Icons.bar_chart_rounded,
-                  label: 'Kinerja',
+                  icon: Icons.history_rounded,
+                  label: 'Riwayat',
                   selected: _selectedIndex == 1,
                   onTap: () => setState(() => _selectedIndex = 1),
                 ),

@@ -29,6 +29,7 @@ class ApiService {
   static const _keyUserEmail = 'auth_user_email';
   static const _keyUserNim = 'auth_user_nim';
   static const _keyUserRole = 'auth_user_role';
+  static const _keyMustChangePassword = 'auth_must_change_pwd';
 
   // ── Singleton ────────────────────────────────────────────
   static final ApiService _instance = ApiService._internal();
@@ -81,6 +82,7 @@ class ApiService {
     await prefs.setString(_keyUserEmail, session.email);
     await prefs.setString(_keyUserNim, session.nim);
     await prefs.setString(_keyUserRole, session.role.name);
+    await prefs.setBool(_keyMustChangePassword, session.mustChangePassword);
     _token = session.token;
   }
 
@@ -93,6 +95,7 @@ class ApiService {
     final roleStr = prefs.getString(_keyUserRole) ?? 'pelapor';
     final email = prefs.getString(_keyUserEmail) ?? '';
     final ssoId = email.contains('@') ? email.split('@').first : email;
+    final mustChangePassword = prefs.getBool(_keyMustChangePassword) ?? false;
 
     return UserSession(
       id: prefs.getInt(_keyUserId) ?? 0,
@@ -102,6 +105,7 @@ class ApiService {
       email: email,
       role: roleStr == 'teknisi' ? UserRole.teknisi : UserRole.pelapor,
       token: token,
+      mustChangePassword: mustChangePassword,
     );
   }
 
@@ -109,6 +113,11 @@ class ApiService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
     _token = null;
+  }
+
+  Future<void> updateMustChangePassword(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyMustChangePassword, value);
   }
 
   // ── AUTH ─────────────────────────────────────────────────
@@ -153,6 +162,8 @@ class ApiService {
 
     if (res.statusCode != 200) {
       _handleError(res);
+    } else {
+      await updateMustChangePassword(false);
     }
   }
 

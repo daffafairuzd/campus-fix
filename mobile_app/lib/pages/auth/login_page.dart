@@ -7,6 +7,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/campus_fix_logo.dart';
 import '../pelapor/pelapor_home_page.dart';
 import '../teknisi/teknisi_home_page.dart';
+import '../shared/change_password_page.dart';
 import 'register_page.dart';
 import 'forgot_password_page.dart';
 
@@ -71,19 +72,31 @@ class _LoginPageState extends State<LoginPage>
 
       if (!mounted) return;
 
-      final page = session.role == UserRole.pelapor
-          ? PelaporHomePage(session: session)
-          : TeknisiHomePage(session: session);
+      if (session.mustChangePassword) {
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => ChangePasswordPage(isForce: true, session: session),
+            transitionsBuilder: (_, animation, __, child) =>
+                FadeTransition(opacity: animation, child: child),
+            transitionDuration: const Duration(milliseconds: 400),
+          ),
+        );
+      } else {
+        final page = session.role == UserRole.pelapor
+            ? PelaporHomePage(session: session)
+            : TeknisiHomePage(session: session);
 
-      Navigator.pushReplacement(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (_, __, ___) => page,
-          transitionsBuilder: (_, animation, __, child) =>
-              FadeTransition(opacity: animation, child: child),
-          transitionDuration: const Duration(milliseconds: 400),
-        ),
-      );
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => page,
+            transitionsBuilder: (_, animation, __, child) =>
+                FadeTransition(opacity: animation, child: child),
+            transitionDuration: const Duration(milliseconds: 400),
+          ),
+        );
+      }
     } catch (e) {
       setState(() => _errorMessage = e.toString().replaceAll('Exception: ', ''));
     } finally {

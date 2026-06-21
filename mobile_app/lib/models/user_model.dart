@@ -8,6 +8,7 @@ class UserSession {
   final String email;
   final UserRole role;
   final String token;
+  final bool mustChangePassword;
 
   UserSession({
     required this.id,
@@ -17,6 +18,7 @@ class UserSession {
     required this.email,
     required this.role,
     required this.token,
+    required this.mustChangePassword,
   });
 
   /// Membuat UserSession dari response JSON login backend
@@ -29,6 +31,8 @@ class UserSession {
     final roleStr = json['role'] as String? ?? 'pelapor';
     final role = roleStr == 'teknisi' ? UserRole.teknisi : UserRole.pelapor;
 
+    final mustChangePassword = json['must_change_password'] as bool? ?? false;
+
     return UserSession(
       id: json['id'] as int? ?? 0,
       name: json['name'] as String? ?? '',
@@ -37,6 +41,7 @@ class UserSession {
       email: email,
       role: role,
       token: token,
+      mustChangePassword: mustChangePassword,
     );
   }
 

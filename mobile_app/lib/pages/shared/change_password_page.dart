@@ -2,9 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
+import '../../models/user_model.dart';
+import '../auth/login_page.dart';
+import '../pelapor/pelapor_home_page.dart';
+import '../teknisi/teknisi_home_page.dart';
 
 class ChangePasswordPage extends StatefulWidget {
-  const ChangePasswordPage({super.key});
+  final bool isForce;
+  final UserSession? session;
+
+  const ChangePasswordPage({
+    super.key,
+    this.isForce = false,
+    this.session,
+  });
 
   @override
   State<ChangePasswordPage> createState() => _ChangePasswordPageState();
@@ -45,7 +56,35 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Password berhasil diubah')),
         );
-        Navigator.pop(context);
+        
+        if (widget.isForce && widget.session != null) {
+          final newSession = UserSession(
+            id: widget.session!.id,
+            name: widget.session!.name,
+            ssoId: widget.session!.ssoId,
+            nim: widget.session!.nim,
+            email: widget.session!.email,
+            role: widget.session!.role,
+            token: widget.session!.token,
+            mustChangePassword: false,
+          );
+          
+          final page = newSession.role == UserRole.pelapor
+              ? PelaporHomePage(session: newSession)
+              : TeknisiHomePage(session: newSession);
+
+          Navigator.pushReplacement(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (_, __, ___) => page,
+              transitionsBuilder: (_, animation, __, child) =>
+                  FadeTransition(opacity: animation, child: child),
+              transitionDuration: const Duration(milliseconds: 400),
+            ),
+          );
+        } else {
+          Navigator.pop(context);
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -60,15 +99,33 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Ganti Password',
-            style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w700)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => Navigator.pop(context),
+    return PopScope(
+      canPop: !widget.isForce,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(widget.isForce ? 'Wajib Ganti Password' : 'Ganti Password',
+              style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w700)),
+          leading: widget.isForce 
+              ? null 
+              : IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                  onPressed: () => Navigator.pop(context),
+                ),
+          actions: widget.isForce ? [
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: () async {
+                await api.logout();
+                if (mounted) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const LoginPage()),
+                  );
+                }
+              },
+            )
+          ] : null,
         ),
-      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -122,6 +179,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           ],
         ),
       ),
+    ),
     );
   }
 

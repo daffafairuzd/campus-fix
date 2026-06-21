@@ -43,7 +43,7 @@ class _PerformancePageState extends State<PerformancePage> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: Text('Kinerja',
+        title: Text('Riwayat Penyelesaian',
             style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w800)),
       ),
       body: _isLoading
@@ -54,10 +54,6 @@ class _PerformancePageState extends State<PerformancePage> {
               child: ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
-                  Text('Riwayat Penyelesaian',
-                      style: GoogleFonts.spaceGrotesk(
-                          fontSize: 16, fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 12),
                   if (_history.isEmpty)
                     Center(
                       child: Padding(
