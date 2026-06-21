@@ -147,86 +147,100 @@ export default function Analytics() {
       {/* KPI Grid: Durasi Penyelesaian, Prioritas, Kategori, Status */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-4">
         {/* Durasi Penyelesaian */}
-        <div className="card p-5 border-ui-info/20 bg-dark-card/50">
-          <h3 className="text-[13px] font-bold text-ui-text mb-1">Durasi Penyelesaian</h3>
-          <p className="text-[10px] text-ui-muted mb-2">Rata-rata waktu pengerjaan (Jam)</p>
-          <div className="h-40 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={advancedStats?.bottlenecks || []} margin={{ top: 10, right: 0, left: -25, bottom: 25 }} layout="horizontal">
-                <XAxis dataKey="category" stroke="#6b7280" fontSize={9} axisLine={false} tickLine={false} angle={-45} textAnchor="end" interval={0} />
-                <YAxis stroke="#6b7280" fontSize={9} axisLine={false} tickLine={false} domain={[0, 'auto']} />
-                <RechartsTooltip contentStyle={{ backgroundColor: '#1f242d', border: '1px solid #2e3643', borderRadius: '8px', fontSize: '11px' }} itemStyle={{ color: '#fff' }} formatter={(value) => `${value} Jam`} />
-                <Bar dataKey="process" fill="#f59e0b" name="Waktu Pengerjaan" radius={[2, 2, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+        <div className="card p-5 border-ui-info/20 bg-dark-card/50 flex flex-col h-full">
+          <div>
+            <h3 className="text-[13px] font-bold text-ui-text mb-1">Durasi Penyelesaian</h3>
+            <p className="text-[10px] text-ui-muted mb-2">Rata-rata waktu pengerjaan (Jam)</p>
           </div>
-          <div className="flex gap-4 mt-1 text-[10px] justify-center items-center">
-            <span className="flex items-center gap-1.5 text-ui-dim"><span className="w-2 h-2 rounded-[2px] bg-[#f59e0b]"></span> Rata-rata Jam</span>
+          <div className="flex-1 flex flex-col justify-center">
+            <div className="h-40 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={advancedStats?.bottlenecks || []} margin={{ top: 10, right: 0, left: -25, bottom: 25 }} layout="horizontal">
+                  <XAxis dataKey="category" stroke="#6b7280" fontSize={9} axisLine={false} tickLine={false} angle={-45} textAnchor="end" interval={0} />
+                  <YAxis stroke="#6b7280" fontSize={9} axisLine={false} tickLine={false} domain={[0, 'auto']} />
+                  <RechartsTooltip contentStyle={{ backgroundColor: '#1f242d', border: '1px solid #2e3643', borderRadius: '8px', fontSize: '11px' }} itemStyle={{ color: '#fff' }} formatter={(value) => `${value} Jam`} />
+                  <Bar dataKey="process" fill="#f59e0b" name="Waktu Pengerjaan" radius={[2, 2, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex gap-4 mt-1 text-[10px] justify-center items-center">
+              <span className="flex items-center gap-1.5 text-ui-dim"><span className="w-2 h-2 rounded-[2px] bg-[#f59e0b]"></span> Rata-rata Jam</span>
+            </div>
           </div>
         </div>
 
         {/* Distribusi Prioritas Laporan */}
-        <div className="card p-5 border-ui-warning/20 bg-dark-card/50">
-          <h3 className="text-[13px] font-bold text-ui-text mb-1">Distribusi Prioritas</h3>
-          <p className="text-[10px] text-ui-muted mb-4">Sebaran prioritas laporan</p>
-          <div className="h-40 w-full relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={advancedStats?.priorities || []}
-                  cx="50%" cy="50%"
-                  innerRadius={45} outerRadius={65}
-                  paddingAngle={3}
-                  dataKey="value"
-                  stroke="none"
-                >
-                  {(advancedStats?.priorities || []).map((entry, idx) => {
-                    const colorMap = { 'Kritis': '#dc2626', 'Tinggi': '#f59e0b', 'Sedang': '#3b82f6', 'Rendah': '#6b7280' };
-                    return <Cell key={idx} fill={colorMap[entry.name] || '#6b7280'} />;
-                  })}
-                </Pie>
-                <RechartsTooltip
-                  contentStyle={{ backgroundColor: '#1f242d', border: '1px solid #2e3643', borderRadius: '8px', fontSize: '11px' }}
-                  itemStyle={{ color: '#fff' }}
-                  formatter={(value, name) => [`${value} laporan`, name]}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none flex-col">
-              <span className="text-xl font-bold text-ui-text">{overview?.total_laporan || 0}</span>
-              <span className="text-[9px] text-ui-muted uppercase tracking-widest mt-0.5">Total</span>
-            </div>
+        <div className="card p-5 border-ui-warning/20 bg-dark-card/50 flex flex-col h-full">
+          <div>
+            <h3 className="text-[13px] font-bold text-ui-text mb-1">Distribusi Prioritas</h3>
+            <p className="text-[10px] text-ui-muted mb-4">Sebaran prioritas laporan</p>
           </div>
-          <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3 text-[9px] justify-center items-center">
-            {[
-              { label: 'Kritis', color: 'bg-ui-danger' },
-              { label: 'Tinggi', color: 'bg-ui-warning' },
-              { label: 'Sedang', color: 'bg-blue-500' },
-              { label: 'Rendah', color: 'bg-ui-muted' },
-            ].map(l => (
-              <span key={l.label} className="flex items-center gap-1 text-ui-dim">
-                <span className={`w-1.5 h-1.5 rounded-full ${l.color}`}></span> {l.label}
-              </span>
-            ))}
+          <div className="flex-1 flex flex-col justify-center">
+            <div className="h-40 w-full relative">
+              {/* Text Center - rendered before chart so tooltip renders over it */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none flex-col z-0">
+                <span className="text-xl font-bold text-ui-text">{overview?.total_laporan || 0}</span>
+                <span className="text-[9px] text-ui-muted uppercase tracking-widest mt-0.5">Total</span>
+              </div>
+              <ResponsiveContainer width="100%" height="100%" className="relative z-10">
+                <PieChart>
+                  <Pie
+                    data={advancedStats?.priorities || []}
+                    cx="50%" cy="50%"
+                    innerRadius={45} outerRadius={65}
+                    paddingAngle={3}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {(advancedStats?.priorities || []).map((entry, idx) => {
+                      const colorMap = { 'Kritis': '#dc2626', 'Tinggi': '#f59e0b', 'Sedang': '#3b82f6', 'Rendah': '#10b981', 'Belum_ditentukan': '#6b7280' };
+                      return <Cell key={idx} fill={colorMap[entry.name] || '#6b7280'} />;
+                    })}
+                  </Pie>
+                  <RechartsTooltip
+                    contentStyle={{ backgroundColor: '#1f242d', border: '1px solid #2e3643', borderRadius: '8px', fontSize: '11px', zIndex: 100 }}
+                    itemStyle={{ color: '#fff' }}
+                    formatter={(value, name) => [`${value} laporan`, name.replace('_', ' ')]}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3 text-[9px] justify-center items-center">
+              {[
+                { label: 'Kritis', color: 'bg-ui-danger' },
+                { label: 'Tinggi', color: 'bg-ui-warning' },
+                { label: 'Sedang', color: 'bg-blue-500' },
+                { label: 'Rendah', color: 'bg-ui-success' },
+                { label: 'Belum ditentukan', color: 'bg-ui-muted' },
+              ].map(l => (
+                <span key={l.label} className="flex items-center gap-1 text-ui-dim">
+                  <span className={`w-1.5 h-1.5 rounded-full ${l.color}`}></span> {l.label}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Kategori Laporan Bar Chart */}
-        <div className="card p-5 border-brand-primary/20 bg-dark-card/50">
-          <h3 className="text-[13px] font-bold text-ui-text mb-1">Laporan per Kategori</h3>
-          <p className="text-[10px] text-ui-muted mb-2">Total laporan masuk</p>
-          <div className="h-40 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={advancedStats?.categories_stats || []} margin={{ top: 10, right: 0, left: -25, bottom: 25 }} layout="horizontal">
-                <XAxis dataKey="category" stroke="#6b7280" fontSize={9} axisLine={false} tickLine={false} angle={-45} textAnchor="end" interval={0} />
-                <YAxis stroke="#6b7280" fontSize={9} axisLine={false} tickLine={false} domain={[0, 'auto']} />
-                <RechartsTooltip contentStyle={{ backgroundColor: '#1f242d', border: '1px solid #2e3643', borderRadius: '8px', fontSize: '11px' }} itemStyle={{ color: '#fff' }} formatter={(value) => `${value} Laporan`} />
-                <Bar dataKey="total" fill="#3b82f6" name="Total Laporan" radius={[2, 2, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+        <div className="card p-5 border-brand-primary/20 bg-dark-card/50 flex flex-col h-full">
+          <div>
+            <h3 className="text-[13px] font-bold text-ui-text mb-1">Laporan per Kategori</h3>
+            <p className="text-[10px] text-ui-muted mb-2">Total laporan masuk</p>
           </div>
-          <div className="flex gap-4 mt-3 text-[10px] justify-center items-center">
-            <span className="flex items-center gap-1.5 text-ui-dim"><span className="w-2 h-2 rounded-[2px] bg-blue-500"></span> Jumlah Laporan</span>
+          <div className="flex-1 flex flex-col justify-center">
+            <div className="h-40 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={advancedStats?.categories_stats || []} margin={{ top: 10, right: 0, left: -25, bottom: 25 }} layout="horizontal">
+                  <XAxis dataKey="category" stroke="#6b7280" fontSize={9} axisLine={false} tickLine={false} angle={-45} textAnchor="end" interval={0} />
+                  <YAxis stroke="#6b7280" fontSize={9} axisLine={false} tickLine={false} domain={[0, 'auto']} />
+                  <RechartsTooltip contentStyle={{ backgroundColor: '#1f242d', border: '1px solid #2e3643', borderRadius: '8px', fontSize: '11px' }} itemStyle={{ color: '#fff' }} formatter={(value) => `${value} Laporan`} />
+                  <Bar dataKey="total" fill="#3b82f6" name="Total Laporan" radius={[2, 2, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex gap-4 mt-3 text-[10px] justify-center items-center">
+              <span className="flex items-center gap-1.5 text-ui-dim"><span className="w-2 h-2 rounded-[2px] bg-blue-500"></span> Jumlah Laporan</span>
+            </div>
           </div>
         </div>
 
@@ -242,7 +256,8 @@ export default function Analytics() {
                 { key: "assessment", label: "Assessment", color: "bg-teal-500", text: "text-teal-500" },
                 { key: "dalam_proses", label: "Dalam Proses", color: "bg-ui-info", text: "text-ui-info" },
                 { key: "selesai", label: "Selesai", color: "bg-ui-success", text: "text-ui-success" },
-                { key: "eskalasi", label: "Eskalasi", color: "bg-ui-danger", text: "text-ui-danger" },
+                { key: "eskalasi", label: "Eskalasi", color: "bg-orange-500", text: "text-orange-500" },
+                { key: "ditolak", label: "Ditolak", color: "bg-ui-danger", text: "text-ui-danger" },
               ];
               return statusOrder.map(s => ({ ...s, val: dist[s.key] || 0 }));
             })().map(s => {
