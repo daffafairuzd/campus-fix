@@ -1,0 +1,160 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="modul1" name="Autentikasi dan Manajemen Akun">
+    <mxGraphModel dx="243" dy="122" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1600" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="lane_user" parent="1" style="swimlane;startSize=30;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;" value="Pengguna" vertex="1">
+          <mxGeometry height="1350" width="250" x="40" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="start" parent="lane_user" style="ellipse;fillColor=#000000;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="110" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="a1" parent="lane_user" style="rounded=1;whiteSpace=wrap;arcSize=40;" value="Input Email&#xa;dan Password" vertex="1">
+          <mxGeometry height="50" width="140" x="55" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="a3_err" parent="lane_user" style="rounded=1;whiteSpace=wrap;arcSize=40;" value="Tampilkan Error&#xa;&quot;Email/Pass Salah&quot;" vertex="1">
+          <mxGeometry height="50" width="140" x="55" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="a4_err" parent="lane_user" style="rounded=1;whiteSpace=wrap;arcSize=40;" value="Tampilkan Error&#xa;&quot;Akun Dinonaktifkan&quot;" vertex="1">
+          <mxGeometry height="50" width="140" x="55" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="label_reg" parent="lane_user" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;fontStyle=1;fontSize=11;" value="--- ALUR REGISTRASI ---" vertex="1">
+          <mxGeometry height="30" width="200" x="25" y="640" as="geometry" />
+        </mxCell>
+        <mxCell id="start_reg" parent="lane_user" style="ellipse;fillColor=#000000;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="110" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="r1" parent="lane_user" style="rounded=1;whiteSpace=wrap;arcSize=40;" value="Isi Form Registrasi&#xa;(Nama, Email, NIM, HP)" vertex="1">
+          <mxGeometry height="50" width="160" x="45" y="740" as="geometry" />
+        </mxCell>
+        <mxCell id="r3_err" parent="lane_user" style="rounded=1;whiteSpace=wrap;arcSize=40;" value="Error: Harus domain&#xa;Telkom University" vertex="1">
+          <mxGeometry height="50" width="140" x="55" y="910" as="geometry" />
+        </mxCell>
+        <mxCell id="label_otp" parent="lane_user" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;fontStyle=1;fontSize=11;" value="--- ALUR LUPA PASSWORD ---" vertex="1">
+          <mxGeometry height="30" width="220" x="15" y="1080" as="geometry" />
+        </mxCell>
+        <mxCell id="start_otp" parent="lane_user" style="ellipse;fillColor=#000000;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="110" y="1120" as="geometry" />
+        </mxCell>
+        <mxCell id="o1" parent="lane_user" style="rounded=1;whiteSpace=wrap;arcSize=40;" value="Input Email" vertex="1">
+          <mxGeometry height="40" width="120" x="65" y="1170" as="geometry" />
+        </mxCell>
+        <mxCell id="o3" parent="lane_user" style="rounded=1;whiteSpace=wrap;arcSize=40;" value="Input Kode OTP" vertex="1">
+          <mxGeometry height="40" width="140" x="55" y="1240" as="geometry" />
+        </mxCell>
+        <mxCell id="o5" parent="lane_user" style="rounded=1;whiteSpace=wrap;arcSize=40;" value="Input Password Baru" vertex="1">
+          <mxGeometry height="40" width="140" x="55" y="1300" as="geometry" />
+        </mxCell>
+        <mxCell id="end_login" parent="lane_user" style="ellipse;html=1;aspect=fixed;fillColor=#000000;strokeColor=#000000;shape=doubleCircle;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="110" y="600" as="geometry" />
+        </mxCell>
+        <mxCell id="end_reg" parent="lane_user" style="ellipse;html=1;aspect=fixed;fillColor=#000000;strokeColor=#000000;shape=doubleCircle;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="110" y="1050" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="lane_user" source="start" style="rounded=1;" target="a1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er1" edge="1" parent="lane_user" source="start_reg" style="rounded=1;" target="r1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eo1" edge="1" parent="lane_user" source="start_otp" style="rounded=1;" target="o1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="TV8omQEqf_ZYgG-Y-3cK-1" parent="lane_user" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;fontStyle=1;fontSize=11;" value="--- ALUR LOGIN ---" vertex="1">
+          <mxGeometry height="30" width="120" x="65" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="lane_sistem" parent="1" style="swimlane;startSize=30;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;" value="Sistem" vertex="1">
+          <mxGeometry height="1350" width="250" x="290" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="a2" parent="lane_sistem" style="rounded=1;whiteSpace=wrap;arcSize=40;" value="Validasi&#xa;Kredensial" vertex="1">
+          <mxGeometry height="50" width="140" x="55" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="d1" parent="lane_sistem" style="rhombus;whiteSpace=wrap;" value="Valid?" vertex="1">
+          <mxGeometry height="60" width="100" x="75" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="d2" parent="lane_sistem" style="rhombus;whiteSpace=wrap;" value="Status&#xa;Aktif?" vertex="1">
+          <mxGeometry height="60" width="100" x="75" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="a5" parent="lane_sistem" style="rounded=1;whiteSpace=wrap;arcSize=40;" value="Hapus Token Lama&#xa;(Single Session)" vertex="1">
+          <mxGeometry height="50" width="140" x="55" y="470" as="geometry" />
+        </mxCell>
+        <mxCell id="a6" parent="lane_sistem" style="rounded=1;whiteSpace=wrap;arcSize=40;" value="Generate Token&#xa;Login Berhasil" vertex="1">
+          <mxGeometry height="50" width="140" x="55" y="550" as="geometry" />
+        </mxCell>
+        <mxCell id="r2" parent="lane_sistem" style="rounded=1;whiteSpace=wrap;arcSize=40;" value="Validasi Domain&#xa;Email Kampus" vertex="1">
+          <mxGeometry height="50" width="140" x="55" y="820" as="geometry" />
+        </mxCell>
+        <mxCell id="d3" parent="lane_sistem" style="rhombus;whiteSpace=wrap;" value="Domain&#xa;Valid?" vertex="1">
+          <mxGeometry height="60" width="100" x="75" y="900" as="geometry" />
+        </mxCell>
+        <mxCell id="r4" parent="lane_sistem" style="rounded=1;whiteSpace=wrap;arcSize=40;" value="Buat Akun Pelapor&#xa;dan Generate Token" vertex="1">
+          <mxGeometry height="50" width="140" x="55" y="1000" as="geometry" />
+        </mxCell>
+        <mxCell id="o2" parent="lane_sistem" style="rounded=1;whiteSpace=wrap;arcSize=40;" value="Kirim OTP&#xa;ke Email" vertex="1">
+          <mxGeometry height="40" width="140" x="55" y="1170" as="geometry" />
+        </mxCell>
+        <mxCell id="o4" parent="lane_sistem" style="rounded=1;whiteSpace=wrap;arcSize=40;" value="Verifikasi OTP" vertex="1">
+          <mxGeometry height="40" width="140" x="55" y="1240" as="geometry" />
+        </mxCell>
+        <mxCell id="o6" parent="lane_sistem" style="rounded=1;whiteSpace=wrap;arcSize=40;" value="Reset Password&#xa;Berhasil" vertex="1">
+          <mxGeometry height="40" width="140" x="55" y="1300" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="lane_sistem" source="a2" style="rounded=1;" target="d1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="lane_sistem" source="d1" style="rounded=1;" target="d2" value="Ya">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="lane_sistem" source="d2" style="rounded=1;" target="a5" value="Ya">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="lane_sistem" source="a5" style="rounded=1;" target="a6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er3" edge="1" parent="lane_sistem" source="r2" style="rounded=1;" target="d3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er5" edge="1" parent="lane_sistem" source="d3" style="rounded=1;" target="r4" value="Ya">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="a1" style="rounded=1;" target="a2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="d1" style="rounded=1;" target="a3_err" value="Tidak">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="d2" style="rounded=1;" target="a4_err" value="Tidak">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="a6" style="rounded=1;" target="end_login">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er2" edge="1" parent="1" source="r1" style="rounded=1;" target="r2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er4" edge="1" parent="1" source="d3" style="rounded=1;" target="r3_err" value="Tidak">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er6" edge="1" parent="1" source="r4" style="rounded=1;" target="end_reg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eo2" edge="1" parent="1" source="o1" style="rounded=1;" target="o2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eo3" edge="1" parent="1" source="o2" style="rounded=1;" target="o3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eo4" edge="1" parent="1" source="o3" style="rounded=1;" target="o4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eo5" edge="1" parent="1" source="o4" style="rounded=1;" target="o5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eo6" edge="1" parent="1" source="o5" style="rounded=1;" target="o6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

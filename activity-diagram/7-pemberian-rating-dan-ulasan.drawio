@@ -1,0 +1,55 @@
+<mxfile host="Electron" version="24.2.5" type="device">
+  <diagram id="modul7" name="Pemberian Rating dan Ulasan">
+    <mxGraphModel dx="900" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1100" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="lane_pelapor" value="Pelapor" style="swimlane;startSize=30;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="230" height="700" as="geometry" />
+        </mxCell>
+        <mxCell id="lane_sistem" value="Sistem" style="swimlane;startSize=30;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="270" y="40" width="230" height="700" as="geometry" />
+        </mxCell>
+
+        <!-- Pelapor -->
+        <mxCell id="start" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="lane_pelapor">
+          <mxGeometry x="100" y="50" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="a1" value="Terima Notifikasi&#10;Laporan Selesai" style="rounded=1;whiteSpace=wrap;arcSize=40;" vertex="1" parent="lane_pelapor">
+          <mxGeometry x="45" y="120" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="a2" value="Buka Detail&#10;Laporan" style="rounded=1;whiteSpace=wrap;arcSize=40;" vertex="1" parent="lane_pelapor">
+          <mxGeometry x="55" y="220" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="a3" value="Lihat Foto&#10;Bukti Penyelesaian" style="rounded=1;whiteSpace=wrap;arcSize=40;" vertex="1" parent="lane_pelapor">
+          <mxGeometry x="45" y="320" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="a4" value="Beri Rating (1-5)&#10;dan Tulis Ulasan" style="rounded=1;whiteSpace=wrap;arcSize=40;" vertex="1" parent="lane_pelapor">
+          <mxGeometry x="45" y="420" width="140" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Sistem -->
+        <mxCell id="s1" value="Simpan Rating&#10;dan Feedback" style="rounded=1;whiteSpace=wrap;arcSize=40;" vertex="1" parent="lane_sistem">
+          <mxGeometry x="55" y="500" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="s2" value="Catat di&#10;Report History" style="rounded=1;whiteSpace=wrap;arcSize=40;" vertex="1" parent="lane_sistem">
+          <mxGeometry x="55" y="590" width="120" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="end" value="" style="ellipse;html=1;aspect=fixed;fillColor=#000000;strokeColor=#000000;shape=doubleCircle;" vertex="1" parent="lane_pelapor">
+          <mxGeometry x="100" y="640" width="30" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Edges -->
+        <mxCell id="e1" edge="1" source="start" target="a1" parent="lane_pelapor" style="rounded=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" edge="1" source="a1" target="a2" parent="lane_pelapor" style="rounded=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" edge="1" source="a2" target="a3" parent="lane_pelapor" style="rounded=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" edge="1" source="a3" target="a4" parent="lane_pelapor" style="rounded=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" edge="1" source="a4" target="s1" parent="1" style="rounded=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e6" edge="1" source="s1" target="s2" parent="lane_sistem" style="rounded=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e7" edge="1" source="s2" target="end" parent="1" style="rounded=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
