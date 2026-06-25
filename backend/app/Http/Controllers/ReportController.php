@@ -10,7 +10,7 @@ use App\Models\Notification;
 use App\Models\User;
 use App\Events\ReportCreated;
 use App\Events\ReportStatusUpdated;
-use App\Services\FcmService;
+use App\Jobs\SendFcmNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -241,11 +241,11 @@ class ReportController extends Controller
         // Kirim FCM push notification ke pelapor
         $pelapor = User::find($report->reporter_id);
         if ($pelapor?->fcm_token) {
-            app(FcmService::class)->send(
+            SendFcmNotification::dispatch(
                 $pelapor->fcm_token,
                 'Laporan Ditolak',
                 "Laporan #{$report->report_number} ditolak. Alasan: {$request->rejection_reason}",
-                ['report_id' => (string) $report->id, 'type' => 'status_update'],
+                ['report_id' => (string) $report->id, 'type' => 'status_update']
             );
         }
 
@@ -381,11 +381,11 @@ class ReportController extends Controller
             $formattedStatus = ucwords(str_replace('_', ' ', $newStatus));
             if ($newStatus === 'assessment') $formattedStatus = 'Asesmen Teknisi';
             
-            app(FcmService::class)->send(
+            SendFcmNotification::dispatch(
                 $pelapor->fcm_token,
                 'Status Laporan Diperbarui',
                 "Laporan #{$report->report_number} kini berstatus: {$formattedStatus}.",
-                ['report_id' => (string) $report->id, 'type' => 'status_update'],
+                ['report_id' => (string) $report->id, 'type' => 'status_update']
             );
         }
 
