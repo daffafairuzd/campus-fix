@@ -20,7 +20,7 @@ class ReportController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Report::with(['reporter', 'activeTechnicians', 'assignments.technician', 'histories', 'photos'])
+        $query = Report::with(['reporter', 'activeTechnicians', 'assignments.technician', 'histories'])
             // Filter berdasarkan role
             ->when($request->user()->isReporter(), function ($q) use ($request) {
                 return $q->where('reporter_id', $request->user()->id);
